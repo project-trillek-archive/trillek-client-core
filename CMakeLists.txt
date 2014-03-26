@@ -70,9 +70,9 @@ set(TCC_ALL_LIBS
 	)
 
 # if just building an exe use all the source and libraries
-ADD_EXECUTABLE("Trillek Client"
+ADD_EXECUTABLE("Trillek_Client"
 	${TCC_SRC}
 	${TCC_INCLUDES}
 	)
 # Link the executable to all required libraries
-TARGET_LINK_LIBRARIES("Trillek Client" ${TCC_ALL_LIBS})
+TARGET_LINK_LIBRARIES("Trillek_Client" ${TCC_ALL_LIBS})
