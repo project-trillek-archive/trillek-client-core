@@ -65,6 +65,12 @@ IF (WIN32 AND NOT MINGW) # Windows
 	ENDIF (CMAKE_CL_64)
 ENDIF (WIN32 AND NOT MINGW)
 
+SET(TCC_BUILD_TESTS CACHE BOOL "Parse the tests directory")
+
+IF (TCC_BUILD_TESTS)
+	ADD_SUBDIRECTORY(tests)
+ENDIF (TCC_BUILD_TESTS)
+
 # define all required external libraries
 set(TCC_ALL_LIBS
 	)
