@@ -17,4 +17,4 @@ file(GLOB Source
 make_directory("bin")
 add_executable(bin/TrillekClientCore ${Source})
 
-target_link_libraries(bin/TrillekClientCore glfw ${OPENGL_glu_LIBRARY} ${GLFW_LIBRARIES})
+target_link_libraries(bin/TrillekClientCore glfw ${GLFW_LIBRARIES})
