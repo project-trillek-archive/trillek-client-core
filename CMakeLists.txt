@@ -9,7 +9,12 @@ set(GLFW_BUILD_DOCS OFF)
 add_subdirectory(libs/glfw3)
 include_directories(libs/glfw3/include)
 
+include_directories(include)
+file(GLOB Source
+    "src/*.cxx"
+)
+
 make_directory("bin")
-add_executable(bin/TrillekClientCore main.cxx)
+add_executable(bin/TrillekClientCore ${Source})
 
 target_link_libraries(bin/TrillekClientCore glfw ${OPENGL_glu_LIBRARY} ${GLFW_LIBRARIES})
