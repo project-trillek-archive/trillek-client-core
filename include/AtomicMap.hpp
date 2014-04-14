@@ -24,10 +24,16 @@ namespace Trillek {
 		 */
 		virtual ~AtomicMap() { mtx.unlock(); };
 
-		// Array subscript operator
-		T& operator[](const K& key) {
+        /** \brief Insert an element
+         *
+         * \param key K&& key of the element
+         * \param value T&& value to insert
+         *
+         */
+		template<class L=K,class U=T>
+		void Insert(L&& key, U&& value) const {
 			std::lock_guard<std::mutex> locker(mtx);
-			return q[key];
+			q[std::forward<K>(key)] = std::forward<T>(value);
 		}
 
 		/** \brief Remove an element
