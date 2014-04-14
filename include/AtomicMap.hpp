@@ -7,21 +7,21 @@
 
 namespace Trillek {
 
-    /** \brief A thread-safe map implementation with atomic operations
-     */
+	/** \brief A thread-safe map implementation with atomic operations
+	 */
 	template<class K,class T>
 	class AtomicMap {
 
 	public:
 
-        /** \brief Default constructor
+		/** \brief Default constructor
 		 *
-         */
+		 */
 		AtomicMap() {};
 
-        /** \brief Default destructor
-         *
-         */
+		/** \brief Default destructor
+		 *
+		 */
 		virtual ~AtomicMap() { mtx.unlock(); };
 
 		// Array subscript operator
@@ -30,23 +30,23 @@ namespace Trillek {
 			return q[key];
 		}
 
-        /** \brief Remove an element
-         *
-         * \param key const K& the key of the element to remove
-         *
-         */
+		/** \brief Remove an element
+		 *
+		 * \param key const K& the key of the element to remove
+		 *
+		 */
 		void Erase(const K& key) const {
 			std::lock_guard<std::mutex> locker(mtx);
 			q.erase(key);
 		}
 
-        /** \brief Remove and get a reference of an element
-         *
-         * \param key const K& the key of the element
-         * \param element T& a non-const reference that will contain the element
-         * \return bool true if removed, false otherwise
-         *
-         */
+		/** \brief Remove and get a reference of an element
+		 *
+		 * \param key const K& the key of the element
+		 * \param element T& a non-const reference that will contain the element
+		 * \return bool true if removed, false otherwise
+		 *
+		 */
 		bool Pop(const K& key, T& element) const {
 			std::lock_guard<std::mutex> locker(mtx);
 			if(q.count(key)) {
@@ -57,35 +57,35 @@ namespace Trillek {
 			return false;
 		}
 
-        /** \brief Get an element
-         *
-         * \param key const K& the key of the element
-         * \return T the element
-         *
-         */
+		/** \brief Get an element
+		 *
+		 * \param key const K& the key of the element
+		 * \return T the element
+		 *
+		 */
 		T At(const K& key) const {
 			std::lock_guard<std::mutex> locker(mtx);
 			return q.at(key);
 		}
 
-        /** \brief Get the number of elements having key
-         *
-         * \param key const K& the key
-         * \return size_t the number of elements
-         *
-         */
+		/** \brief Get the number of elements having key
+		 *
+		 * \param key const K& the key
+		 * \return size_t the number of elements
+		 *
+		 */
 		size_t Count(const K& key) const {
 			std::lock_guard<std::mutex> locker(mtx);
 			return q.count(key);
 		}
 
-        /** \brief Compare atomically an element with a value
-         *
-         * \param key const K& the key of the element
-         * \param element const T& the value to compare with
-         * \return bool true if equal, false otherwise
-         *
-         */
+		/** \brief Compare atomically an element with a value
+		 *
+		 * \param key const K& the key of the element
+		 * \param element const T& the value to compare with
+		 * \return bool true if equal, false otherwise
+		 *
+		 */
 		bool Compare(const K& key, const T& element) const {
 			std::lock_guard<std::mutex> locker(mtx);
 			return q.count(key) && (q.at(key) == element);
