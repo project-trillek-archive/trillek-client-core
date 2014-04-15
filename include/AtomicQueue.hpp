@@ -9,7 +9,7 @@
 namespace trillek {
 
     template<class T>
-    using atomic_queue = std::unique_ptr<std::list<T>>;
+    using atomic_queue = std::list<T>;
 
     /** \brief A thread-safe queue implementation with atomic operations
      */
@@ -20,7 +20,7 @@ namespace trillek {
         /** \brief Default constructor
          *
          */
-        AtomicQueue() : q(atomic_queue<T>(new std::list<T>)) {};
+        AtomicQueue() {};
 
         /** \brief Destructor
          *
@@ -38,10 +38,10 @@ namespace trillek {
          */
         atomic_queue<T> Poll() const {
             std::unique_lock<std::mutex> locker(mtx);
-            if (! q->size()) {
-                return atomic_queue<T>();
+            if (! q.size()) {
+                return {};
             }
-            auto ret = atomic_queue<T>(new std::list<T>());
+            auto ret = atomic_queue<T>{};
             std::swap(ret,q);
             return ret;
         }
@@ -53,7 +53,7 @@ namespace trillek {
         template<class U>
         void Push(U&& element) const {
             std::unique_lock<std::mutex> locker(mtx);
-            q->push_back(std::forward<U>(element));
+            q.push_back(std::forward<U>(element));
         }
 
         /** \brief Put a list of element at the end of the queue
@@ -63,7 +63,7 @@ namespace trillek {
         template<class U>
         void PushList(U&& list) const {
             std::unique_lock<std::mutex> locker(mtx);
-            q->splice(q->end(), std::forward<U>(list));
+            q.splice(q.end(), std::forward<U>(list));
         }
 
         /** \brief Pop an element from the end of the queue
@@ -73,11 +73,11 @@ namespace trillek {
          */
         bool Pop(T& element) const {
             std::unique_lock<std::mutex> locker(mtx);
-            if(q->empty()) {
+            if(q.empty()) {
                 return false;
             }
-            element = std::move(q->front());
-            q->pop_front();
+            element = std::move(q.front());
+            q.pop_front();
             return true;
         }
 
@@ -88,7 +88,7 @@ namespace trillek {
          */
         bool Empty() const {
             std::unique_lock<std::mutex> locker(mtx);
-            return q->empty();
+            return q.empty();
         }
 
     private:
