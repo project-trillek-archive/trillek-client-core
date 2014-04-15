@@ -24,12 +24,12 @@ namespace Trillek {
 		 */
 		virtual ~AtomicMap() { mtx.unlock(); };
 
-        /** \brief Insert an element
-         *
-         * \param key K&& key of the element
-         * \param value T&& value to insert
-         *
-         */
+		/** \brief Insert an element
+		 *
+		 * \param key K&& key of the element
+		 * \param value T&& value to insert
+		 *
+		 */
 		template<class L=K,class U=T>
 		void Insert(L&& key, U&& value) const {
 			std::lock_guard<std::mutex> locker(mtx);
