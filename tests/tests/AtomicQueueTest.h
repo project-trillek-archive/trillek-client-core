@@ -5,12 +5,12 @@
 
 #include "gtest/gtest.h"
 
-    class AtomicQueueTest: public ::testing::Test {
-	public:
-		AtomicQueueTest() {};
-    protected:
-        trillek::AtomicQueue<int> q;
-    };
+class AtomicQueueTest: public ::testing::Test {
+public:
+    AtomicQueueTest() {};
+protected:
+    trillek::AtomicQueue<int> q;
+};
 
 using trillek::AtomicQueue;
 

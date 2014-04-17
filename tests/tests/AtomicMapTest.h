@@ -6,12 +6,12 @@
 
 #include "gtest/gtest.h"
 
-    class AtomicMapTest: public ::testing::Test {
-	public:
-		AtomicMapTest() {};
-    protected:
-        trillek::AtomicMap<std::string, int> q;
-    };
+class AtomicMapTest: public ::testing::Test {
+public:
+    AtomicMapTest() {};
+protected:
+    trillek::AtomicMap<std::string, int> q;
+};
 
 using trillek::AtomicMap;
 
