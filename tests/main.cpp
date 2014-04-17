@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "tests/AtomicQueueTest.h"
+#include "tests/AtomicMapTest.h"
 
 int main(int argc, char **argv) {
 	::testing::InitGoogleTest(&argc, argv);
