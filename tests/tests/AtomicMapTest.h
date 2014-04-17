@@ -31,8 +31,9 @@ namespace trillek {
         q.Insert(k, i);
         ASSERT_EQ(k, "a") << "Insert moved lvalue key";
         ASSERT_EQ(i, 1) << "Insert moved lvalue value";
-        ASSERT_FALSE(q.Count(k) == 0) << "Map is empty";
+        ASSERT_EQ(q.Count(k), 1) << "Map is empty";
         EXPECT_NO_THROW(i = q.At("a")) << "At throws an exception";
+        ASSERT_EQ(i, 1) << "At should return 1";
         ASSERT_TRUE(q.Compare("a", 1)) << "Compare should return true";
         ASSERT_FALSE(q.Compare("a", 2)) << "Compare should return false";
         i = 0;
