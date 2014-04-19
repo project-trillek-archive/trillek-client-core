@@ -1,2 +1,29 @@
 build/
 lib/
+bin/
+
+#################################
+## Code::Blocks
+#################################
+*.bmarks
+*.cbp
+*.layout
+*_build_log.html
+
+################################
+# CMake
+################################
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+compile_commands.json
+cscope.out
+*.cscope_file_list
+*.depend
+# We don't want to see Makefiles modifications
+Makefile
+
+###############################
+# NetBean
+###############################
+nbproject/
