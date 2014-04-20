@@ -22,7 +22,7 @@ namespace trillek {
         /** \brief Default destructor
          *
          */
-        virtual ~AtomicMap() { mtx.unlock(); };
+        virtual ~AtomicMap() {};
 
         /** \brief Insert an element
          *
