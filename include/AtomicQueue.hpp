@@ -25,7 +25,7 @@ namespace trillek {
         /** \brief Destructor
          *
          */
-        virtual ~AtomicQueue() { mtx.unlock(); };
+        virtual ~AtomicQueue() {};
 
         // disable copy functions
         AtomicQueue(AtomicQueue&) = delete;
