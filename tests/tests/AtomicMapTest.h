@@ -29,7 +29,7 @@ namespace trillek {
         auto k = "a";
         int i = 1;
         q.Insert(k, i);
-        ASSERT_EQ(k, "a") << "Insert moved lvalue key";
+        ASSERT_STREQ(k, "a") << "Insert moved lvalue key";
         ASSERT_EQ(i, 1) << "Insert moved lvalue value";
         ASSERT_EQ(q.Count(k), 1) << "Map is empty";
         EXPECT_NO_THROW(i = q.At("a")) << "At throws an exception";
