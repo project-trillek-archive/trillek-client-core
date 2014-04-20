@@ -1,7 +1,10 @@
-#pragma once
+#ifndef PROPERTY_TEST_H_INCLUDED
+#define PROPERTY_TEST_H_INCLUDED
+
+#include "gtest/gtest.h"
+#include <string>
 
 #include "Property.h"
-#include <string>
 
 namespace {
     // Basic move and copy tests with POD int
@@ -113,3 +116,5 @@ namespace {
         delete testINT;
     }
 }  // namespace
+
+#endif

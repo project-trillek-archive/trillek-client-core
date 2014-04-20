@@ -3,6 +3,7 @@
 #include "tests/PropertyTest.h"
 #include "tests/AtomicQueueTest.h"
 #include "tests/AtomicMapTest.h"
+#include "tests/ResourceSystemTest.h"
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
