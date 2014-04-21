@@ -50,14 +50,17 @@ FOREACH(MAIN_CPP ${TCC_MAIN_CPP})
     GET_FILENAME_COMPONENT(TEST_NAME ${MAIN_CPP} NAME_WE)
     if(TEST_NAME STREQUAL "Client_main")
         SET(TEST_NAME "Trillek_Client")
+        SET(BUILDTARGET "CLIENT")
     endif(TEST_NAME STREQUAL "Client_main")
 
     if(TEST_NAME STREQUAL "Server_main")
         SET(TEST_NAME "Trillek_Server")
+        SET(BUILDTARGET "SERVER")
     endif(TEST_NAME STREQUAL "Server_main")
 
     if(TEST_NAME STREQUAL "main")
         SET(TEST_NAME "Trillek")
+        SET(BUILDTARGET "STANDALONE")
     endif(TEST_NAME STREQUAL "main")
 
     MESSAGE(STATUS "Processing: ${TEST_NAME}")
@@ -68,6 +71,13 @@ FOREACH(MAIN_CPP ${TCC_MAIN_CPP})
       ${TCC_SRC}
       ${TCC_INCLUDES}
       )
+
+    # Set a preprocessor variable
+    set_property(
+        TARGET ${TEST_NAME}
+        PROPERTY COMPILE_DEFINITIONS ${BUILDTARGET}
+    )
+
     # Link the executable to all required libraries
     TARGET_LINK_LIBRARIES(${TEST_NAME} ${TCC_ALL_LIBS})
 ENDFOREACH(MAIN_CPP)
