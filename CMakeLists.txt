@@ -58,11 +58,6 @@ FOREACH(MAIN_CPP ${TCC_MAIN_CPP})
         SET(BUILDTARGET "SERVER")
     endif(TEST_NAME STREQUAL "Server_main")
 
-    if(TEST_NAME STREQUAL "main")
-        SET(TEST_NAME "Trillek")
-        SET(BUILDTARGET "STANDALONE")
-    endif(TEST_NAME STREQUAL "main")
-
     MESSAGE(STATUS "Processing: ${TEST_NAME}")
 
     # if just building an exe use all the source and libraries
