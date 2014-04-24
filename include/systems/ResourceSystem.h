@@ -167,7 +167,7 @@ namespace trillek {
              * \return void
              */
             void Remove(const std::string& name) {
-                for each(auto list in this->resources) {
+                for(auto list : this->resources) {
                     if (list.second.find(name) != list.second.end()) {
                         this->resources[list.first].erase(name);
                         return;
@@ -182,7 +182,7 @@ namespace trillek {
              * \return bool True if the resource exists.
              */
             bool Exists(const std::string& name) {
-                for each(auto list in this->resources) {
+                for(auto list : this->resources) {
                     if (list.second.find(name) != list.second.end()) {
                         return true;
                     }
