@@ -9,7 +9,7 @@ SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/modules")
 
 # find all source files in the src directory
-FILE(GLOB_RECURSE TCC_SRC "src/*.cpp")
+FILE(GLOB_RECURSE TCC_SRC "src/*.cpp" "engine/*.cpp")
 
 # find all the files in the includes directory
 FILE(GLOB_RECURSE TCC_INCLUDES "engine/*.h" "engine/*.hpp")
