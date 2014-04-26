@@ -12,7 +12,7 @@ SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/modules")
 FILE(GLOB_RECURSE TCC_SRC "src/*.cpp")
 
 # find all the files in the includes directory
-FILE(GLOB_RECURSE TCC_INCLUDES "include/*.h" "include/*.hpp")
+FILE(GLOB_RECURSE TCC_INCLUDES "engine/*.h" "engine/*.hpp")
 
 # check for gcc version to set c++11 or c++0x.
 # thanks to http://stackoverflow.com/questions/10984442/how-to-detect-c11-support-of-a-compiler-with-cmake .
@@ -22,7 +22,7 @@ IF ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
     MESSAGE("Supported GCC!")
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
   ENDIF (GCC_VERSION VERSION_GREATER 4.7 OR GCC_VERSION VERSION_EQUAL 4.7)
-ELSEIF ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang") # Clang 3.3 and up support c++11.  
+ELSEIF ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang") # Clang 3.3 and up support c++11.
   MESSAGE("Clang Version: " ${CMAKE_CXX_COMPILER_VERSION})
   # On OS X, Clang 3.3 would be Clang/LLVM 5.0.
   IF (APPLE)
@@ -49,9 +49,9 @@ ELSE ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
   MESSAGE(FATAL_ERROR "Your C++ compiler does not support C++11.")
 ENDIF ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
 
-SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} ${CMAKE_SOURCE_DIR}/include/)
-INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/include/")
-  
+SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} ${CMAKE_SOURCE_DIR}/)
+INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/")
+
 # If we are on windows add in the local search directories as well.
 IF (WIN32 AND NOT MINGW) # Windows
   SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} ${CMAKE_SOURCE_DIR}/lib/include/)
