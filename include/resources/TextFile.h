@@ -18,7 +18,7 @@ namespace trillek {
              * \return bool True if initialization finished with no errors.
              */
             virtual bool Initialize(const std::vector<Property> &properties) {
-                for each (Property p in properties) {
+                for (const Property& p : properties) {
                     std::string name = p.GetName();
                     if (name == "filename") {
                         this->fname = p.Get<std::string>();
