@@ -11,6 +11,7 @@
 #include <queue>
 #include <list>
 #include <iterator>
+#include "engine/core/AtomicQueue.hpp"
 
 #define		STOP		0
 #define 	SPLIT		1
@@ -19,6 +20,8 @@
 #define		REPEAT		4
 
 namespace trillek {
+
+    class System;
 
     typedef std::function<int(void)> block_t;
     typedef std::list<block_t> chain_t;
@@ -147,18 +150,36 @@ namespace trillek {
     };
 
 
+    /** \brief Scheduler for trillek engine
+     */
     class TrillekScheduler {
     public:
         TrillekScheduler() : counter(0), one_frame(1) {};
         virtual ~TrillekScheduler() {};
 
-        void Initialize(unsigned int nr_thread);
+        /** \brief Launch the threads and attach them to system
+         *
+         * \param nr_thread unsigned int number of threads to launch
+         * \param systems std::queue<System*>&& list of systems to attach
+         *
+         */
+        void Initialize(unsigned int nr_thread, std::queue<System*>&& systems);
 
+        /** \brief Execute a task using the current thread
+         *
+         * \param task task to execute
+         *
+         */
         template<class T>
         void Execute(const std::shared_ptr<TaskRequest<T>>& task) {
             task->RunTask();
         }
 
+        /** \brief Queue a task for asynchronous execution
+         *
+         * \param task task to execute
+         *
+         */
         template<class T>
         void Queue(T&& task) {
             std::unique_lock<std::mutex> locker(m_queue);
@@ -168,8 +189,16 @@ namespace trillek {
 
     private:
 
-        void DayWork(const std::chrono::time_point<std::chrono::steady_clock, frame_unit>& now);
-        void NightWork();
+        /** \brief Main loop of each thread
+         *
+         * \param now start time
+         * \param system System* system to attach
+         *
+         */
+        void DayWork(const std::chrono::time_point<std::chrono::steady_clock, frame_unit>& now, System* system);
+
+        thread_local static std::function<void(const std::chrono::time_point<std::chrono::steady_clock, frame_unit>&)> handleEvents_functor;
+        thread_local static std::function<void(void)> runBatch_functor;
 
         std::priority_queue<std::shared_ptr<TaskRequestBase>> taskqueue;
         std::condition_variable countercheck;

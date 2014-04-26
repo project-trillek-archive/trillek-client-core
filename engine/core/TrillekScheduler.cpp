@@ -5,15 +5,26 @@
 #include <iomanip>
 #include <ctime>
 #include <iostream>
+#include <functional>
+
+#include "engine/core/System.h"
 
 namespace trillek {
     std::function<void(std::shared_ptr<TaskRequest<chain_t>>&&,frame_unit&&)> TaskRequest<chain_t>::queue_task;
 
-    void TrillekScheduler::Initialize(unsigned int nr_thread) {
+    thread_local std::function<void(const std::chrono::time_point<std::chrono::steady_clock, frame_unit>&)> TrillekScheduler::handleEvents_functor;
+    thread_local std::function<void(void)> TrillekScheduler::runBatch_functor;
+
+    void TrillekScheduler::Initialize(unsigned int nr_thread, std::queue<System*>&& systems) {
 //        LOG_DEBUG << "hardware concurrency " << std::thread::hardware_concurrency();
         std::chrono::time_point<std::chrono::steady_clock, frame_unit> now = std::chrono::steady_clock::now();
         for (auto i = 0; i < nr_thread; ++i) {
-            std::thread(std::bind(&TrillekScheduler::DayWork, std::ref(*this), now)).detach();
+            System* sys = nullptr;
+            if (! systems.empty()) {
+                sys = systems.front();
+                systems.pop();
+            }
+            std::thread(std::bind(&TrillekScheduler::DayWork, std::ref(*this), now, sys)).detach();
         }
         TaskRequest<chain_t>::Initialize([&](std::shared_ptr<TaskRequest<chain_t>>&& c, frame_unit&& delay)
                                         {
@@ -22,8 +33,15 @@ namespace trillek {
                                         });
     }
 
-    void TrillekScheduler::DayWork(const std::chrono::time_point<std::chrono::steady_clock, frame_unit>& now) {
+    void TrillekScheduler::DayWork(const std::chrono::time_point<std::chrono::steady_clock, frame_unit>& now, System* system) {
         std::chrono::time_point<std::chrono::steady_clock, frame_unit> next_frame_tp = now + one_frame;
+        if (system) {
+            handleEvents_functor = std::bind(&System::HandleEvents, std::ref(*system), std::placeholders::_1);
+            runBatch_functor = std::bind(&System::RunBatch, std::ref(*system));
+        } else {
+            handleEvents_functor = [](const std::chrono::time_point<std::chrono::steady_clock, frame_unit>& timepoint) {};
+            runBatch_functor = [] () {};
+        }
 
         while (1) {
 
@@ -37,8 +55,9 @@ namespace trillek {
                     if (queuecheck.wait_until(locker, max_timepoint) == std::cv_status::timeout) {
                         // we reach timeout
                         if (std::chrono::steady_clock::now() >= next_frame_tp) {
+                            handleEvents_functor(next_frame_tp);
+                            runBatch_functor();
                             next_frame_tp += one_frame;
-                            NightWork();
                         }
                     }
                 }
@@ -62,9 +81,5 @@ namespace trillek {
             counter.fetch_sub(1, std::memory_order::memory_order_relaxed);
             queuecheck.notify_all();
         }
-    }
-
-    void TrillekScheduler::NightWork() {
-//       LOG_DEBUG << "thread #" << std::this_thread::get_id() << " entering night";
     }
 }
