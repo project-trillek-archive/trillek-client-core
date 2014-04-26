@@ -37,7 +37,7 @@ namespace trillek {
         std::chrono::time_point<std::chrono::steady_clock, frame_unit> next_frame_tp = now + one_frame;
         if (system) {
             handleEvents_functor = std::bind(&System::HandleEvents, std::ref(*system), std::placeholders::_1);
-            runBatch_functor = std::bind(&System::RunBatch, std::ref(*system));
+            runBatch_functor = std::bind(&System::RunBatch, std::cref(*system));
         } else {
             handleEvents_functor = [](const std::chrono::time_point<std::chrono::steady_clock, frame_unit>& timepoint) {};
             runBatch_functor = [] () {};
