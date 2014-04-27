@@ -67,27 +67,6 @@ namespace {
         delete testINT;
     }
 
-    // Advanced move and copy tests using pointers
-    // The pointer is deleted early and as such the value held is now invalid
-    TEST(PropertyTest, PropertyMovePTREarlyDelete) {
-        const std::string name = "PropertyTestName";
-        int* testINT = new int();
-        *testINT = 10;
-        Property p(name, testINT);
-        Property moved_P = std::move(p);
-        delete testINT;
-        EXPECT_NE(10, *moved_P.Get<int*>());
-    }
-    TEST(PropertyTest, PropertyCopyPTREarlyDelete) {
-        const std::string name = "PropertyTestName";
-        int* testINT = new int();
-        *testINT = 10;
-        Property p(name, testINT);
-        Property copied_P(p);
-        delete testINT;
-        EXPECT_NE(10, *copied_P.Get<int*>());
-    }
-
     // Testing get without a different type than the set
     TEST(PropertyTest, PropertyGetDifferentType_Exception) {
         const std::string name = "PropertyTestName";
