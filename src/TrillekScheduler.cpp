@@ -1,4 +1,4 @@
-#include "engine/core/TrillekScheduler.h"
+#include "TrillekScheduler.h"
 #include <thread>
 //#include <iostream>
 //#include <utmpx.h>
@@ -7,7 +7,7 @@
 #include <iostream>
 #include <functional>
 
-#include "engine/core/System.h"
+#include "System.h"
 
 namespace trillek {
     std::function<void(std::shared_ptr<TaskRequest<chain_t>>&&,frame_unit&&)> TaskRequest<chain_t>::queue_task;

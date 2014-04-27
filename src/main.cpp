@@ -1,4 +1,4 @@
-#include "engine/core/TrillekGame.h"
+#include "TrillekGame.h"
 #include <queue>
 #include <thread>
 #include <chrono>

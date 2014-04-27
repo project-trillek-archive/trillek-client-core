@@ -1,7 +1,7 @@
 #ifndef FAKESYSTEM_H_INCLUDED
 #define FAKESYSTEM_H_INCLUDED
 
-#include "engine/core/System.h"
+#include "System.h"
 #include <iostream>
 
 namespace trillek {

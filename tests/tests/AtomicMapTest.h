@@ -1,7 +1,7 @@
 #ifndef ATOMICMAPTEST_H_INCLUDED
 #define ATOMICMAPTEST_H_INCLUDED
 
-#include "engine/core/AtomicMap.hpp"
+#include "AtomicMap.hpp"
 #include <stdexcept>
 
 #include "gtest/gtest.h"

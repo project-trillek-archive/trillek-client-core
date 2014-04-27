@@ -11,7 +11,7 @@
 #include <queue>
 #include <list>
 #include <iterator>
-#include "engine/core/AtomicQueue.hpp"
+#include "AtomicQueue.hpp"
 
 #define		STOP		0
 #define 	SPLIT		1

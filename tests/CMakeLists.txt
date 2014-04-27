@@ -48,8 +48,8 @@ SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/modules"
 IF (NOT (DEFINED TCC_BUILD_TESTS))
   MESSAGE("Called independently.")
   MESSAGE("The include directory ${CMAKE_SOURCE_DIR}/../include may not be correct.")
-  SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} ${CMAKE_SOURCE_DIR}/../)
-  INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/../")
+  SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} ${CMAKE_SOURCE_DIR}/../include)
+  INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/../include")
 ELSE (NOT (DEFINED TCC_BUILD_TESTS))
   MESSAGE("Called from root.")
 ENDIF (NOT (DEFINED TCC_BUILD_TESTS))
@@ -70,9 +70,9 @@ ENDIF (WIN32 AND NOT MINGW)
 # Try to get GTest using a Env. variable, if not, with find_package
 IF (DEFINED ENV{GTEST_ROOT})
   MESSAGE ("... using gtest found in $ENV{GTEST_ROOT}")
-  # Example :
+  # Example : 
   # GTEST_ROOT=path/gtest-1.6.0 ;
-  # export GTEST_ROOT
+  # export GTEST_ROOT 
   ADD_SUBDIRECTORY ($ENV{GTEST_ROOT} ${CMAKE_CURRENT_BINARY_DIR}/gtest)
   INCLUDE_DIRECTORIES ($ENV{GTEST_ROOT}/include $ENV{GTEST_ROOT})
   SET (GTEST_LIBRARIES gtest)

@@ -1,8 +1,8 @@
 #ifndef TRILLEKGAME_H_INCLUDED
 #define TRILLEKGAME_H_INCLUDED
 
-#include "engine/core/TrillekScheduler.h"
-#include "engine/core/FakeSystem.h"
+#include "TrillekScheduler.h"
+#include "FakeSystem.h"
 
 namespace trillek {
     class TrillekGame {
