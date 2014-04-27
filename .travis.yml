@@ -45,7 +45,6 @@ before_script:
     - cmake -DTCC_BUILD_TESTS=True ..
 script:
     - make
-    - cd ..
     - cd bin
     - ./TCCTests
 
