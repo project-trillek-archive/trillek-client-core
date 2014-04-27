@@ -12,12 +12,12 @@
 namespace trillek {
     std::function<void(std::shared_ptr<TaskRequest<chain_t>>&&,frame_unit&&)> TaskRequest<chain_t>::queue_task;
 
-    thread_local std::function<void(const std::chrono::time_point<std::chrono::steady_clock, frame_unit>&)> TrillekScheduler::handleEvents_functor;
+    thread_local std::function<void(const frame_tp&)> TrillekScheduler::handleEvents_functor;
     thread_local std::function<void(void)> TrillekScheduler::runBatch_functor;
 
     void TrillekScheduler::Initialize(unsigned int nr_thread, std::queue<System*>&& systems) {
 //        LOG_DEBUG << "hardware concurrency " << std::thread::hardware_concurrency();
-        std::chrono::time_point<std::chrono::steady_clock, frame_unit> now = std::chrono::steady_clock::now();
+        frame_tp now = steady_clock::now();
         for (auto i = 0; i < nr_thread; ++i) {
             System* sys = nullptr;
             if (! systems.empty()) {
@@ -33,13 +33,13 @@ namespace trillek {
                                         });
     }
 
-    void TrillekScheduler::DayWork(const std::chrono::time_point<std::chrono::steady_clock, frame_unit>& now, System* system) {
-        std::chrono::time_point<std::chrono::steady_clock, frame_unit> next_frame_tp = now + one_frame;
+    void TrillekScheduler::DayWork(const frame_tp& now, System* system) {
+        frame_tp next_frame_tp = now + one_frame;
         if (system) {
             handleEvents_functor = std::bind(&System::HandleEvents, std::ref(*system), std::placeholders::_1);
             runBatch_functor = std::bind(&System::RunBatch, std::cref(*system));
         } else {
-            handleEvents_functor = [](const std::chrono::time_point<std::chrono::steady_clock, frame_unit>& timepoint) {};
+            handleEvents_functor = [](const frame_tp& timepoint) {};
             runBatch_functor = [] () {};
         }
 
@@ -50,11 +50,14 @@ namespace trillek {
             {
                 // Wait for a task to do
                 std::unique_lock<std::mutex> locker(m_queue);
-                while (taskqueue.empty() || ! taskqueue.top()->IsNow() || std::chrono::steady_clock::now() >= next_frame_tp) {
-                    auto max_timepoint = taskqueue.empty() ? next_frame_tp : std::min(next_frame_tp, taskqueue.top()->Timepoint());
+                while (taskqueue.empty()
+                       || ! taskqueue.top()->IsNow()
+                       || steady_clock::now() >= next_frame_tp) {
+                    auto max_timepoint = taskqueue.empty() ? next_frame_tp :
+                                                                std::min(next_frame_tp, taskqueue.top()->Timepoint());
                     if (queuecheck.wait_until(locker, max_timepoint) == std::cv_status::timeout) {
                         // we reach timeout
-                        if (std::chrono::steady_clock::now() >= next_frame_tp) {
+                        if (steady_clock::now() >= next_frame_tp) {
                             handleEvents_functor(next_frame_tp);
                             runBatch_functor();
                             next_frame_tp += one_frame;

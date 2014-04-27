@@ -21,16 +21,22 @@
 
 namespace trillek {
 
+    using namespace std::chrono;
+
     class System;
 
     typedef std::function<int(void)> block_t;
     typedef std::list<block_t> chain_t;
 
-    typedef std::chrono::duration<double, std::ratio<1,60>> frame_unit;
+    typedef duration<double, std::ratio<1,60>> frame_unit;
+    typedef time_point<steady_clock, frame_unit> frame_tp;
 
     class TaskRequestBase {
     public:
-        TaskRequestBase(std::chrono::time_point<std::chrono::steady_clock, frame_unit>&& timestamp) : timestamp(std::move(timestamp)) {};
+        TaskRequestBase(frame_tp&& timestamp) :
+            timestamp(std::move(timestamp))
+            {};
+
         virtual ~TaskRequestBase() {};
 
         bool operator<(const TaskRequestBase& tqe) const {
@@ -40,19 +46,19 @@ namespace trillek {
         virtual void RunTask() = 0;
 
         bool IsNow() const {
-            return timestamp < std::chrono::steady_clock::now();
+            return timestamp < steady_clock::now();
         }
 
         void Reschedule(frame_unit&& delay) {
-            timestamp = std::chrono::steady_clock::now() + delay;
+            timestamp = steady_clock::now() + delay;
         }
 
-        std::chrono::time_point<std::chrono::steady_clock, frame_unit> Timepoint() const {
+        frame_tp Timepoint() const {
             return timestamp;
         }
 
     protected:
-        std::chrono::time_point<std::chrono::steady_clock, frame_unit> timestamp;
+        frame_tp timestamp;
     };
 
     template<class T>
@@ -60,12 +66,12 @@ namespace trillek {
     public:
         TaskRequest(T&& funct) :
             funct(std::forward<T>(funct)),
-            TaskRequestBase(std::chrono::steady_clock::now())
+            TaskRequestBase(steady_clock::now())
             {};
 
         TaskRequest(T&& funct, const frame_unit& delay) :
             funct(std::forward<T>(funct)),
-            TaskRequestBase(std::chrono::steady_clock::now() + delay)
+            TaskRequestBase(steady_clock::now() + delay)
             {};
 
         virtual ~TaskRequest() {};
@@ -83,13 +89,13 @@ namespace trillek {
         TaskRequest(const chain_t& chain) :
             block(chain.cbegin()),
             block_end(chain.cend()),
-            TaskRequestBase(std::chrono::steady_clock::now())
+            TaskRequestBase(steady_clock::now())
             {};
 
         TaskRequest(const chain_t& chain, const frame_unit& delay) :
             block(chain.cbegin()),
             block_end(chain.cend()),
-            TaskRequestBase(std::chrono::steady_clock::now() + delay)
+            TaskRequestBase(steady_clock::now() + delay)
             {};
 
         TaskRequest(chain_t&& chain) = delete;
@@ -100,14 +106,14 @@ namespace trillek {
             chain(std::move(chain)),
             block(this->chain->cbegin()),
             block_end(this->chain->cend()),
-            TaskRequestBase(std::chrono::steady_clock::now())
+            TaskRequestBase(steady_clock::now())
             {};
 
         TaskRequest(std::shared_ptr<chain_t>&& chain, const frame_unit& delay) :
             chain(std::move(chain)),
             block(this->chain->cbegin()),
             block_end(this->chain->cend()),
-            TaskRequestBase(std::chrono::steady_clock::now() + delay)
+            TaskRequestBase(steady_clock::now() + delay)
             {};
 
         virtual ~TaskRequest() {};
@@ -140,7 +146,9 @@ namespace trillek {
             }
         }
 
-        static void Initialize(std::function<void(std::shared_ptr<TaskRequest<chain_t>>&&, frame_unit&&)>&& f) { queue_task = std::move(f); };
+        static void Initialize(std::function<void(std::shared_ptr<TaskRequest<chain_t>>&&, frame_unit&&)>&& f) {
+            queue_task = std::move(f);
+        };
 
     private:
         static std::function<void(std::shared_ptr<TaskRequest<chain_t>>&&, frame_unit&&)> queue_task;
@@ -195,9 +203,9 @@ namespace trillek {
          * \param system System* system to attach
          *
          */
-        void DayWork(const std::chrono::time_point<std::chrono::steady_clock, frame_unit>& now, System* system);
+        void DayWork(const frame_tp& now, System* system);
 
-        thread_local static std::function<void(const std::chrono::time_point<std::chrono::steady_clock, frame_unit>&)> handleEvents_functor;
+        thread_local static std::function<void(const frame_tp&)> handleEvents_functor;
         thread_local static std::function<void(void)> runBatch_functor;
 
         std::priority_queue<std::shared_ptr<TaskRequestBase>> taskqueue;
