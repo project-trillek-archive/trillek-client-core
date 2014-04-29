@@ -100,8 +100,13 @@ namespace trillek { namespace resource {
         void CalculateVertexNormals();
 
         /**
+        * \brief Updates the meshgroups index list based from the loaded mesh groups.
         *
+        * There isn't a return as the processing will just do nothing if the
+        * parse data was default objects.
+        * \return void
         */
+        void UpdateIndexList();
 
         /**
         * \brief Sets the mesh filename.

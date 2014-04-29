@@ -122,6 +122,7 @@ namespace trillek { namespace resource {
         if (Parse()) {
             CalculateVertexPositions();
             CalculateVertexNormals();
+            UpdateIndexList();
             return true;
         }
 
@@ -230,6 +231,7 @@ namespace trillek { namespace resource {
                 }
             }
         }
+
         for (size_t i = 0; i < this->meshes.size(); ++i) {
             if (this->meshGroups[i]->verts.size() < this->meshes[i]->verts.size()) {
                 this->meshGroups[i]->verts.resize(this->meshes[i]->verts.size());
@@ -308,7 +310,26 @@ namespace trillek { namespace resource {
         }
     }
 
+    void MD5Mesh::UpdateIndexList() {
+        if (this->meshGroups.size() < this->meshes.size()) {
+            this->meshGroups.resize(this->meshes.size());
+            for (auto& mgruop : this->meshGroups) {
+                if (!mgruop) {
+                    mgruop.reset(new MeshGroup());
+                }
+            }
         }
 
+        // Copy the triangle indexes.
+        for (size_t i = 0; i < this->meshes.size(); ++i) {
+            if (this->meshGroups[i]->indexList.size() < this->meshes[i]->tris.size()) {
+                this->meshGroups[i]->indexList.resize(this->meshes[i]->tris.size());
+            }
+            for (size_t j = 0; j < this->meshes[i]->tris.size(); ++j) {
+                this->meshGroups[i]->indexList[j].index[0] = this->meshes[i]->tris[j].verts[0];
+                this->meshGroups[i]->indexList[j].index[1] = this->meshes[i]->tris[j].verts[1];
+                this->meshGroups[i]->indexList[j].index[2] = this->meshes[i]->tris[j].verts[2];
+            }
+        }
     }
 }}
