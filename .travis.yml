@@ -23,7 +23,8 @@ install:
     - if [ "$CXX" = "g++" ]; then sudo apt-get install -qq g++-4.8; fi
     - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
     # GLEW, GLM
-    #- sudo apt-get -q -y install libglew-dev libglm-dev
+    #- sudo apt-get -q -y install libglew-dev
+    - sudo apt-get -q -y install libglm-dev
     # OpenAL, Vorbis and OGG
     #- sudo apt-get -q -y install libogg-dev libvorbis-dev libopenal-dev
     # Bullet
@@ -44,7 +45,6 @@ before_script:
     - cmake -DTCC_BUILD_TESTS=True ..
 script:
     - make
-    - cd ..
     - cd bin
     - ./TCCTests
 
