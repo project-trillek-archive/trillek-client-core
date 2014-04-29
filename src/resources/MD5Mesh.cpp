@@ -222,12 +222,17 @@ namespace trillek { namespace resource {
     }
 
     void MD5Mesh::CalculateVertexPositions() {
-        if (this->verts.size() < this->meshes.size()) {
-            this->verts.resize(this->meshes.size());
+        if (this->meshGroups.size() < this->meshes.size()) {
+            this->meshGroups.resize(this->meshes.size());
+            for (auto& mgruop : this->meshGroups) {
+                if (!mgruop) {
+                    mgruop.reset(new MeshGroup());
+                }
+            }
         }
         for (size_t i = 0; i < this->meshes.size(); ++i) {
-            if (this->verts[i].size() < this->meshes[i]->verts.size()) {
-                this->verts[i].resize(this->meshes[i]->verts.size());
+            if (this->meshGroups[i]->verts.size() < this->meshes[i]->verts.size()) {
+                this->meshGroups[i]->verts.resize(this->meshes[i]->verts.size());
             }
             for (size_t j = 0; j < this->meshes[i]->verts.size(); ++j) {
                 VertexData vdata;
@@ -249,18 +254,24 @@ namespace trillek { namespace resource {
                 // Copy the texture coordinates
                 vdata.uv = this->meshes[i]->verts[j].uv;
 
-                this->verts[i][j] = vdata;
+                this->meshGroups[i]->verts[j] = vdata;
             }
         }
     }
 
     void MD5Mesh::CalculateVertexNormals() {
-        if (this->verts.size() < this->meshes.size()) {
-            this->verts.resize(this->meshes.size());
+        if (this->meshGroups.size() < this->meshes.size()) {
+            this->meshGroups.resize(this->meshes.size());
+            for (auto& mgruop : this->meshGroups) {
+                if (!mgruop) {
+                    mgruop.reset(new MeshGroup());
+                }
+            }
         }
+
         for (size_t i = 0; i < this->meshes.size(); ++i) {
-            if (this->verts[i].size() < this->meshes[i]->verts.size()) {
-                this->verts[i].resize(this->meshes[i]->verts.size());
+            if (this->meshGroups[i]->verts.size() < this->meshes[i]->verts.size()) {
+                this->meshGroups[i]->verts.resize(this->meshes[i]->verts.size());
                 // If we need to resize here then we will need to calculate the vertex positions again.
                 CalculateVertexPositions();
             }
@@ -282,7 +293,7 @@ namespace trillek { namespace resource {
                 Vertex& vert = this->meshes[i]->verts[j];
 
                 glm::vec3 normal = glm::normalize(vert.normal);
-                this->verts[i][j].normal = normal;
+                this->meshGroups[i]->verts[j].normal = normal;
 
                 // Reset the normal to calculate the bind-pose normal in joint space
                 vert.normal = glm::vec3(0);
@@ -297,11 +308,7 @@ namespace trillek { namespace resource {
         }
     }
 
-    std::vector<VertexData>* MD5Mesh::GetVertexData(const unsigned int& meshIndex) {
-        if (meshIndex < this->verts.size()) {
-            return &this->verts[meshIndex];
         }
 
-        return nullptr;
     }
 }}

@@ -1,5 +1,5 @@
-#ifndef MD5MESH_H_INCLUDED
-#define MD5MESH_H_INCLUDED
+#ifndef MD5MESH_HPP_INCLUDED
+#define MD5MESH_HPP_INCLUDED
 
 #include <string>
 
@@ -7,19 +7,10 @@
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
 
-#include "systems/ResourceSystem.h"
+#include "resources/Mesh.hpp"
 
 namespace trillek { namespace resource {
-    // Holds final calcualted vertex data used for rendering or other purposes.
-    struct VertexData {
-        VertexData() : position(0.0f, 0.0f, 0.0f) { }
-        glm::vec3 position;
-        glm::vec3 color;
-        glm::vec3 normal;
-        glm::vec2 uv;
-    };
-
-    class MD5Mesh : public ResourceBase {
+    class MD5Mesh : public Mesh {
     public:
         MD5Mesh() { }
         ~MD5Mesh() { }
@@ -109,13 +100,8 @@ namespace trillek { namespace resource {
         void CalculateVertexNormals();
 
         /**
-        * \brief Returns a vector containing the VertexData for the requested sub-mesh.
         *
-        * \param[in] const unsigned int& meshIndex The index of the sub-mesh to retrieve.
-        * \return std::vector<VertexData>* A vector with the mesh's VertexData or nullptr if the index was OOB.
         */
-        std::vector<VertexData>* GetVertexData(const unsigned int& meshIndex);
-
 
         /**
         * \brief Sets the mesh filename.
@@ -131,7 +117,6 @@ namespace trillek { namespace resource {
         std::string fname; // Relative filename
         std::vector<std::unique_ptr<Mesh>> meshes;
         std::vector<std::unique_ptr<Joint>> joints;
-        std::vector<std::vector<VertexData>> verts; // Final computed vertex data.
     };
 }
 
