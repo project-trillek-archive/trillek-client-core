@@ -1,0 +1,143 @@
+#ifndef MD5MESH_H_INCLUDED
+#define MD5MESH_H_INCLUDED
+
+#include <string>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
+
+#include "systems/ResourceSystem.h"
+
+namespace trillek { namespace resource {
+    // Holds final calcualted vertex data used for rendering or other purposes.
+    struct VertexData {
+        VertexData() : position(0.0f, 0.0f, 0.0f) { }
+        glm::vec3 position;
+        glm::vec3 color;
+        glm::vec3 normal;
+        glm::vec2 uv;
+    };
+
+    class MD5Mesh : public ResourceBase {
+    public:
+        MD5Mesh() { }
+        ~MD5Mesh() { }
+
+        /*****************************/
+        /* MD$Mesh helper structures */
+        /*****************************/
+        struct Joint {
+            Joint() : name(""), parent(-1), position(0.0f, 0.0f, 0.0f) { }
+
+            /**
+            * \brief Compute the joint's quaternion W component.
+            *
+            * \return void
+            */
+            void ComputeW();
+
+            std::string name; // The name of the joint
+            int parent; // index
+            glm::vec3 position; // Transformed position.
+            glm::quat orientation; // Quaternion
+        };
+
+        struct Vertex {
+            Vertex() : startWeight(0), weightCount(0), uv(0.0f, 0.0f) { }
+            glm::vec2 uv; // Texture coordinates
+            int startWeight; // index
+            unsigned int weightCount;
+            glm::vec3 position; // Calculated position (cached for later use)
+            glm::vec3 normal; // Calculated normal (cached for later use)
+        };
+
+        struct Triangle {
+            Triangle() {
+                this->verts[0] = 0; verts[1] = 0; verts[2] = 0;
+            }
+            int verts[3]; // index
+        };
+
+        struct Weight {
+            Weight() : joint(0), bias(0.0f), position(0.0f, 0.0f, 0.0f) { }
+            int joint; // index
+            float bias; // 0-1
+            glm::vec3 position;
+        };
+
+        // Holds information about each mesh inside the file.
+        struct Mesh {
+            std::string shader; // MTR or texture filename.
+            std::vector<Vertex> verts;
+            std::vector<Triangle> tris;
+            std::vector<Weight> weights;
+        };
+
+        /**
+        * \brief Returns a resource with the specified name.
+        *
+        * The only used initialization property is "filename".
+        * \param[in] const std::vector<Property>& properties The creation properties for the resource.
+        * \return bool True if initialization finished with no errors.
+        */
+        virtual bool Initialize(const std::vector<Property>& properties);
+
+        /**
+        * \brief Loads the MD5Mesh file from disk and parses it.
+        *
+        * \return bool If the mesh was valid and loaded correctly.
+        */
+        bool Parse();
+
+        /**
+        * \brief Calculates the final vertex positions based on the bind-pose skeleton.
+        *
+        * There isn't a return as the processing will just do nothing if the
+        * parse data was default objects.
+        * \return void
+        */
+        void CalculateVertexPositions();
+
+        /**
+        * \brief Calculates the vertex normals based on the bind-pose skeleton and mesh tris.
+        *
+        * There isn't a return as the processing will just do nothing if the
+        * parse data was default objects.
+        * \return void
+        */
+        void CalculateVertexNormals();
+
+        /**
+        * \brief Returns a vector containing the VertexData for the requested sub-mesh.
+        *
+        * \param[in] const unsigned int& meshIndex The index of the sub-mesh to retrieve.
+        * \return std::vector<VertexData>* A vector with the mesh's VertexData or nullptr if the index was OOB.
+        */
+        std::vector<VertexData>* GetVertexData(const unsigned int& meshIndex);
+
+
+        /**
+        * \brief Sets the mesh filename.
+        *
+        * This is just a shorthand function that can be called directly via script API.
+        * \param[in] const std::string& fname The mesh filename.
+        * \return bool True if initialization finished with no errors.
+        */
+        void SetFileName(const std::string& fname) {
+            this->fname = fname;
+        }
+    private:
+        std::string fname; // Relative filename
+        std::vector<std::unique_ptr<Mesh>> meshes;
+        std::vector<std::unique_ptr<Joint>> joints;
+        std::vector<std::vector<VertexData>> verts; // Final computed vertex data.
+    };
+}
+
+namespace reflection {
+    template <> inline const char* GetTypeName<resource::MD5Mesh>() { return "MD5Mesh"; }
+    template <> inline const unsigned int GetTypeID<resource::MD5Mesh>() { return 1001; }
+}}
+
+#endif
