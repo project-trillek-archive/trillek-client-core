@@ -66,6 +66,45 @@ IF (WIN32 AND NOT MINGW) # Windows
 ENDIF (WIN32 AND NOT MINGW)
 
 FIND_PACKAGE(GLM REQUIRED)
+FIND_PACKAGE(OpenGL REQUIRED)
+FIND_PACKAGE(GLFW3 REQUIRED)
+
+# Give these some dummy values and if the platform is LINUX or OSX they will be set accordingly.
+SET(X11_LIBRARIES "")
+SET(OSX_LIBRARIES "")
+
+IF (NOT APPLE) # X11 and GLEW are not needed on OSX.
+	FIND_PACKAGE(X11)
+	SET(USE_STATIC_GLEW CACHE BOOL "Build against GLEW static (default no)")
+	FIND_PACKAGE(GLEW REQUIRED) # We find GLEW here as OSX doesn't need it.
+ENDIF (NOT APPLE)
+
+IF (APPLE) # Mac OSX
+	SET(GLEW_LIBRARY "") # Set a dummy value for GLEW.
+
+	SET(CMAKE_XCODE_ATTRIBUTE_SUPPORTED_PLATFORMS macosx)
+
+	# Need the 10.7 SDK or later.
+	EXECUTE_PROCESS(COMMAND xcodebuild -sdk macosx -version SDKVersion OUTPUT_VARIABLE OSX_SDK_VERSION)
+	IF (NOT (OSX_SDK_VERSION VERSION_GREATER 10.7 OR OSX_SDK_VERSION VERSION_EQUAL 10.7))
+		MESSAGE(FATAL_ERROR "The installed version of Xcode does not support the 10.7 SDK or later.  Please upgrade Xcode and try again.")
+	ENDIF (NOT (OSX_SDK_VERSION VERSION_GREATER 10.7 OR OSX_SDK_VERSION VERSION_EQUAL 10.7))
+
+	# Configure the project to use the correct SDK.
+	IF (XCODE_VERSION)
+		SET(CMAKE_OSX_SYSROOT macosx)
+	ELSE (XCODE_VERSION)
+		# Non-Xcode generators need the full path.
+		EXECUTE_PROCESS(COMMAND xcodebuild -sdk macosx -version Path | head -n 1 OUTPUT_VARIABLE CMAKE_OSX_SYSROOT)
+		STRING(REGEX REPLACE "(\r?\n)+$" "" CMAKE_OSX_SYSROOT "${CMAKE_OSX_SYSROOT}")
+	ENDIF (XCODE_VERSION)
+
+	# Can deploy back to 10.7, the first OS X to support the GL Core.
+	SET(CMAKE_OSX_DEPLOYMENT_TARGET 10.7)
+
+	# Need Core Foundation and libobjc.
+	SET(OSX_LIBRARIES "-framework CoreFoundation /usr/lib/libobjc.dylib")
+ENDIF (APPLE)
 
 SET(TCC_BUILD_TESTS CACHE BOOL "Parse the tests directory")
 
@@ -75,12 +114,17 @@ ENDIF (TCC_BUILD_TESTS)
 
 # define all required external libraries
 set(TCC_ALL_LIBS
+	${OPENGL_LIBRARIES}
+	${GLFW3_LIBRARIES}
+	${X11_LIBRARIES}
+	${OSX_LIBRARIES}
+	${GLEW_LIBRARIES}
   )
 
 # if just building an exe use all the source and libraries
 ADD_EXECUTABLE("Trillek_Client"
-  ${TCC_SRC}
-  ${TCC_INCLUDES}
+	${TCC_SRC}
+	${TCC_INCLUDES}
   )
 # Link the executable to all required libraries
 TARGET_LINK_LIBRARIES("Trillek_Client" ${TCC_ALL_LIBS})
