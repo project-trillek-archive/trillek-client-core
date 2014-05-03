@@ -205,9 +205,6 @@ namespace trillek {
          */
         void DayWork(const frame_tp& now, System* system);
 
-        thread_local static std::function<void(const frame_tp&)> handleEvents_functor;
-        thread_local static std::function<void(void)> runBatch_functor;
-
         std::priority_queue<std::shared_ptr<TaskRequestBase>> taskqueue;
         std::condition_variable countercheck;
         std::atomic<int> counter;

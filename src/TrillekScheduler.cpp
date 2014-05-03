@@ -12,9 +12,6 @@
 namespace trillek {
     std::function<void(std::shared_ptr<TaskRequest<chain_t>>&&,frame_unit&&)> TaskRequest<chain_t>::queue_task;
 
-    thread_local std::function<void(const frame_tp&)> TrillekScheduler::handleEvents_functor;
-    thread_local std::function<void(void)> TrillekScheduler::runBatch_functor;
-
     void TrillekScheduler::Initialize(unsigned int nr_thread, std::queue<System*>&& systems) {
 //        LOG_DEBUG << "hardware concurrency " << std::thread::hardware_concurrency();
         frame_tp now = steady_clock::now();
@@ -35,6 +32,9 @@ namespace trillek {
 
     void TrillekScheduler::DayWork(const frame_tp& now, System* system) {
         frame_tp next_frame_tp = now + one_frame;
+
+        std::function<void(const frame_tp&)> handleEvents_functor;
+        std::function<void(void)> runBatch_functor;
         if (system) {
             handleEvents_functor = std::bind(&System::HandleEvents, std::ref(*system), std::placeholders::_1);
             runBatch_functor = std::bind(&System::RunBatch, std::cref(*system));
