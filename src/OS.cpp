@@ -109,11 +109,8 @@ namespace trillek {
         return this->height;
     }
 
-    double OS::GetDeltaTime() {
-        double time = glfwGetTime();
-        double delta = time - this->lastTime;
-        this->lastTime = time;
-        return delta;
+    std::chrono::duration<double,std::ratio<1>> OS::GetTime() {
+        return std::chrono::duration<double,std::ratio<1>>(glfwGetTime());
     }
 
     void OS::windowResized(GLFWwindow* window, int width, int height) {

@@ -10,6 +10,7 @@
 
 #include <GLFW/glfw3.h>
 #include <string>
+#include <chrono>
 
 namespace trillek {
     class OS {
@@ -71,11 +72,12 @@ namespace trillek {
         int GetWindowHeight();
 
         /**
-         * \brief Returns the time since this last call to GetDeltaTime().
+         * \brief Returns the time since the start of the program.
          *
-         * \return double The number of seconds (or fractions of a second) that has passed.
+         * \return std::chrono::duration<double,std::ratio<1>> The number of seconds
+         * (or fractions of a second) that has passed.
          */
-        double GetDeltaTime();
+        std::chrono::duration<double,std::ratio<1>> GetTime();
 
         /**
          * \brief Callback for when the window is resized.

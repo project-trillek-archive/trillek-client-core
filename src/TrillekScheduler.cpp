@@ -8,13 +8,14 @@
 #include <functional>
 
 #include "System.h"
+#include "TrillekGame.h"
 
 namespace trillek {
     std::function<void(std::shared_ptr<TaskRequest<chain_t>>&&,frame_unit&&)> TaskRequest<chain_t>::queue_task;
 
     void TrillekScheduler::Initialize(unsigned int nr_thread, std::queue<System*>&& systems) {
 //        LOG_DEBUG << "hardware concurrency " << std::thread::hardware_concurrency();
-        frame_tp now = steady_clock::now();
+        frame_tp now = frame_tp(TrillekGame::GetOS().GetTime());
         for (auto i = 0; i < nr_thread; ++i) {
             System* sys = nullptr;
             if (! systems.empty()) {
@@ -44,7 +45,6 @@ namespace trillek {
         }
 
         while (1) {
-
             std::shared_ptr<TaskRequestBase> task;
 
             {
@@ -52,12 +52,16 @@ namespace trillek {
                 std::unique_lock<std::mutex> locker(m_queue);
                 while (taskqueue.empty()
                        || ! taskqueue.top()->IsNow()
-                       || steady_clock::now() >= next_frame_tp) {
+                       || frame_tp(TrillekGame::GetOS().GetTime()) >= next_frame_tp) {
                     auto max_timepoint = taskqueue.empty() ? next_frame_tp :
                                                                 std::min(next_frame_tp, taskqueue.top()->Timepoint());
                     if (queuecheck.wait_until(locker, max_timepoint) == std::cv_status::timeout) {
                         // we reach timeout
-                        if (steady_clock::now() >= next_frame_tp) {
+                        if (TrillekGame::GetTerminateFlag()) {
+                            // TODO: save the state of the system
+                            return;
+                        }
+                        if (frame_tp(TrillekGame::GetOS().GetTime()) >= next_frame_tp) {
                             handleEvents_functor(next_frame_tp);
                             runBatch_functor();
                             next_frame_tp += one_frame;
