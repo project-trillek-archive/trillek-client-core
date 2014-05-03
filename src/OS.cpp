@@ -1,6 +1,7 @@
 #include "OS.h"
 
 #include <iostream>
+#include "TrillekGame.h"
 
 #ifdef __APPLE__
 // Needed so we can disable retina support for our window.
@@ -82,6 +83,8 @@ namespace trillek {
 
         glfwGetCursorPos(this->window, &this->oldMouseX, &this->oldMouseY);
 
+        glfwSetWindowCloseCallback(this->window, &OS::TrillekCloseWindowCallback);
+
         return true;
     }
 
@@ -97,8 +100,9 @@ namespace trillek {
         glfwSwapBuffers(this->window);
     }
 
-    void OS::OSMessageLoop() {
+    int OS::OSMessageLoop() {
         glfwPollEvents();
+        return REQUEUE;
     }
 
     int OS::GetWindowWidth() {
@@ -243,5 +247,9 @@ namespace trillek {
 
     void OS::SetMousePosition(double x, double y) {
         glfwSetCursorPos(this->window, x, y);
+    }
+
+    void OS::TrillekCloseWindowCallback(GLFWwindow* w) {
+        TrillekGame::NotifyCloseWindow();
     }
 }

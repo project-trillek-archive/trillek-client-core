@@ -53,9 +53,9 @@ namespace trillek {
         /**
          * \brief Processes events in the OS message event loop.
          *
-         * \return void
+         * \return int return code for the scheduler
          */
-        void OSMessageLoop();
+        int OSMessageLoop();
 
         /**
         * \brief Gets the cached window width.
@@ -200,6 +200,14 @@ namespace trillek {
          * \return void
          */
         void DispatchMouseButtonEvent(const int button, const int action, const int mods);
+
+        /** \brief Callback function called when the user tries to close the window
+         *
+         * \param w GLFWwindow* the window to close
+         * \return void
+         *
+         */
+        static void TrillekCloseWindowCallback(GLFWwindow* w);
 
         GLFWwindow* window;
         int width, height; // Current window's client width and height.
