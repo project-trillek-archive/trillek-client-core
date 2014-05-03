@@ -10,12 +10,12 @@ before_install:
     #- wget http://archive.getdeb.net/install_deb/playdeb_0.3-1~getdeb1_all.deb
     #- sudo dpkg -i playdeb_0.3-1~getdeb1_all.deb
     # No ppa for GLFW3 at this time. Compiling by hand!
-    #- sudo apt-get -qq install xorg-dev libglu1-mesa-dev
-    #- git clone https://github.com/glfw/glfw.git
-    #- cd glfw
-    #- CMAKE_CXX_FLAGS=-fPIC CMAKE_C_FLAGS=-fPIC cmake -DCMAKE_INSTALL_PREFIX=/usr -DBUILD_SHARED_LIBS:bool=true .
-    #- sudo make install
-    #- cd ..
+    - sudo apt-get -qq install xorg-dev libglu1-mesa-dev
+    - git clone https://github.com/glfw/glfw.git
+    - cd glfw
+    - CMAKE_CXX_FLAGS=-fPIC CMAKE_C_FLAGS=-fPIC cmake -DCMAKE_INSTALL_PREFIX=/usr -DBUILD_SHARED_LIBS:bool=true .
+    - sudo make install
+    - cd ..
 install:
     # Install libstdv++ 4.8 and clang
     - sudo apt-get -qq install libstdc++-4.8-dev clang-3.3
@@ -23,7 +23,7 @@ install:
     - if [ "$CXX" = "g++" ]; then sudo apt-get install -qq g++-4.8; fi
     - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
     # GLEW, GLM
-    #- sudo apt-get -q -y install libglew-dev libglm-dev
+    - sudo apt-get -q -y install libglew-dev libglm-dev
     # OpenAL, Vorbis and OGG
     #- sudo apt-get -q -y install libogg-dev libvorbis-dev libopenal-dev
     # Bullet
@@ -44,7 +44,6 @@ before_script:
     - cmake -DTCC_BUILD_TESTS=True ..
 script:
     - make
-    - cd ..
     - cd bin
     - ./TCCTests
 
