@@ -13,6 +13,11 @@
 namespace trillek {
     std::function<void(std::shared_ptr<TaskRequest<chain_t>>&&,frame_unit&&)> TaskRequest<chain_t>::queue_task;
 
+    time_point<steady_clock, std::chrono::duration<double, std::ratio<1>>> TaskRequestBase::Now() const {
+        return time_point<steady_clock, std::chrono::duration<double, std::ratio<1>>>(TrillekGame::GetOS().GetTime());
+    }
+
+
     void TrillekScheduler::Initialize(unsigned int nr_thread, std::queue<System*>&& systems) {
 //        LOG_DEBUG << "hardware concurrency " << std::thread::hardware_concurrency();
         frame_tp now = frame_tp(TrillekGame::GetOS().GetTime());

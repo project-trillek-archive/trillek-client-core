@@ -45,12 +45,14 @@ namespace trillek {
 
         virtual void RunTask() = 0;
 
+        time_point<steady_clock, std::chrono::duration<double, std::ratio<1>>> Now() const;
+
         bool IsNow() const {
-            return timestamp < steady_clock::now();
+            return timestamp < Now();
         }
 
         void Reschedule(frame_unit&& delay) {
-            timestamp = steady_clock::now() + delay;
+            timestamp = Now() + delay;
         }
 
         frame_tp Timepoint() const {
@@ -66,12 +68,12 @@ namespace trillek {
     public:
         TaskRequest(T&& funct) :
             funct(std::forward<T>(funct)),
-            TaskRequestBase(steady_clock::now())
+            TaskRequestBase(Now())
             {};
 
         TaskRequest(T&& funct, const frame_unit& delay) :
             funct(std::forward<T>(funct)),
-            TaskRequestBase(steady_clock::now() + delay)
+            TaskRequestBase(Now() + delay)
             {};
 
         virtual ~TaskRequest() {};
@@ -89,13 +91,13 @@ namespace trillek {
         TaskRequest(const chain_t& chain) :
             block(chain.cbegin()),
             block_end(chain.cend()),
-            TaskRequestBase(steady_clock::now())
+            TaskRequestBase(Now())
             {};
 
         TaskRequest(const chain_t& chain, const frame_unit& delay) :
             block(chain.cbegin()),
             block_end(chain.cend()),
-            TaskRequestBase(steady_clock::now() + delay)
+            TaskRequestBase(Now() + delay)
             {};
 
         TaskRequest(chain_t&& chain) = delete;
@@ -106,14 +108,14 @@ namespace trillek {
             chain(std::move(chain)),
             block(this->chain->cbegin()),
             block_end(this->chain->cend()),
-            TaskRequestBase(steady_clock::now())
+            TaskRequestBase(Now())
             {};
 
         TaskRequest(std::shared_ptr<chain_t>&& chain, const frame_unit& delay) :
             chain(std::move(chain)),
             block(this->chain->cbegin()),
             block_end(this->chain->cend()),
-            TaskRequestBase(steady_clock::now() + delay)
+            TaskRequestBase(Now() + delay)
             {};
 
         virtual ~TaskRequest() {};
