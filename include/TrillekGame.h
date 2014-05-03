@@ -3,6 +3,7 @@
 
 #include "TrillekScheduler.h"
 #include "FakeSystem.h"
+#include "OS.h"
 
 namespace trillek {
     class TrillekGame {
@@ -18,6 +19,13 @@ namespace trillek {
          */
         static TrillekScheduler& GetScheduler() { return scheduler; };
 
+        /** \brief Return the GLFW instance
+         *
+         * \return OS& the instance
+         *
+         */
+        static OS& GetOS() { return glfw_os; };
+
         /** \brief Get the FakeSystem
          *
          * \return FakeSystem& the fake system
@@ -29,6 +37,7 @@ namespace trillek {
 
         static TrillekScheduler scheduler;
         static FakeSystem fake_system;
+        static OS glfw_os;
    };
 }
 
