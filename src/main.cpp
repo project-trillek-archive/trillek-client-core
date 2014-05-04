@@ -9,8 +9,19 @@ int main(int argCount, char **argValues) {
 
     std::queue<trillek::System*> systems;
     systems.push(&trillek::TrillekGame::GetFakeSystem());
-    trillek::TrillekGame::GetScheduler().Initialize(5, std::move(systems));
 
+    // mutex held by the scheduler
+    std::mutex scheduler_terminating_mutex;
+    // start the scheduler in another thread
+    std::thread tp(
+                   &trillek::TrillekScheduler::Initialize,
+                   &trillek::TrillekGame::GetScheduler(),
+                   5,
+                   std::move(systems),
+                   std::ref(scheduler_terminating_mutex));
+    tp.detach();
+
+    // schedule the OS loop task
     auto olf = new trillek::chain_t{std::bind(&trillek::OS::OSMessageLoop, std::ref(os))};
     auto os_loop_functor = std::make_shared<trillek::TaskRequest<trillek::chain_t>>(std::shared_ptr<trillek::chain_t>(olf));
     trillek::TrillekGame::GetScheduler().Queue(std::move(os_loop_functor));
@@ -22,8 +33,11 @@ int main(int argCount, char **argValues) {
         // the thread is blocked here
         trillek::TrillekGame::GetCloseWindowCV().wait(locker, [&]() { return os.Closing(); });
     }
-    // TODO: Tell the user we are waiting all systems to terminate
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    // wait the scheduler thread to terminate
+    while (! scheduler_terminating_mutex.try_lock()) {
+        // TODO: Display something on the screen
+        std::cout << "Closing...";
+    };
     os.Terminate();
     return 0;
 }

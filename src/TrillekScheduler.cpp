@@ -1,7 +1,5 @@
 #include "TrillekScheduler.h"
 #include <thread>
-//#include <iostream>
-//#include <utmpx.h>
 #include <iomanip>
 #include <ctime>
 #include <iostream>
@@ -18,22 +16,30 @@ namespace trillek {
     }
 
 
-    void TrillekScheduler::Initialize(unsigned int nr_thread, std::queue<System*>&& systems) {
-//        LOG_DEBUG << "hardware concurrency " << std::thread::hardware_concurrency();
+    void TrillekScheduler::Initialize(unsigned int nr_thread, std::queue<System*>&& systems, std::mutex& m) {
+        // lock the mutex
+        std::lock_guard<std::mutex> locker(m);
+        std::list<std::thread> thread_list;
+        // initialize
         frame_tp now = frame_tp(TrillekGame::GetOS().GetTime());
+        TaskRequest<chain_t>::Initialize([&](std::shared_ptr<TaskRequest<chain_t>>&& c, frame_unit&& delay)
+                                        {
+                                            c->Reschedule(std::move(delay));
+                                            Queue(std::move(c));
+                                        });
+        // prepare threads
         for (auto i = 0; i < nr_thread; ++i) {
             System* sys = nullptr;
             if (! systems.empty()) {
                 sys = systems.front();
                 systems.pop();
             }
-            std::thread(std::bind(&TrillekScheduler::DayWork, std::ref(*this), now, sys)).detach();
+            thread_list.push_back(std::thread(std::bind(&TrillekScheduler::DayWork, std::ref(*this), now, sys)));
         }
-        TaskRequest<chain_t>::Initialize([&](std::shared_ptr<TaskRequest<chain_t>>&& c, frame_unit&& delay)
-                                        {
-                                            c->Reschedule(std::move(delay));
-                                            Queue(std::move(c));
-                                        });
+        // run threads and block
+        for (auto& t : thread_list) {
+            t.join();
+        }
     }
 
     void TrillekScheduler::DayWork(const frame_tp& now, System* system) {
