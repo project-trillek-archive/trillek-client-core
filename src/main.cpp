@@ -4,10 +4,14 @@
 #include <chrono>
 
 int main(int argCount, char **argValues) {
+    // create the window
     auto& os = trillek::TrillekGame::GetOS();
     os.InitializeWindow(800, 600, "Trillek Client Core", 3, 0);
 
+    // we register the systems in this queue
     std::queue<trillek::System*> systems;
+
+    // register the fake system. Comment this to cancel
     systems.push(&trillek::TrillekGame::GetFakeSystem());
 
     // mutex held by the scheduler
@@ -33,6 +37,7 @@ int main(int argCount, char **argValues) {
         // the thread is blocked here
         trillek::TrillekGame::GetCloseWindowCV().wait(locker, [&]() { return os.Closing(); });
     }
+
     // wait the scheduler thread to terminate
     while (! scheduler_terminating_mutex.try_lock()) {
         // TODO: Display something on the screen
