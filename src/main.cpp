@@ -36,7 +36,6 @@ int main(int argCount, char **argValues) {
     // wait the scheduler thread to terminate
     while (! scheduler_terminating_mutex.try_lock()) {
         // TODO: Display something on the screen
-        std::cout << "Closing...";
     };
     os.Terminate();
     return 0;

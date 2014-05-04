@@ -20,6 +20,10 @@ namespace trillek {
         void RunBatch() const override {
             std::cout << "run batch" << std::endl;
         };
+
+        void Terminate() override {
+            std::cout << "terminating" << std::endl;
+        };
     };
 }
 

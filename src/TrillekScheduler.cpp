@@ -47,12 +47,15 @@ namespace trillek {
 
         std::function<void(const frame_tp&)> handleEvents_functor;
         std::function<void(void)> runBatch_functor;
+        std::function<void(void)> terminate_functor;
         if (system) {
             handleEvents_functor = std::bind(&System::HandleEvents, std::ref(*system), std::placeholders::_1);
             runBatch_functor = std::bind(&System::RunBatch, std::cref(*system));
+            terminate_functor = std::bind(&System::Terminate, std::ref(*system));
         } else {
             handleEvents_functor = [](const frame_tp& timepoint) {};
             runBatch_functor = [] () {};
+            terminate_functor = [] () {};
         }
 
         while (1) {
@@ -69,7 +72,8 @@ namespace trillek {
                     if (queuecheck.wait_until(locker, max_timepoint) == std::cv_status::timeout) {
                         // we reach timeout
                         if (TrillekGame::GetTerminateFlag()) {
-                            // TODO: save the state of the system
+                            // save the state of the system
+                            terminate_functor();
                             return;
                         }
                         if (frame_tp(TrillekGame::GetOS().GetTime()) >= next_frame_tp) {

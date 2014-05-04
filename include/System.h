@@ -37,6 +37,13 @@ namespace trillek {
          *
          */
         virtual void RunBatch() const = 0;
+
+        /** \brief Save the data and terminate the system
+         *
+         * This function is called when the program is closing
+         *
+         */
+        virtual void Terminate() = 0;
     };
 }
 
