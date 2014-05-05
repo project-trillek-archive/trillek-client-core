@@ -11,8 +11,8 @@
 namespace trillek {
     std::function<void(std::shared_ptr<TaskRequest<chain_t>>&&,frame_unit&&)> TaskRequest<chain_t>::queue_task;
 
-    time_point<steady_clock, std::chrono::duration<double, std::ratio<1>>> TaskRequestBase::Now() const {
-        return time_point<steady_clock, std::chrono::duration<double, std::ratio<1>>>(TrillekGame::GetOS().GetTime());
+    glfw_tp TaskRequestBase::Now() const {
+        return glfw_tp(TrillekGame::GetOS().GetTime());
     }
 
 
@@ -34,7 +34,8 @@ namespace trillek {
                 sys = systems.front();
                 systems.pop();
             }
-            thread_list.push_back(std::thread(std::bind(&TrillekScheduler::DayWork, std::ref(*this), now, sys)));
+            auto f = std::bind(&TrillekScheduler::DayWork, std::ref(*this), now, sys);
+            thread_list.push_back(std::thread(std::move(f)));
         }
         // run threads and block
         for (auto& t : thread_list) {

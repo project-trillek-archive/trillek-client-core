@@ -20,7 +20,7 @@ namespace trillek {
          * prepared and stored temporarily to be retrieved by RunBatch().
          *
          */
-        virtual void HandleEvents(const std::chrono::time_point<std::chrono::steady_clock, frame_unit>& timepoint) = 0;
+        virtual void HandleEvents(const frame_tp& timepoint) = 0;
 
         /** \brief Make all pre-update or post-update work.
          *

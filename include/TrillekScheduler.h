@@ -29,7 +29,8 @@ namespace trillek {
     typedef std::list<block_t> chain_t;
 
     typedef duration<double, std::ratio<1,60>> frame_unit;
-    typedef time_point<steady_clock, frame_unit> frame_tp;
+    typedef time_point<system_clock, frame_unit> frame_tp;
+    typedef time_point<system_clock, duration<double, std::ratio<1>>> glfw_tp;
 
     class TaskRequestBase {
     public:
@@ -45,7 +46,7 @@ namespace trillek {
 
         virtual void RunTask() = 0;
 
-        time_point<steady_clock, std::chrono::duration<double, std::ratio<1>>> Now() const;
+        glfw_tp Now() const;
 
         bool IsNow() const {
             return timestamp < Now();

@@ -13,8 +13,8 @@ namespace trillek {
         FakeSystem() {};
         virtual ~FakeSystem() {};
 
-        void HandleEvents(const std::chrono::time_point<std::chrono::steady_clock, frame_unit>& timepoint) override {
-            std::cout << "handle events" << std::endl;
+        void HandleEvents(const frame_tp& timepoint) override {
+            std::cout << "handle events of frame " << timepoint.time_since_epoch().count() << std::endl;
         };
 
         void RunBatch() const override {
