@@ -47,6 +47,7 @@
 
 
 #include "MetaMacros.h"
+#include "AssertionMacros.h"
 #include "ClassBase.h"
 #include "PlatformClasses.h"
 

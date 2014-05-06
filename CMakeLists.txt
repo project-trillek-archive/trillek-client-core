@@ -38,6 +38,7 @@ SET(TCC_INCLUDE_DIRS
 
 SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} ${TCC_INCLUDE_DIRS})
 INCLUDE_DIRECTORIES("${TCC_INCLUDE_DIRS}")
+MESSAGE("DEBUG: Include Dirs = ${TCC_INCLUDE_DIRS}")
 
 # LEGACY - Keep these so merges don't instantly break the build.
 SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} ${CMAKE_SOURCE_DIR}/include/)
@@ -131,7 +132,7 @@ IF (APPLE) # Mac OSX
 	SET(CMAKE_OSX_DEPLOYMENT_TARGET 10.7)
 
 	# Need Core Foundation and libobjc.
-	SET(OSX_LIBRARIES "-framework CoreFoundation /usr/lib/libobjc.dylib")
+	SET(OSX_LIBRARIES "-framework Foundation -framework CoreFoundation /usr/lib/libobjc.dylib")
 ENDIF (APPLE)
 
 SET(TCC_BUILD_TESTS CACHE BOOL "Parse the tests directory")

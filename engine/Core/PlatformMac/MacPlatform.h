@@ -15,6 +15,10 @@
     #include <Cocoa/Cocoa.h>
 #endif
 
+// OS X defines these in one of the system headers.
+#undef check
+#undef verify
+#undef require
 
 //-----------------------------------------------------------------------------
 
