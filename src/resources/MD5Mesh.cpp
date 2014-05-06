@@ -322,13 +322,13 @@ namespace trillek { namespace resource {
 
         // Copy the triangle indexes.
         for (size_t i = 0; i < this->meshes.size(); ++i) {
-            if (this->meshGroups[i]->indexList.size() < this->meshes[i]->tris.size()) {
-                this->meshGroups[i]->indexList.resize(this->meshes[i]->tris.size());
+            if (this->meshGroups[i]->indicies.size() < this->meshes[i]->tris.size()) {
+                this->meshGroups[i]->indicies.resize(this->meshes[i]->tris.size() * 3);
             }
             for (size_t j = 0; j < this->meshes[i]->tris.size(); ++j) {
-                this->meshGroups[i]->indexList[j].index[0] = this->meshes[i]->tris[j].verts[0];
-                this->meshGroups[i]->indexList[j].index[1] = this->meshes[i]->tris[j].verts[1];
-                this->meshGroups[i]->indexList[j].index[2] = this->meshes[i]->tris[j].verts[2];
+                this->meshGroups[i]->indicies.push_back(this->meshes[i]->tris[j].verts[0]);
+                this->meshGroups[i]->indicies.push_back(this->meshes[i]->tris[j].verts[1]);
+                this->meshGroups[i]->indicies.push_back(this->meshes[i]->tris[j].verts[2]);
             }
         }
     }

@@ -12,20 +12,15 @@ namespace trillek { namespace resource {
     struct VertexData {
         VertexData() : position(0.0f, 0.0f, 0.0f) { }
         glm::vec3 position;
-        glm::vec3 color;
+        glm::vec4 color;
         glm::vec3 normal;
         glm::vec2 uv;
-    };
-
-    // Face information
-    struct Face {
-        unsigned int index[3]; // Vertex index
     };
 
     // Container for holding sub-mesh groups.
     struct MeshGroup {
         std::vector<VertexData> verts;
-        std::vector<Face> indexList;
+        std::vector<unsigned int> indicies;
     };
 
     class Mesh : public ResourceBase {
