@@ -7,8 +7,25 @@
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 
+#include <list>
+#include <memory>
+#include <vector>
+
 namespace trillek {
+namespace resource {
+class Material;
+}
+
 namespace graphics {
+class Renderable;
+
+struct MaterialGroup {
+    std::shared_ptr<resource::Material> mat;
+    // Each vector contains a list of renderables.
+    // The vector's index matches the texture index in the material.
+    std::vector<std::list<std::shared_ptr<Renderable>>> renderables;
+};
+
 class GL {
 public:
 
@@ -40,6 +57,23 @@ public:
     * \return void
     */
     void SetViewportSize(const unsigned int width, const unsigned int height);
+
+    /**
+    * \brief Adds a Renderable component to the system..
+    *
+    * \param const unsigned int entityID The entity ID the compoennt belongs to.
+    * \param std::shared_ptr<Renderable> ren The Renderable to add.
+    * \return void
+    */
+    void AddRenderable(const unsigned int entityID, std::shared_ptr<Renderable> ren);
+
+    /**
+    * \brief Removes a Renderable component from the system..
+    *
+    * \param const unsigned int entityID The entity ID of the compoennt to remove.
+    * \return void
+    */
+    void RemoveRenderable(const unsigned int entityID);
 private:
     int OpenGLVersion[2];
     glm::mat4 proj;
@@ -47,6 +81,10 @@ private:
 
     unsigned int windowWidth; // Store the width of our window
     unsigned int windowHeight; // Store the height of our window
+
+    // A list of the renderables in the system. Stored as a pair (entity ID, Renderable).
+    std::list<std::pair<unsigned int, std::shared_ptr<Renderable>>> renderables;
+    std::list<MaterialGroup> matGroups;
 };
 
 }
