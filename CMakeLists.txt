@@ -45,13 +45,15 @@ ELSEIF ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang") # Clang 3.3 and up support c
   UNSET(CLANG_MIN_VERSION)
 ELSEIF (MSVC AND (MSVC_VERSION GREATER 1699))
   MESSAGE("Supported Visual Studio!")
+  SET(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH}
+    "$ENV{PROGRAMFILES}/Microsoft Visual Studio 12.0/VC")
 ELSE ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
   MESSAGE(FATAL_ERROR "Your C++ compiler does not support C++11.")
 ENDIF ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
 
 SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} ${CMAKE_SOURCE_DIR}/include/)
 INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/include/")
-  
+
 # If we are on windows add in the local search directories as well.
 IF (WIN32 AND NOT MINGW) # Windows
   SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} ${CMAKE_SOURCE_DIR}/lib/include/)
