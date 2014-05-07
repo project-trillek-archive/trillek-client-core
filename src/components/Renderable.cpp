@@ -85,5 +85,6 @@ void Renderable::SetMaterial(std::shared_ptr<resource::Material> m) {
 std::shared_ptr<resource::Material> Renderable::GetMaterial() {
     return this->mat;
 }
+
 }
 }

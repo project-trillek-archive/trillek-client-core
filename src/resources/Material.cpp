@@ -44,5 +44,6 @@ void Material::ActivateTexture(const size_t index, const TEXTURE_TARGET target) 
         glBindTexture(GL_TEXTURE_2D, texID);
     }
 }
+
 }
 }

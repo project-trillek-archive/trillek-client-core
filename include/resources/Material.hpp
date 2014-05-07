@@ -83,6 +83,7 @@ private:
 
     std::shared_ptr<resource::Shader> shader;
 };
+
 }
 }
 

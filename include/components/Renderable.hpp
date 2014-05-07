@@ -92,6 +92,7 @@ private:
 
     std::shared_ptr<resource::Material> mat;
 };
+
 }
 }
 
