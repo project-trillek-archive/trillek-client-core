@@ -39,7 +39,7 @@ void GL::Update(const double delta) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); // Clear required buffers
 
     for (auto& matgrp : this->matGroups) {
-        auto& shader = matgrp.mat->GetShader();
+        const auto& shader = matgrp.mat->GetShader();
         shader->Use();
 
         glUniformMatrix4fv((*shader)("view"), 1, GL_FALSE, &this->view[0][0]);
@@ -47,7 +47,7 @@ void GL::Update(const double delta) {
         for (size_t i = 0; i < matgrp.renderables.size(); ++i) {
             matgrp.mat->ActivateTexture(i, resource::Material::TEX0);
             for (auto& ren : matgrp.renderables[i]) {
-                auto& bufgrp = ren->GetBufferGroup(i);
+                const auto& bufgrp = ren->GetBufferGroup(i);
                 glBindVertexArray(bufgrp->vao);
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufgrp->ibo);
                 glDrawElements(GL_TRIANGLES, bufgrp->iboCount, GL_UNSIGNED_INT, 0);
@@ -88,7 +88,7 @@ void GL::AddRenderable(const unsigned int entityID, std::shared_ptr<Renderable> 
     this->renderables.push_back(std::make_pair(entityID, ren));
 
     // Check if there is a material group for the renderable's material.
-    auto& mat = ren->GetMaterial();
+    const auto& mat = ren->GetMaterial();
     if (!mat) {
         // TODO: Insert with a default material.
         return;
@@ -111,7 +111,7 @@ void GL::AddRenderable(const unsigned int entityID, std::shared_ptr<Renderable> 
         mg.renderables.push_back(renlist);
     }
 
-    auto& shader = mat->GetShader();
+    const auto& shader = mat->GetShader();
     shader->Use();
     shader->AddUniform("view");
     shader->AddUniform("projection");
