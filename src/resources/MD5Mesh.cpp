@@ -164,7 +164,9 @@ namespace trillek { namespace resource {
                 while (std::getline(f, line)) {
                     if (line.find("\"") != std::string::npos) {
                         ss.str(CleanString(line));
-                        this->joints.push_back(std::make_unique<Joint>(ParseJoint(ss)));
+                        std::unique_ptr<Joint> joint( new Joint(ParseJoint(ss)) );
+                        this->joints.push_back( std::move(joint));
+                        //this->joints.push_back(std::make_unique<Joint>(ParseJoint(ss)));
                     }
                     // Check if the line contained the closing brace. This is done after parsing
                     // as the line might have the ending brace on it.
