@@ -68,7 +68,7 @@ void GL::SetViewportSize(const unsigned int width, const unsigned int height) {
 
     // update projection matrix based on new aspect ratio
     this->proj = glm::perspective(
-        45.0f,
+        glm::radians(45.0f),
         aspectRatio,
         0.1f,
         10000.0f
