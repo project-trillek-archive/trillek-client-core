@@ -25,7 +25,7 @@ static void GenCRC32Table()
     crc32_table_computed = true;
 }
 
-void CRC32::Update(const std::string &d) {
+void Crc32::Update(const std::string &d) {
     uint32_t c = ldata;
     std::string::size_type n, l = d.length();
     if(!crc32_table_computed)
@@ -35,7 +35,7 @@ void CRC32::Update(const std::string &d) {
     }
     ldata = c;
 }
-void CRC32::Update(const void *dv, size_t l) {
+void Crc32::Update(const void *dv, size_t l) {
     uint32_t c = ldata;
     std::string::size_type n;
     char * d = (char*)dv;
@@ -52,9 +52,11 @@ void Adler32::Update(const std::string &d) {
     std::string::size_type n, l = d.length();
     for(n = 0; n < l; n++) {
         c1 = (c1 + d[n]);
-        while(c1 >= 65521) c1 -= 65521;
+        while(c1 >= 65521ul)
+            c1 -= 65521;
         c2 = (c2 + c1);
-        while(c2 >= 65521) c1 -= 65521;
+        while(c2 >= 65521ul)
+            c2 -= 65521;
     }
     ldata = (c2 << 16) + c1;
 }

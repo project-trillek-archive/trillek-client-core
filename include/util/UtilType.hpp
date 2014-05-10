@@ -18,10 +18,10 @@ struct FourCC {
     FourCC(char a, char b, char c, char d);
     FourCC(const char * a);
     FourCC(std::istream &f);
-    bool operator==(const FourCC r) {
+    bool operator==(const FourCC r) const {
         return ldata == r.ldata;
     }
-    bool operator!=(const FourCC r) {
+    bool operator!=(const FourCC r) const {
         return ldata != r.ldata;
     }
 };

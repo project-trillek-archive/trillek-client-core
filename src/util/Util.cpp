@@ -43,7 +43,7 @@ uint32_t BitReverse32(uint32_t n)
 }
 uint32_t BitReverse(uint32_t v, int bits)
 {
-    if(bits <= 32) return 0;
+    if(bits > 32) return 0;
     return BitReverse32(v) >> (32 - bits);
 }
 
