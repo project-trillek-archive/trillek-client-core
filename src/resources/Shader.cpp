@@ -59,6 +59,7 @@ namespace trillek {
                 glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLogLength);
                 GLchar *infoLog = new GLchar[infoLogLength];
                 glGetShaderInfoLog(shader, infoLogLength, NULL, infoLog);
+                std::cerr << "Shader Compile: " << infoLog << '\n';
                 delete[] infoLog;
             }
             _shaders[_totalShaders++] = shader;
@@ -93,6 +94,7 @@ namespace trillek {
                 glGetProgramiv(_program, GL_INFO_LOG_LENGTH, &infoLogLength);
                 GLchar *infoLog = new GLchar[infoLogLength];
                 glGetProgramInfoLog(_program, infoLogLength, NULL, infoLog);
+                std::cerr << "Shader Link: " << infoLog << '\n';
                 delete[] infoLog;
             }
 
