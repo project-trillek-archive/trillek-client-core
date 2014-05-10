@@ -4,6 +4,7 @@
 #include "tests/AtomicQueueTest.h"
 #include "tests/AtomicMapTest.h"
 #include "tests/ResourceSystemTest.h"
+#include "tests/UtilityTest.h"
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);

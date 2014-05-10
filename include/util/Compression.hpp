@@ -5,6 +5,8 @@
 #include <memory>
 #include <stdint.h>
 
+#include "util/UtilType.hpp"
+
 namespace trillek {
 namespace util {
 
@@ -31,8 +33,8 @@ public:
 };
 
 namespace algorithm {
-    typedef struct
-    {
+
+    typedef struct {
         uint16_t fast[512];
         uint16_t firstcode[16];
         int maxcode[17];
@@ -42,6 +44,10 @@ namespace algorithm {
 
         int Build(uint8_t *sizelist, int num);
     } Huffman;
+
+    enum class InflateStateNumber : int {
+        HEADER,
+    };
 
     struct InflateState {
         std::string indata;
@@ -53,15 +59,15 @@ namespace algorithm {
         uint32_t bit_buffer;
 
         bool errored;
-        char const * lasterror;
+        ErrorReturn<void> error_state;
 
         Huffman length, distance;
 
-        int readstate;
+        InflateStateNumber readstate;
 
         InflateState();
-        int FetchByte();
-        uint32_t GetBits(int n);
+        ErrorReturn<void> FetchByte();
+        ErrorReturn<uint32_t> GetBits(int n);
     };
 
     class Inflate : public DecompressionMethod {
@@ -74,8 +80,9 @@ namespace algorithm {
         bool DecompressHasOutput();
         std::string DecompressGetOutput();
     protected:
-        std::unique_ptr<InflateState> state;
+        InflateState state;
     };
+
 } // algorithm
 
 } // util
