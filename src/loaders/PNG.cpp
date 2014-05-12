@@ -8,7 +8,7 @@ namespace resource {
 struct PNGChunk {
     uint32_t len;
     util::FourCC type;
-    util::algorithm::CRC32 crc;
+    util::algorithm::Crc32 crc;
 
     bool IsCritical() {
         return (type.cdata[0] & 32) == 0;

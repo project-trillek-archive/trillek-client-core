@@ -49,8 +49,20 @@ public:
     ErrorReturn(const ErrorReturn &) = default;
     ErrorReturn& operator=(const ErrorReturn &) = default;
 
+    ErrorReturn(RT val, const ErrorReturn<void> &rv) : value(val) {
+        error_code = rv.error_code;
+        error_text = rv.error_text;
+    }
+    ErrorReturn(RT val, ErrorReturn<void> &&rv) : value(val) {
+        error_code = rv.error_code;
+        error_text = std::move(rv.error_text);
+    }
     operator bool() {
         return error_code != 0;
+    }
+
+    RT& operator*() {
+        return value;
     }
 
     ErrorReturn(ErrorReturn && rv) {
@@ -96,6 +108,16 @@ public:
         error_text = std::string(rv.error_text);
         return *this;
     }
+    ErrorReturn& operator=(ErrorReturn && rv) {
+        error_code = rv.error_code;
+        error_text = std::move(rv.error_text);
+        return *this;
+    }
+    template<class T>
+    ErrorReturn<T> value (T val) {
+        return ErrorReturn<T>(val, *this);
+    }
+
     template<typename T>
     T& operator=(ErrorReturn<T> & rv) {
         error_code = rv.error_code;
@@ -119,6 +141,8 @@ public:
         return rv.value;
     }
 };
+
+typedef ErrorReturn<void> void_er;
 
 uint16_t BitReverse16(uint16_t n);
 uint32_t BitReverse32(uint32_t n);

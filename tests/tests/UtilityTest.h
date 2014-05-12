@@ -81,6 +81,8 @@ namespace util {
         EXPECT_EQ(std::string(""), T_NoErrorRetDef().error_text);
         EXPECT_EQ(0, T_NoErrorRetDef().error_code);
 
+        EXPECT_EQ(std::string("test"), *T_NoErrorRet());
+
         EXPECT_EQ(std::string("test"), (sts = T_NoErrorRet()).value);
         EXPECT_EQ(std::string("NO ERROR"), sts.error_text);
         EXPECT_EQ(0, sts.error_code);
@@ -104,6 +106,16 @@ namespace util {
     TEST(UtilTest, ErrorReturnVoidClass) {
         EXPECT_EQ(false, ((bool)T_NoErrorVDef()));
         ErrorReturn<void> st;
+
+        EXPECT_EQ(std::string("NO ERROR"), (st = T_NoError()).error_text);
+        EXPECT_EQ(std::string("NO ERROR"), st.error_text);
+        EXPECT_EQ(0, st.error_code);
+        EXPECT_EQ(false, ((bool)st));
+
+        EXPECT_EQ(std::string("ERROR 5"), (st = T_Error()).error_text);
+        EXPECT_EQ(std::string("ERROR 5"), st.error_text);
+        EXPECT_EQ(5, st.error_code);
+        EXPECT_EQ(true, ((bool)st));
 
         EXPECT_EQ(std::string("test"), (st = T_NoErrorRet()));
         EXPECT_EQ(std::string("NO ERROR"), st.error_text);

@@ -90,6 +90,7 @@ file(GLOB_RECURSE TCCTests_SRC "tests/*.h" "main.cpp" "src/*.cpp")
 file(GLOB TCCExtra_SRC
 "${TCCSRC}/util/Util.cpp"
 "${TCCSRC}/util/Checksum.cpp"
+"${TCCSRC}/util/Compression.cpp"
 )
 
 foreach(flag_var

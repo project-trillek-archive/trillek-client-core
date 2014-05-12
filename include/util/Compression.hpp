@@ -10,15 +10,21 @@
 namespace trillek {
 namespace util {
 
+typedef std::basic_string<
+    unsigned char,
+    std::char_traits<unsigned char>,
+    std::allocator<unsigned char>
+> DataString;
+
 class CompressionMethod {
 public:
     CompressionMethod() {}
     virtual ~CompressionMethod() {};
     virtual bool CompressStart() = 0;
     virtual bool CompressEnd() = 0;
-    virtual bool CompressData(std::string) = 0;
+    virtual bool CompressData(DataString) = 0;
     virtual bool CompressHasOutput() = 0;
-    virtual std::string CompressGetOutput() = 0;
+    virtual DataString CompressGetOutput() = 0;
 };
 class DecompressionMethod {
 public:
@@ -27,14 +33,14 @@ public:
 
     virtual bool DecompressStart() = 0;
     virtual bool DecompressEnd() = 0;
-    virtual bool DecompressData(std::string) = 0;
+    virtual bool DecompressData(DataString) = 0;
     virtual bool DecompressHasOutput() = 0;
-    virtual std::string DecompressGetOutput() = 0;
+    virtual DataString DecompressGetOutput() = 0;
 };
 
 namespace algorithm {
 
-    typedef struct {
+    struct Huffman {
         uint16_t fast[512];
         uint16_t firstcode[16];
         int maxcode[17];
@@ -43,31 +49,48 @@ namespace algorithm {
         uint16_t value[288];
 
         int Build(uint8_t *sizelist, int num);
-    } Huffman;
+    };
+
+    struct BitStreamDecoder {
+        DataString indata;
+        unsigned long inpos;
+        int num_bits;
+        uint32_t bit_buffer;
+
+        BitStreamDecoder();
+
+        /** \brief put data into the stream
+         */
+        void_er AppendData(const DataString & in);
+
+        // used for bit buffer filling
+        void_er FetchByte();
+        void_er FetchFull();
+
+        /** \brief get bits out of the stream
+         */
+        ErrorReturn<uint32_t> GetBits(int n);
+
+    };
 
     enum class InflateStateNumber : int {
         HEADER,
     };
 
     struct InflateState {
-        std::string indata;
-        unsigned long inpos;
-        std::string outdata;
+        BitStreamDecoder instream;
+
+        DataString outdata;
         unsigned long outpos;
 
-        int num_bits;
-        uint32_t bit_buffer;
-
         bool errored;
-        ErrorReturn<void> error_state;
+        void_er error_state;
 
         Huffman length, distance;
 
         InflateStateNumber readstate;
 
         InflateState();
-        ErrorReturn<void> FetchByte();
-        ErrorReturn<uint32_t> GetBits(int n);
     };
 
     class Inflate : public DecompressionMethod {
@@ -76,9 +99,9 @@ namespace algorithm {
         ~Inflate();
         bool DecompressStart();
         bool DecompressEnd();
-        bool DecompressData(std::string);
+        bool DecompressData(DataString);
         bool DecompressHasOutput();
-        std::string DecompressGetOutput();
+        DataString DecompressGetOutput();
     protected:
         InflateState state;
     };

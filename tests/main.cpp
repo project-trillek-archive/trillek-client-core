@@ -5,6 +5,7 @@
 #include "tests/AtomicMapTest.h"
 #include "tests/ResourceSystemTest.h"
 #include "tests/UtilityTest.h"
+#include "tests/DecompressorTest.h"
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
