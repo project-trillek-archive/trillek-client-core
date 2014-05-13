@@ -17,46 +17,50 @@
 #include "systems/ResourceSystem.h"
 
 namespace trillek {
-    namespace resource {
-        class Shader : public ResourceBase {
-        public:
-            Shader(void);
-            ~Shader(void);
+namespace resource {
 
-            virtual bool Initialize(const std::vector<Property> &properties);
+class Shader : public ResourceBase {
+public:
+    Shader(void);
+    ~Shader(void);
 
-            void LoadFromString(GLenum whichShader, const std::string source);
-            void LoadFromFile(GLenum whichShader, const std::string filename);
-            void CreateAndLinkProgram();
-            void Use();
-            void UnUse();
-            void AddAttribute(const std::string attribute);
-            void AddUniform(const std::string uniform);
-            GLuint GetProgram() const;
+    virtual bool Initialize(const std::vector<Property> &properties);
 
-            // ISSUE: This is a bit questionable as it violates the principle of least surprise
-            //An indexer that returns the location of the attribute/uniform
-            GLuint operator[](const std::string attribute);
-            GLuint operator()(const std::string uniform);
+    void LoadFromString(GLenum whichShader, const std::string source);
+    void LoadFromFile(GLenum whichShader, const std::string filename);
+    void CreateAndLinkProgram();
+    void Use();
+    void UnUse();
+    void AddAttribute(const std::string attribute);
+    void AddUniform(const std::string uniform);
+    GLuint GetProgram() const;
 
-            //Program deletion
-            void DeleteProgram() { glDeleteProgram(_program); _program = -1; }
-            bool isLoaded() { return _program != 0; }
-            enum ShaderType { VERTEX_SHADER = GL_VERTEX_SHADER, FRAGMENT_SHADER = GL_FRAGMENT_SHADER, GEOMETRY_SHADER };
-        private:
-            enum ShaderIndex { VERTEX_SHADER_INDEX, FRAGMENT_SHADER_INDEX, GEOMETRY_SHADER_INDEX };
-            GLuint	_program;
-            int _totalShaders;
-            GLuint _shaders[3];//0->vertexshader, 1->fragmentshader, 2->geometryshader
-            std::map<std::string, GLuint> _attributeList;
-            std::map<std::string, GLuint> _uniformLocationList;
-        };
-    }
+    // ISSUE: This is a bit questionable as it violates the principle of least surprise
+    //An indexer that returns the location of the attribute/uniform
+    GLuint operator[](const std::string attribute);
+    GLuint operator()(const std::string uniform);
 
-    namespace reflection {
-        template <> inline const char* GetTypeName<resource::Shader>() { return "Shader"; }
-        template <> inline const unsigned int GetTypeID<resource::Shader>() { return 1002; }
-    }
-}
+    //Program deletion
+    void DeleteProgram() { glDeleteProgram(_program); _program = -1; }
+    bool isLoaded() { return _program != 0; }
+    enum ShaderType { VERTEX_SHADER = GL_VERTEX_SHADER, FRAGMENT_SHADER = GL_FRAGMENT_SHADER, GEOMETRY_SHADER };
+private:
+    enum ShaderIndex { VERTEX_SHADER_INDEX, FRAGMENT_SHADER_INDEX, GEOMETRY_SHADER_INDEX };
+    GLuint	_program;
+    int _totalShaders;
+    GLuint _shaders[3];//0->vertexshader, 1->fragmentshader, 2->geometryshader
+    std::map<std::string, GLuint> _attributeList;
+    std::map<std::string, GLuint> _uniformLocationList;
+};
+
+} // End of resource
+
+namespace reflection {
+
+    template <> inline const char* GetTypeName<resource::Shader>() { return "Shader"; }
+    template <> inline const unsigned int GetTypeID<resource::Shader>() { return 1002; }
+
+} // End of reflection
+} // End of trillek
 
 #endif

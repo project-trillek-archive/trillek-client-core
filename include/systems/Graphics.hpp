@@ -13,14 +13,17 @@
 
 namespace trillek {
 namespace resource {
+
 class Material;
-}
+
+} // End of resource
 
 namespace graphics {
+
 class Renderable;
 
 struct MaterialGroup {
-    std::shared_ptr<resource::Material> mat;
+    std::shared_ptr<resource::Material> material;
     // Each vector contains a list of renderables.
     // The vector's index matches the texture index in the material.
     std::vector<std::list<std::shared_ptr<Renderable>>> renderables;
@@ -65,7 +68,7 @@ public:
     * \param std::shared_ptr<Renderable> ren The Renderable to add.
     * \return void
     */
-    void AddRenderable(const unsigned int entityID, std::shared_ptr<Renderable> ren);
+    void AddRenderable(const unsigned int entity_id, std::shared_ptr<Renderable> ren);
 
     /**
     * \brief Removes a Renderable component from the system..
@@ -73,21 +76,21 @@ public:
     * \param const unsigned int entityID The entity ID of the compoennt to remove.
     * \return void
     */
-    void RemoveRenderable(const unsigned int entityID);
+    void RemoveRenderable(const unsigned int entity_id);
 private:
-    int OpenGLVersion[2];
-    glm::mat4 proj;
-    glm::mat4 view;
+    int gl_version[2];
+    glm::mat4 projection_matrix;
+    glm::mat4 view_matrix;
 
-    unsigned int windowWidth; // Store the width of our window
-    unsigned int windowHeight; // Store the height of our window
+    unsigned int window_width; // Store the width of our window
+    unsigned int window_height; // Store the height of our window
 
     // A list of the renderables in the system. Stored as a pair (entity ID, Renderable).
     std::list<std::pair<unsigned int, std::shared_ptr<Renderable>>> renderables;
-    std::list<MaterialGroup> matGroups;
+    std::list<MaterialGroup> material_groups;
 };
 
-}
-}
+} // End of graphics
+} // End of trillek
 
 #endif

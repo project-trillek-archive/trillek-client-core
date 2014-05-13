@@ -10,6 +10,7 @@
 
 namespace trillek {
 namespace resource {
+
 class Texture;
 class Shader;
 
@@ -31,7 +32,7 @@ public:
     *
     * \return std::shared_ptr<resource::Shader> The material's shader.
     */
-    std::shared_ptr<resource::Shader> GetShader() {
+    std::shared_ptr<resource::Shader> GetShader() const {
         return this->shader;
     }
 
@@ -53,29 +54,15 @@ public:
     */
     size_t GetTextureIndex(std::shared_ptr<resource::Texture> t);
 
-    // Wrapper areound the valid enaum values for ActivateTexture.
-    enum TEXTURE_TARGET {
-        TEX0 = GL_TEXTURE0,
-        TEX1 = GL_TEXTURE1,
-        TEX2 = GL_TEXTURE2,
-        TEX3 = GL_TEXTURE3,
-        TEX4 = GL_TEXTURE4,
-        TEX5 = GL_TEXTURE5,
-        TEX6 = GL_TEXTURE6,
-        TEX7 = GL_TEXTURE7,
-        TEX8 = GL_TEXTURE8,
-        TEX9 = GL_TEXTURE9
-    };
-
     /**
     * \brief Set's the target texture unit as active and binds the texture
     * at index in textures.
     *
     * \param size_t index The index of the texture to bind.
-    * \param TEXTURE_TARGET target Target texture unit to make active.
+    * \param GLuint target Target texture unit to make active.
     * \return void
     */
-    void ActivateTexture(const size_t index, const TEXTURE_TARGET target);
+    void ActivateTexture(const size_t index, const GLuint target);
 private:
     // Stores a mapping of texutre to GL texture ID.
     // During rendering a change is done via the vector index.
@@ -84,7 +71,7 @@ private:
     std::shared_ptr<resource::Shader> shader;
 };
 
-}
-}
+} // End of resource
+} // End of trillek
 
 #endif

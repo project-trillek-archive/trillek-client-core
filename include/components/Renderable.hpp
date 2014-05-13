@@ -10,11 +10,14 @@
 
 namespace trillek {
 namespace resource {
+
 class Mesh;
 class Material;
-}
+
+} // End of resource
 
 namespace graphics {
+
 class Renderable {
 public:
     Renderable();
@@ -25,7 +28,7 @@ public:
         GLuint vao;
         GLuint vbo;
         GLuint ibo;
-        unsigned int iboCount;
+        unsigned int ibo_count;
     };
 
     /**
@@ -50,7 +53,7 @@ public:
     *
     * \return std::shared_ptr<resource::Mesh> The mesh reousrce for this component.
     */
-    std::shared_ptr<resource::Mesh> GetMesh();
+    std::shared_ptr<resource::Mesh> GetMesh() const;
 
     /**
     * \brief Sets the shader resource associated with this component.
@@ -65,15 +68,15 @@ public:
     *
     * \return std::shared_ptr<Material> This material for this component.
     */
-    std::shared_ptr<resource::Material> GetMaterial();
+    std::shared_ptr<resource::Material> GetMaterial() const;
 
     /**
     * \brief Gets the number of buffer groups.
     *
     * \return size_t The number of buffer groups.
     */
-    size_t GetBufferGroupCount() {
-        return this->bufferGroups.size();
+    size_t GetBufferGroupCount() const {
+        return this->buffer_groups.size();
     }
 
     /**
@@ -82,18 +85,18 @@ public:
     * \param const size_t index The index of the buffer group to return.
     * \return std::shared_ptr<BufferGroup> The requested buffer group.
     */
-    std::shared_ptr<BufferGroup> GetBufferGroup(const size_t index) {
-        return this->bufferGroups[index];
+    std::shared_ptr<BufferGroup> GetBufferGroup(const size_t index) const {
+        return this->buffer_groups[index];
     }
 private:
-    std::vector<std::shared_ptr<BufferGroup>> bufferGroups; // Render buffer ID group
+    std::vector<std::shared_ptr<BufferGroup>> buffer_groups; // Render buffer ID group
 
     std::shared_ptr<resource::Mesh> mesh;
 
-    std::shared_ptr<resource::Material> mat;
+    std::shared_ptr<resource::Material> material;
 };
 
-}
-}
+} // End of graphics
+} // End of trillek
 
 #endif
