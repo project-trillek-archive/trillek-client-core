@@ -40,7 +40,6 @@ install:
 #    - sudo apt-get -y install automake libtool cmake
 before_script:
     - mkdir build
-    - git clone -b test-files https://github.com/trillek-team/trillek-assets.git
     - mv assets build
     - cd build
     - cmake -DTCC_BUILD_TESTS=True ..
