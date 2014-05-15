@@ -5,7 +5,7 @@
 namespace trillek {
 namespace resource {
 
-struct PNGChunk {
+struct PngChunk {
     uint32_t len;
     util::FourCC type;
     util::algorithm::Crc32 crc;

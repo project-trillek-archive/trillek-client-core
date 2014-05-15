@@ -32,11 +32,11 @@ TEST(DecompressorTest, BitBuffering) {
     EXPECT_EQ(true, ((bool)st));
     EXPECT_EQ(-5, inf.GetBits(42).error_code);
 
-    EXPECT_EQ(-1, inf.FetchByte().error_code);
-    EXPECT_EQ(-1, inf.FetchFull().error_code);
+    EXPECT_EQ(-1, inf.LoadByte().error_code);
+    EXPECT_EQ(-1, inf.LoadFull().error_code);
     inf.bit_buffer = -1;
-    EXPECT_EQ(-2, inf.FetchByte().error_code);
-    EXPECT_EQ(-2, inf.FetchFull().error_code);
+    EXPECT_EQ(-2, inf.LoadByte().error_code);
+    EXPECT_EQ(-2, inf.LoadFull().error_code);
 }
 
 } // algorithm
