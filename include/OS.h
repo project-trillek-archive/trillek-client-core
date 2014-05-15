@@ -28,11 +28,12 @@ namespace trillek {
             const unsigned int glMajor = 3, const unsigned int glMinor = 2);
 
         /**
-        * \brief Calls GLFWTerminate to close the window.
-        *
-        * This is a static method so it can be called from anywhere to terminate the current winodw.
-        * \return void
-        */
+         * \brief Calls GLFWTerminate to close the window.
+         *
+         * This is a static method so it can be called from anywhere
+         * to terminate the current window.
+         * \return void
+         */
         static void Terminate();
 
         /**
@@ -57,17 +58,17 @@ namespace trillek {
         void OSMessageLoop();
 
         /**
-        * \brief Gets the cached window width.
-        *
-        * \return int The window width.
-        */
+         * \brief Gets the cached window width.
+         *
+         * \return int The window width.
+         */
         int GetWindowWidth();
 
         /**
-        * \brief Gets the cached window height.
-        *
-        * \return int The window height.
-        */
+         * \brief Gets the cached window height.
+         *
+         * \return int The window height.
+         */
         int GetWindowHeight();
 
         /**
@@ -101,7 +102,8 @@ namespace trillek {
         /**
          * \brief Callback for unicode character event.
          *
-         * This is different from just a normal keyboard event as it has been translated and modified by
+         * This is different from just a normal keyboard event
+         * as it has been translated and modified by
          * the OS and is just like typing into a text editor.
          * \param[in] GLFWwindow * window
          * \param[in] unsigned int uchar The unicode character key code.
@@ -139,18 +141,18 @@ namespace trillek {
         static void windowFocusChange(GLFWwindow* window, int focused);
 
         /**
-        * \brief Toggles wether the mouse cursor should be locked to the current window.
-        *
-        * \return void
-        */
+         * \brief Toggles wether the mouse cursor should be locked to the current window.
+         *
+         * \return void
+         */
         void ToggleMouseLock();
 
         /**
-        * \brief Sets the mouse cursor position relative to the upper-left corner of the window.
-        *
-        * \param[in] double x, y The new x and y coordinate of the mouse in screen coordinates.
-        * \return void
-        */
+         * \brief Sets the mouse cursor position relative to the upper-left corner of the window.
+         *
+         * \param[in] double x, y The new x and y coordinate of the mouse in screen coordinates.
+         * \return void
+         */
         void SetMousePosition(double x, double y);
     private:
         /**
@@ -200,10 +202,10 @@ namespace trillek {
         void DispatchMouseButtonEvent(const int button, const int action, const int mods);
 
         GLFWwindow* window;
-        int width, height; // Current window's client width and height.
+        int width, height; /// Current window's client width and height.
         double oldMouseX, oldMouseY;
-        double lastTime; // The time at the last call to GetDeltaTime().
-        bool mouseLock; // If mouse lock is enabled causing the cursor to snap to mid-window each movement event.
+        double lastTime; /// The time at the last call to GetDeltaTime().
+        bool mouseLock; /// If mouse lock is enabled causing the cursor to snap to mid-window each movement event.
     };
 }
 #endif //OS_H
