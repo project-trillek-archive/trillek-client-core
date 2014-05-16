@@ -46,22 +46,22 @@ void Renderable::UpdateBufferGroups() {
 
                 GLuint posLocation = glGetAttribLocation(shader_program, "pos");
                 glVertexAttribPointer(posLocation, 3, GL_FLOAT, GL_FALSE, sizeof(resource::VertexData),
-                    (GLvoid*)offsetof(resource::VertexData, resource::VertexData::position)); // Tell the VAO the vertex data will be stored at the location we just found.
+                    (GLvoid*)offsetof(resource::VertexData, position)); // Tell the VAO the vertex data will be stored at the location we just found.
                 glEnableVertexAttribArray(posLocation); // Enable the VAO line for vertex data.
 
                 GLuint normalLocation = glGetAttribLocation(shader_program, "norm");
                 glVertexAttribPointer(normalLocation, 3, GL_FLOAT, GL_FALSE, sizeof(resource::VertexData),
-                    (GLvoid*)offsetof(resource::VertexData, resource::VertexData::normal));
+                    (GLvoid*)offsetof(resource::VertexData, normal));
                 glEnableVertexAttribArray(normalLocation);
 
                 GLuint colLocation = glGetAttribLocation(shader_program, "color");
                 glVertexAttribPointer(colLocation, 4, GL_FLOAT, GL_FALSE, sizeof(resource::VertexData),
-                    (GLvoid*)offsetof(resource::VertexData, resource::VertexData::color));
+                    (GLvoid*)offsetof(resource::VertexData, color));
                 glEnableVertexAttribArray(colLocation);
 
                 GLuint uvLocation = glGetAttribLocation(shader_program, "tex1");
                 glVertexAttribPointer(uvLocation, 2, GL_FLOAT, GL_FALSE, sizeof(resource::VertexData),
-                    (GLvoid*)offsetof(resource::VertexData, resource::VertexData::uv)); // Tell the VAO the vertex data will be stored at the location we just found.
+                    (GLvoid*)offsetof(resource::VertexData, uv)); // Tell the VAO the vertex data will be stored at the location we just found.
                 glEnableVertexAttribArray(uvLocation); // Enable the VAO line for vertex data.
             }
 
