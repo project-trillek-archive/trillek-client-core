@@ -48,7 +48,7 @@ namespace algorithm {
         uint8_t size[288];
         uint16_t value[288];
 
-        void_er Build(uint8_t *sizelist, uint32_t num);
+        void_er Build(const uint8_t *sizelist, uint32_t num);
     };
 
     struct BitStreamDecoder {
@@ -66,6 +66,11 @@ namespace algorithm {
         /** \brief get a byte from the stream
          */
         ErrorReturn<uint8_t> ReadByte();
+
+        /** \brief ensure bits are available
+         */
+        void_er Require(uint32_t n);
+
         // used for bit buffer filling
         void_er LoadByte();
         void_er LoadFull();
@@ -76,8 +81,9 @@ namespace algorithm {
 
     };
 
-    enum class InflateStateNumber : uint32_t {
-        HEADER,
+    enum class InflateState : uint32_t {
+        ZLIB_HEADER,
+        BLOCK_HEADER,
     };
 
     class Inflate : public DecompressionMethod {
@@ -92,6 +98,8 @@ namespace algorithm {
     protected:
         ErrorReturn<uint16_t> HuffmanDecode(const Huffman&);
         void_er UncompressedBlock();
+        void_er DynamicBlock();
+
         void_er HuffmanBlock();
 
         BitStreamDecoder instream;
@@ -100,7 +108,7 @@ namespace algorithm {
         bool errored;
         void_er error_state;
         Huffman length, distance;
-        InflateStateNumber readstate;
+        InflateState readstate;
     };
 
 } // algorithm
