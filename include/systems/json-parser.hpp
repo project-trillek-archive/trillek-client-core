@@ -2,6 +2,7 @@
 #define JSON_PARSER_HPP_INCLUDED
 
 #include <memory>
+#include <map>
 #include <rapidjson/document.h>
 #include <string>
 
@@ -15,10 +16,23 @@ class ResourceSystem;
 
 namespace system {
 
+class SerializerBase {
+protected:
+    SerializerBase(std::string name) : name(name) { }
+public:
+    virtual bool Serialize(rapidjson::Value& node) = 0;
+    virtual bool DeSerialize(rapidjson::Value& node) = 0;
+
+    std::string GetName() {
+        return this->name;
+    }
+private:
+    std::string name;
+};
+
 class JSONParser {
 public:
     JSONParser();
-
 
     /**
     * \brief Parses a JSON file with the given filename.
@@ -28,6 +42,16 @@ public:
     * \return bool True if parsing was successfully.
     */
     bool Parse(const std::string& fname);
+
+    /**
+    * \brief Registers a serializer type.
+    *
+    * This method will call GetName() on the serializer to get its type name. If a type
+    * with the same name exists it is overridden.
+    * \param[in] std::shared_ptr<SerializerBase> serializer The serializer to register.
+    * \return void
+    */
+    static void RegisterSerializer(std::shared_ptr<SerializerBase> serializer);
 private:
     /**
     * \brief Parses and load the resources for a JSON node.
@@ -39,7 +63,7 @@ private:
 
     std::shared_ptr<resource::TextFile> file; // The loaded TextFile. Usefull if the file is reloaded.
     rapidjson::Document document; // Currently parsed document.
-    std::shared_ptr<trillek::resource::ResourceSystem> res_sys; // Reference to the resource system (obtained in ctor).
+    static std::map<std::string, std::shared_ptr<SerializerBase>> serializer_types;
 };
 
 } // End of system

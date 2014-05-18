@@ -11,7 +11,6 @@ FIND_PATH(RAPID_JSON_INCLUDE_DIR rapidjson/rapidjson.h
         $ENV{PROGRAMFILES}/rapidjson/include
         ${COMPILER_PATH}/PlatformSDK/Include
         $ENV{JSON_ROOT_DIR}/include
-        ${GLEW_ROOT_DIR}/include
         /usr/include
         /usr/local/include
         /sw/include
