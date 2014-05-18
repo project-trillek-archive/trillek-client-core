@@ -1,7 +1,7 @@
 #include "systems/ResourceSystem.h"
 
 namespace trillek {
-namespace resource {
+namespace system {
 
 std::once_flag ResourceSystem::only_one;
 std::shared_ptr<ResourceSystem> ResourceSystem::instance = nullptr;
@@ -79,5 +79,5 @@ bool ResourceSystem::DeSerialize(rapidjson::Value& node) {
     return false;
 }
 
-} // End of resource
+} // End of system
 } // End of trillek

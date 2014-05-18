@@ -10,19 +10,39 @@ namespace trillek {
 namespace resource {
 
 class TextFile;
-class ResourceSystem;
 
 } // End of resource
 
 namespace system {
 
+class ResourceSystem;
+
 class SerializerBase {
 protected:
     SerializerBase(std::string name) : name(name) { }
 public:
+    /**
+    * \brief Serialize this object to the provided JSON node.
+    *
+    * \param[in] rapidjson::Value& node The node to serialize to.
+    * \return bool False if an error occured in serializing.
+    */
     virtual bool Serialize(rapidjson::Value& node) = 0;
+
+    /**
+    * \brief Deserialize this object from the provided JSON node.
+    *
+    * \param[in] rapidjson::Value& node The node to deserialize from.
+    * \return bool False if an error occured in deserializing.
+    */
     virtual bool DeSerialize(rapidjson::Value& node) = 0;
 
+    /**
+    * \brief Gets the name of this serializable type.
+    *
+    * This type name matches the one the top-level JSON node.
+    * \return std::string The name of this serializable type.
+    */
     std::string GetName() {
         return this->name;
     }
@@ -53,14 +73,6 @@ public:
     */
     static void RegisterSerializer(std::shared_ptr<SerializerBase> serializer);
 private:
-    /**
-    * \brief Parses and load the resources for a JSON node.
-    *
-    * \param[in] const rapidjson::Value& values The node to parse and load resource from.
-    * \return void
-    */
-    void LoadResources(const rapidjson::Value& values);
-
     std::shared_ptr<resource::TextFile> file; // The loaded TextFile. Usefull if the file is reloaded.
     rapidjson::Document document; // Currently parsed document.
     static std::map<std::string, std::shared_ptr<SerializerBase>> serializer_types;

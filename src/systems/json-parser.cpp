@@ -11,7 +11,7 @@ bool JSONParser::Parse(const std::string& fname) {
     std::vector<Property> props;
     Property p("filename", std::string("assets/tests/sample.json"));
     props.push_back(p);
-    this->file = resource::ResourceSystem::GetInstance()->Create<trillek::resource::TextFile>("JSON_test", props);
+    this->file = system::ResourceSystem::GetInstance()->Create<trillek::resource::TextFile>("JSON_test", props);
 
     this->document.Parse<0>(this->file->GetText().c_str());
     if (this->document.HasParseError()) {

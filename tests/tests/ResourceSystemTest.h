@@ -6,6 +6,7 @@
 #include "systems/ResourceSystem.h"
 #include "resources/TextFile.h"
 
+using namespace trillek::system;
 using namespace trillek::resource;
 
 namespace trillek {
