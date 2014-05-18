@@ -18,7 +18,7 @@ before_install:
     - cd ..
     - wget https://rapidjson.googlecode.com/files/rapidjson-0.11.zip
     - unzip rapidjson-0.11.zip -d /tmp
-    - cp /tmp/rapidjson/include /usr/include
+    - cp -r /tmp/rapidjson/include /usr/include
 install:
     # Install libstdv++ 4.8 and clang
     - sudo apt-get -qq install libstdc++-4.8-dev clang-3.3
