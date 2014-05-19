@@ -17,6 +17,11 @@ FIND_PATH(RAPID_JSON_INCLUDE_DIR rapidjson/rapidjson.h
         /opt/local/include
         DOC "The directory where rapidjson/rapidjson.h resides")
 
+
+IF(APPLE)
+	INCLUDE_DIRECTORIES( "${RAPID_JSON_INCLUDE_DIR}" )
+ENDIF(APPLE)
+
 INCLUDE(FindPackageHandleStandardArgs)
 # handle the QUIETLY and REQUIRED arguments and set RAPID_JSON_FOUND to TRUE if
 # all listed variables are TRUE
