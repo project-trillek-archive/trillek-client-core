@@ -6,7 +6,7 @@ namespace system {
 std::once_flag ResourceSystem::only_one;
 std::shared_ptr<ResourceSystem> ResourceSystem::instance = nullptr;
 
-bool ResourceSystem::Serialize(rapidjson::Value& node) {
+bool ResourceSystem::Serialize(rapidjson::Document& document) {
     return false;
 }
 

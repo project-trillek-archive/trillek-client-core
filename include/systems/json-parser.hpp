@@ -24,10 +24,10 @@ public:
     /**
     * \brief Serialize this object to the provided JSON node.
     *
-    * \param[in] rapidjson::Value& node The node to serialize to.
+    * \param[in] rapidjson::Document& document The document to serialize to.
     * \return bool False if an error occured in serializing.
     */
-    virtual bool Serialize(rapidjson::Value& node) = 0;
+    virtual bool Serialize(rapidjson::Document& document) = 0;
 
     /**
     * \brief Deserialize this object from the provided JSON node.

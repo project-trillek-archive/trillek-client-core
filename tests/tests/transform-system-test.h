@@ -11,27 +11,27 @@
 namespace {
     TEST(TransformSystemTest, AddTransform) {
         // Get the instance allocated, and then we can use the shortcut static mathods.
-        trillek::transform::TransformSystem::GetInstance();
+        trillek::system::TransformSystem::GetInstance();
 
-        auto transform = trillek::transform::TransformSystem::AddTransform(0);
+        auto transform = trillek::system::TransformSystem::AddTransform(0);
 
         EXPECT_TRUE(transform != nullptr);
     }
     TEST(TransformSystemTest, GetTransform) {
-        auto transform = trillek::transform::TransformSystem::GetTransform(0);
+        auto transform = trillek::system::TransformSystem::GetTransform(0);
 
         EXPECT_TRUE(transform != nullptr);
     }
     TEST(TransformSystemTest, AddExistingTransform) {
-        auto transform = trillek::transform::TransformSystem::GetTransform(0);
-        auto transform2 = trillek::transform::TransformSystem::AddTransform(0);
+        auto transform = trillek::system::TransformSystem::GetTransform(0);
+        auto transform2 = trillek::system::TransformSystem::AddTransform(0);
 
         EXPECT_TRUE(transform == transform2);
     }
     TEST(TransformSystemTest, RemoveTransform) {
-        trillek::transform::TransformSystem::RemoveTransform(0);
+        trillek::system::TransformSystem::RemoveTransform(0);
 
-        auto transform = trillek::transform::TransformSystem::GetTransform(0);
+        auto transform = trillek::system::TransformSystem::GetTransform(0);
 
         EXPECT_TRUE(transform == nullptr);
     }

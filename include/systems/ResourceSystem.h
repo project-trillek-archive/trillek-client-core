@@ -198,7 +198,7 @@ public:
     }
 
     // Inherited from SerializeBase
-    virtual bool Serialize(rapidjson::Value& node);
+    virtual bool Serialize(rapidjson::Document& document);
 
     // Inherited from SerializeBase
     virtual bool DeSerialize(rapidjson::Value& node);

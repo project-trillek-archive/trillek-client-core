@@ -2,7 +2,7 @@
 #include "resources/transform.hpp"
 
 namespace trillek {
-namespace transform {
+namespace system {
 
 std::once_flag TransformSystem::only_one;
 std::shared_ptr<TransformSystem> TransformSystem::instance = nullptr;
@@ -29,5 +29,5 @@ void TransformSystem::RemoveTransform(const unsigned int entity_id) {
     instance->transforms.erase(entity_id);
 }
 
-} // End of transofmr
+} // End of system
 } // End of trillek

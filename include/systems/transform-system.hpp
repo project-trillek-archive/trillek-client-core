@@ -12,7 +12,7 @@ class Transform;
 
 } // End of resource
 
-namespace transform {
+namespace system {
 
 class TransformSystem {
 private:
@@ -68,7 +68,7 @@ private:
     std::map<unsigned int, std::shared_ptr<resource::Transform>> transforms;
 };
 
-} // End of transofmr
+} // End of system
 } // End of trillek
 
 #endif
