@@ -1,4 +1,5 @@
-#pragma once
+#ifndef PROPERTY_H
+#define PROPERTY_H
 
 #include <string>
 
@@ -7,7 +8,7 @@
   *
   * This class is used to pass around generic properties.
   * Properties have a name and a value. The value is stored in
-  * vholder and is accessed by calling Get() with the
+  * value_holder and is accessed by calling Get() with the
   * appropriate type.
   */
 class Property {
@@ -17,17 +18,17 @@ public:
     // Copy
     Property(const Property &other) {
         this->name = other.name;
-        if (other.vholder != nullptr) {
-            this->vholder = other.vholder->Clone();
+        if (other.value_holder != nullptr) {
+            this->value_holder = other.value_holder->Clone();
         }
         else {
-            this->vholder = nullptr;
+            this->value_holder = nullptr;
         }
     }
 
     // Move
-    Property(Property&& other) : name(other.name), vholder(other.vholder) {
-        other.vholder = nullptr;
+    Property(Property&& other) : name(other.name), value_holder(other.value_holder) {
+        other.value_holder = nullptr;
     }
 
     /**
@@ -37,18 +38,18 @@ public:
      * \param[in] t value The value of the property. typename is inferred on usage.
      */
     template <typename t>
-    Property(std::string name, t value) : name(name), vholder(new ValueHolder<t>(value)) { }
+    Property(std::string name, t value) : name(name), value_holder(new ValueHolder<t>(value)) { }
 
-    ~Property() { delete this->vholder; }
+    ~Property() { delete this->value_holder; }
 
     /**
-     * \brief Retrieves the value in vholder.
+     * \brief Retrieves the value in value_holder.
      *
      * Calls the Get() method of ValueHolder with the given template type.
      * \returns t The value with the given template type.
      */
     template <typename t>
-    t Get() const { return static_cast<ValueHolder<t>*>(this->vholder)->Get(); }
+    t Get() const { return static_cast<ValueHolder<t>*>(this->value_holder)->Get(); }
 
     /**
      * \brief Gets the name of this property.
@@ -88,5 +89,7 @@ private:
     };
 
     std::string name; // Name of this property.
-    ValueHolderBase* vholder; // The value held by this property.
+    ValueHolderBase* value_holder; // The value held by this property.
 };
+
+#endif
