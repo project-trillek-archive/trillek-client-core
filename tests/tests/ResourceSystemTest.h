@@ -10,9 +10,10 @@ using namespace trillek::system;
 using namespace trillek::resource;
 
 namespace trillek {
-    std::shared_ptr<ResourceSystem> resSys = ResourceSystem::GetInstance();
+    std::shared_ptr<ResourceSystem> resSys;
     // Check if resource types are registered correctly
     TEST(ResSysTest, Register) {
+        resSys = ResourceSystem::GetInstance();
         resSys->Register<TextFile>();
 
         // If we have a valid type id retrieved from within resource system, then registtration was valid.
