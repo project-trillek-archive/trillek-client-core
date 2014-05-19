@@ -64,6 +64,16 @@ public:
     bool Parse(const std::string& fname);
 
     /**
+    * \brief Saves each serializer type to disk.
+    *
+    * If there isn't a supplied filename then each type is saved as "serializer_name.json
+    * \param[in] const std::string& out_directory The directory in which to place the file(s).
+    * \param[in] const std::string& fname The filename of where to save the JSON.
+    * \return void
+    */
+    void Save(const std::string& out_directory, const std::string& fname);
+
+    /**
     * \brief Registers a serializer type.
     *
     * This method will call GetName() on the serializer to get its type name. If a type

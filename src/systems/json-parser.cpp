@@ -1,6 +1,8 @@
 #include "systems/json-parser.hpp"
 #include "resources/TextFile.h"
 #include "systems/ResourceSystem.h"
+#include "rapidjson/prettywriter.h"
+#include "rapidjson/filestream.h"
 
 namespace trillek {
 namespace system {
@@ -28,6 +30,36 @@ bool JSONParser::Parse(const std::string& fname) {
     }
 
     return true;
+}
+
+void JSONParser::Save(const std::string& out_directory, const std::string& fname) {
+    if (fname.length() > 0) {
+        rapidjson::Document document;
+        document.SetObject();
+
+        for (auto serializer : serializer_types) {
+            serializer.second->Serialize(document);
+        }
+
+        FILE* file = fopen((out_directory + fname).c_str(), "w");
+        rapidjson::FileStream f(file);
+        rapidjson::PrettyWriter<rapidjson::FileStream> writer(f);
+        document.Accept(writer);
+        fclose(file);
+    }
+    else {
+        for (auto serializer : serializer_types) {
+            rapidjson::Document document;
+            document.SetObject();
+            serializer.second->Serialize(document);
+
+            FILE* file = fopen((out_directory + serializer.first + ".json").c_str(), "w");
+            rapidjson::FileStream f(file);
+            rapidjson::PrettyWriter<rapidjson::FileStream> writer(f);
+            document.Accept(writer);
+            fclose(file);
+        }
+    }
 }
 
 std::map<std::string, std::shared_ptr<SerializerBase>> JSONParser::serializer_types;

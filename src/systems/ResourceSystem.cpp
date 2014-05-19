@@ -7,7 +7,10 @@ std::once_flag ResourceSystem::only_one;
 std::shared_ptr<ResourceSystem> ResourceSystem::instance = nullptr;
 
 bool ResourceSystem::Serialize(rapidjson::Document& document) {
-    return false;
+    rapidjson::Value resource_node(rapidjson::kObjectType);
+
+    document.AddMember("resources", resource_node, document.GetAllocator());
+    return true;
 }
 
 // "resources": {

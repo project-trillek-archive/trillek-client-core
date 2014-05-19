@@ -31,6 +31,7 @@ void TransformSystem::RemoveTransform(const unsigned int entity_id) {
 
 bool TransformSystem::Serialize(rapidjson::Document& document) {
     rapidjson::Value transform_node(rapidjson::kObjectType);
+
     for (auto entity_transform : this->transforms) {
         rapidjson::Value transform_object(rapidjson::kObjectType);
 
