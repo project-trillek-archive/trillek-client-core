@@ -91,7 +91,8 @@ bool TransformSystem::DeSerialize(rapidjson::Value& node) {
         // Iterate over the entity ids.
         for (auto entity_itr = node.MemberBegin(); entity_itr != node.MemberEnd(); ++entity_itr) {
             if (entity_itr->value.IsObject()) {
-                auto& entity_transform = AddTransform(atoi(entity_itr->name.GetString()));
+                unsigned int entity_id = atoi(entity_itr->name.GetString());
+                auto& entity_transform = AddTransform(entity_id);
 
                 if (entity_itr->value.HasMember("position")) {
                     auto& element = entity_itr->value["position"];
