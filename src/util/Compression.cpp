@@ -160,7 +160,7 @@ void_er Huffman::Build(const uint8_t *sizelist, uint32_t num) {
             ++next_code[codelen];
         }
     }
-    return 1;
+    return void_er();
 }
 
 ErrorReturn<uint16_t> Inflate::HuffmanDecode(const Huffman& z) {
@@ -259,16 +259,71 @@ void_er Inflate::DynamicBlock() {
     if(n != num_literal_codes + num_distance_codes) {
         return void_er(-3, "Bad code lengths");
     }
-    ret = length.Build(lencodes, num_literal_codes);
+    ret = lengthcodes.Build(lencodes, num_literal_codes);
     if(ret) return ret;
-    ret = distance.Build(lencodes + num_literal_codes, num_distance_codes);
+    ret = distancecodes.Build(lencodes + num_literal_codes, num_distance_codes);
     if(ret) return ret;
 
     return void_er();
 }
 
-void_er Inflate::HuffmanBlock() {
+// Constants used by deflate/inflate
+static const uint32_t length_base[31] = {
+    3, 4, 5, 6, 7, 8, 9, 10, 11, 13,
+    15, 17, 19, 23, 27, 31, 35, 43, 51, 59,
+    67, 83, 99, 115, 131, 163, 195, 227, 258, 0, 0
+};
+static const uint32_t length_extra[31] = {
+    0, 0, 0, 0, 0, 0, 0, 0,
+    1, 1, 1, 1, 2, 2, 2, 2,
+    3, 3, 3, 3, 4, 4, 4, 4,
+    5, 5, 5, 5, 0, 0, 0
+};
+static const uint32_t dist_base[32] = {
+    1, 2, 3, 4, 5, 7, 9, 13,
+    17, 25, 33, 49, 65, 97, 129, 193,
+    257, 385, 513, 769, 1025, 1537, 2049, 3073,
+    4097, 6145, 8193, 12289, 16385, 24577, 0, 0
+};
+static const uint32_t dist_extra[32] = {
+    0, 0, 0, 0, 1, 1, 2, 2,
+    3, 3, 4, 4, 5, 5, 6, 6,
+    7, 7, 8, 8, 9, 9, 10, 10,
+    11, 11, 12, 12, 13, 13
+};
 
+void_er Inflate::HuffmanBlock() {
+    uint16_t symbol;
+    uint32_t length;
+    uint32_t distance;
+    unsigned char csym;
+    void_er ret;
+
+    while(!ret) {
+        symbol = (ret = HuffmanDecode(lengthcodes));
+        if(ret) return ret;
+        if(symbol < 256) {
+            csym = (unsigned char)symbol;
+            outdata.append(&csym, 1);
+        } else if(symbol == 256) {
+            return void_er();
+        } else {
+            symbol -= 257;
+            length = length_base[symbol];
+            if(length_extra[symbol]) length += instream.GetBits(length_extra[symbol]);
+            symbol = (ret = HuffmanDecode(distancecodes));
+            if(ret) return ret;
+            distance = dist_base[symbol];
+            if(dist_extra[symbol]) distance += instream.GetBits(dist_extra[symbol]);
+            outpos = outdata.length();
+            if(outpos < distance) {
+                return void_er(-2, "Invalid distance - output too short");
+            }
+            while(length--) {
+                outdata.append(outdata.substr(outpos++ - distance, 1));
+            }
+        }
+    }
     return void_er();
 }
 
@@ -316,7 +371,10 @@ bool Inflate::DecompressData(DataString data) {
     instream.AppendData(data);
 
     uint32_t final_flag, type;
-
+    if(readstate == InflateState::ZLIB_HEADER) {
+        instream.ReadByte();
+        instream.ReadByte();
+    }
     readstate = InflateState::BLOCK_HEADER;
     final_flag = 0;
     while(!final_flag && !error_state) {
@@ -333,9 +391,9 @@ bool Inflate::DecompressData(DataString data) {
         case 2:
             if(type == 1) {
                 // use fixed code lengths
-                error_state = length.Build(default_length, 288);
+                error_state = lengthcodes.Build(default_length, 288);
                 if(error_state) return true;
-                error_state = distance.Build(default_distance, 32);
+                error_state = distancecodes.Build(default_distance, 32);
                 if(error_state) return true;
             }
             else {
@@ -358,11 +416,11 @@ bool Inflate::DecompressData(DataString data) {
 }
 
 bool Inflate::DecompressHasOutput() {
-    return false;
+    return outdata.length() > 0;
 }
 
 DataString Inflate::DecompressGetOutput() {
-    return DataString();
+    return outdata;
 }
 
 } // algorithm

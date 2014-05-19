@@ -104,10 +104,10 @@ namespace algorithm {
 
         BitStreamDecoder instream;
         DataString outdata;
-        unsigned long outpos;
+        DataString::size_type outpos;
         bool errored;
         void_er error_state;
-        Huffman length, distance;
+        Huffman lengthcodes, distancecodes;
         InflateState readstate;
     };
 
