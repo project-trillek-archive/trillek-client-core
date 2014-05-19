@@ -1,4 +1,4 @@
-#include "systems/transform_system.hpp"
+#include "systems/transform-system.hpp"
 #include "resources/transform.hpp"
 
 namespace trillek {

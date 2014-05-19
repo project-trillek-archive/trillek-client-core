@@ -5,7 +5,7 @@
 #include "gtest/gtest-spi.h"
 #include <string>
 
-#include "systems/transform_system.hpp"
+#include "systems/transform-system.hpp"
 #include "resources/transform.hpp"
 
 namespace {

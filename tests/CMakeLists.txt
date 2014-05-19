@@ -90,6 +90,8 @@ file(GLOB_RECURSE TCCTests_SRC "tests/*.h" "main.cpp" "src/*.cpp")
 file(GLOB TCCExtra_SRC
 "${TCCSRC}/systems/ResourceSystem.cpp"
 "${TCCSRC}/systems/json-parser.cpp"
+"${TCCSRC}/systems/transform-system.cpp"
+"${TCCSRC}/resources/transform.cpp"
 )
 
 
