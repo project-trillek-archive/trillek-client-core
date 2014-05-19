@@ -5,6 +5,8 @@
 #include <map>
 #include <mutex>
 
+#include "systems/json-parser.hpp"
+
 namespace trillek {
 namespace resource {
 
@@ -14,10 +16,10 @@ class Transform;
 
 namespace system {
 
-class TransformSystem {
+class TransformSystem : public SerializerBase {
 private:
-    TransformSystem() { }
-    TransformSystem(const TransformSystem& right) {
+    TransformSystem() : SerializerBase("transforms") { }
+    TransformSystem(const TransformSystem& right) : SerializerBase("transforms") {
         instance = right.instance;
     }
     TransformSystem& operator=(const TransformSystem& right) {
@@ -34,6 +36,8 @@ public:
         std::call_once(TransformSystem::only_one,
             [ ] () {
                 TransformSystem::instance.reset(new TransformSystem());
+
+                system::JSONParser::RegisterSerializer(TransformSystem::instance);
             }
         );
 
@@ -64,6 +68,12 @@ public:
     * \return void
     */
     static void RemoveTransform(const unsigned int entity_id);
+
+    // Inherited from SerializeBase
+    virtual bool Serialize(rapidjson::Document& document);
+
+    // Inherited from SerializeBase
+    virtual bool DeSerialize(rapidjson::Value& node);
 private:
     std::map<unsigned int, std::shared_ptr<resource::Transform>> transforms;
 };
