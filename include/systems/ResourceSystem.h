@@ -59,7 +59,7 @@ public:
 
                 ResourceSystem::instance->factories[0] = lambda;
 
-                system::JSONParser::RegisterSerializer(ResourceSystem::instance);
+                ResourceSystem::instance->RegisterTypes();
             }
         );
 
@@ -196,6 +196,17 @@ public:
         }
         return false;
     }
+
+    /**
+    * \brief Registers all resource types as defined in the function body.
+    *
+    * This function is defined in a separate source file to reduce compile times.
+    * This function is coupled to each resource type, and all resource types
+    * known at compile time should be registered via the function body.
+    * Interally it just calls the tempalte method Register().
+    * \return void
+    */
+    void RegisterTypes();
 
     // Inherited from SerializeBase
     virtual bool Serialize(rapidjson::Document& document);

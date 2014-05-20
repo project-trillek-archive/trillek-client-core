@@ -4,10 +4,16 @@
 #include "rapidjson/prettywriter.h"
 #include "rapidjson/filestream.h"
 
+#include <mutex>
+
 namespace trillek {
 namespace system {
 
-JSONParser::JSONParser() { }
+JSONParser::JSONParser() {
+    static std::once_flag only_one;
+
+    std::call_once(only_one, [this] () { RegisterTypes(); } );
+}
 
 bool JSONParser::Parse(const std::string& fname) {
     std::vector<Property> props;

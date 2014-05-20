@@ -82,6 +82,17 @@ public:
     * \return void
     */
     static void RegisterSerializer(std::shared_ptr<SerializerBase> serializer);
+
+    /**
+    * \brief Registers all serializer types as defined in the function body.
+    *
+    * This function is defined in a separate source file to reduce compile times.
+    * This function is coupled to each serializer type, and all serializer types
+    * known at compile time should be registered via the function body.
+    * Interally it just calls the tempalte method RegisterSerializer().
+    * \return void
+    */
+    static void RegisterTypes();
 private:
     std::shared_ptr<resource::TextFile> file; // The loaded TextFile. Usefull if the file is reloaded.
     rapidjson::Document document; // Currently parsed document.

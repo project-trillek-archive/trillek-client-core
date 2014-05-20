@@ -36,8 +36,6 @@ public:
         std::call_once(TransformSystem::only_one,
             [ ] () {
                 TransformSystem::instance.reset(new TransformSystem());
-
-                system::JSONParser::RegisterSerializer(TransformSystem::instance);
             }
         );
 
