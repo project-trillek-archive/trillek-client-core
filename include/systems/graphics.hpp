@@ -12,24 +12,19 @@
 #include <vector>
 
 namespace trillek {
-namespace resource {
-
-class Material;
-
-} // End of resource
-
 namespace graphics {
 
+class Material;
 class Renderable;
 
 struct MaterialGroup {
-    std::shared_ptr<resource::Material> material;
+    std::shared_ptr<Material> material;
     // Each vector contains a list of renderables.
     // The vector's index matches the texture index in the material.
     std::vector<std::list<std::shared_ptr<Renderable>>> renderables;
 };
 
-class GL {
+class System {
 public:
 
     /**

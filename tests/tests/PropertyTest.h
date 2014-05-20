@@ -5,7 +5,7 @@
 #include "gtest/gtest-spi.h"
 #include <string>
 
-#include "Property.h"
+#include "property.hpp"
 
 namespace {
     // Basic move and copy tests with POD int

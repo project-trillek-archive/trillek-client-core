@@ -1,8 +1,8 @@
-#include "resources/Material.hpp"
-#include "resources/Shader.hpp"
+#include "resources/material.hpp"
+#include "resources/shader.hpp"
 
 namespace trillek {
-namespace resource {
+namespace graphics {
 
 Material::Material() { }
 Material::~Material() { }
@@ -45,5 +45,5 @@ void Material::ActivateTexture(const size_t index, const GLuint target) {
     }
 }
 
-} // End of resource
+} // End of graphics
 } // End of trillek

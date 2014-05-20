@@ -1,6 +1,7 @@
 #include "resources/transform.hpp"
+
 namespace trillek {
-namespace resource {
+namespace transform {
 
 void Transform::Translate(const glm::vec3 amount) {
     this->translation += amount;
@@ -56,5 +57,5 @@ glm::vec3 Transform::GetScale() const {
     return this->scale;
 }
 
-    } // End of resource
+} // End of transform
 } // End of trillek

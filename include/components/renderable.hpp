@@ -14,11 +14,12 @@ namespace trillek {
 namespace resource {
 
 class Mesh;
-class Material;
 
 } // End of resource
 
 namespace graphics {
+
+class Material;
 
 class Renderable {
 public:
@@ -63,14 +64,14 @@ public:
     * \param std::shared_ptr<Material> m The material for this component.
     * \return void
     */
-    void SetMaterial(std::shared_ptr<resource::Material> s);
+    void SetMaterial(std::shared_ptr<Material> s);
 
     /**
     * \brief Gets the material for this renderable
     *
     * \return std::shared_ptr<Material> This material for this component.
     */
-    std::shared_ptr<resource::Material> GetMaterial() const;
+    std::shared_ptr<Material> GetMaterial() const;
 
     /**
     * \brief Gets the number of buffer groups.
@@ -95,7 +96,7 @@ private:
 
     std::shared_ptr<resource::Mesh> mesh;
 
-    std::shared_ptr<resource::Material> material;
+    std::shared_ptr<Material> material;
 };
 
 } // End of graphics

@@ -1,7 +1,8 @@
-#include "OS.h"
+#include "os.hpp"
 #include "systems/json-parser.hpp"
 #include "systems/transform-system.hpp"
-#include "systems/ResourceSystem.h"
+#include "systems/resource-system.hpp"
+#include "systems/graphics.hpp"
 
 int main(int argCount, char **argValues) {
     trillek::OS os;
@@ -11,14 +12,16 @@ int main(int argCount, char **argValues) {
     os.InitializeWindow(800, 600, "Trillek Client Core", 3, 0);
 #endif
 
-    trillek::system::TransformSystem::GetInstance();
-    trillek::system::ResourceSystem::GetInstance();
+    trillek::transform::System::GetInstance();
+    trillek::resource::System::GetInstance();
 
-    trillek::system::JSONParser jparser;
+    trillek::json::System jparser;
     jparser.Parse("assets/tests/sample.json");
 
-    trillek::graphics::GL gl;
+
+    trillek::graphics::System gl;
     gl.Start(os.GetWindowWidth(), os.GetWindowHeight());
+
     while (!os.Closing()) {
         os.OSMessageLoop();
         gl.Update(0);

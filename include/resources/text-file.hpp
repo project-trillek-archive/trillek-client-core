@@ -2,7 +2,7 @@
 #define TEXTFILE_H_INCLUDED
 
 #include <fstream>
-#include "systems/ResourceSystem.h"
+#include "systems/resource-system.hpp"
 
 namespace trillek {
 namespace resource {

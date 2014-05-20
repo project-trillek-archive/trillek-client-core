@@ -1,12 +1,12 @@
-#include "systems/ResourceSystem.h"
+#include "systems/resource-system.hpp"
 
 namespace trillek {
-namespace system {
+namespace resource {
 
-std::once_flag ResourceSystem::only_one;
-std::shared_ptr<ResourceSystem> ResourceSystem::instance = nullptr;
+std::once_flag System::only_one;
+std::shared_ptr<System> System::instance = nullptr;
 
-bool ResourceSystem::Serialize(rapidjson::Document& document) {
+bool System::Serialize(rapidjson::Document& document) {
     rapidjson::Value resource_node(rapidjson::kObjectType);
 
     document.AddMember("resources", resource_node, document.GetAllocator());
@@ -23,7 +23,7 @@ bool ResourceSystem::Serialize(rapidjson::Document& document) {
 //     }
 //   }
 // }
-bool ResourceSystem::DeSerialize(rapidjson::Value& node) {
+bool System::DeSerialize(rapidjson::Value& node) {
     if (node.IsObject()) {
         // Iterate over the resrouce types.
         for (auto type_itr = node.MemberBegin(); type_itr != node.MemberEnd(); ++type_itr) {
@@ -82,5 +82,5 @@ bool ResourceSystem::DeSerialize(rapidjson::Value& node) {
     return false;
 }
 
-} // End of system
+} // End of resource
 } // End of trillek

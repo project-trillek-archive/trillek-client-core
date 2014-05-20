@@ -7,7 +7,7 @@
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
 
-#include "resources/Mesh.hpp"
+#include "resources/mesh.hpp"
 
 namespace trillek { 
 namespace resource {

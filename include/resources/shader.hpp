@@ -9,12 +9,12 @@
 #ifdef __APPLE__
 #include <OpenGL/gl3.h>
 #else
-#include "GL/glew.h"
+#include <GL/glew.h>
 #endif
 
 #include <map>
 #include <string>
-#include "systems/ResourceSystem.h"
+#include "systems/resource-system.hpp"
 
 namespace trillek {
 namespace resource {
@@ -57,8 +57,8 @@ private:
 
 namespace reflection {
 
-    template <> inline const char* GetTypeName<resource::Shader>() { return "Shader"; }
-    template <> inline const unsigned int GetTypeID<resource::Shader>() { return 1002; }
+template <> inline const char* GetTypeName<resource::Shader>() { return "Shader"; }
+template <> inline const unsigned int GetTypeID<resource::Shader>() { return 1002; }
 
 } // End of reflection
 } // End of trillek

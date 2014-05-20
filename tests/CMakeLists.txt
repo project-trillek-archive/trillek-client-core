@@ -88,7 +88,7 @@ ENDIF (DEFINED ENV{GTEST_ROOT})
 file(GLOB_RECURSE TCCTests_SRC "tests/*.h" "main.cpp" "src/*.cpp")
 
 file(GLOB TCCExtra_SRC
-"${TCCSRC}/systems/ResourceSystem.cpp"
+"${TCCSRC}/systems/resource-system.cpp"
 "${TCCSRC}/systems/resource-system-registration.cpp"
 "${TCCSRC}/systems/json-parser.cpp"
 "${TCCSRC}/systems/json-parser-registration.cpp"

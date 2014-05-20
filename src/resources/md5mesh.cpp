@@ -1,4 +1,4 @@
-#include "resources/MD5Mesh.hpp"
+#include "resources/md5mesh.hpp"
 
 #include <fstream>
 #include <memory>

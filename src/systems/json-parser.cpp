@@ -1,25 +1,25 @@
 #include "systems/json-parser.hpp"
-#include "resources/TextFile.h"
-#include "systems/ResourceSystem.h"
+#include "resources/text-file.hpp"
+#include "systems/resource-system.hpp"
 #include "rapidjson/prettywriter.h"
 #include "rapidjson/filestream.h"
 
 #include <mutex>
 
 namespace trillek {
-namespace system {
+namespace json {
 
-JSONParser::JSONParser() {
+System::System() {
     static std::once_flag only_one;
 
     std::call_once(only_one, [this] () { RegisterTypes(); } );
 }
 
-bool JSONParser::Parse(const std::string& fname) {
+bool System::Parse(const std::string& fname) {
     std::vector<Property> props;
     Property p("filename", std::string("assets/tests/sample.json"));
     props.push_back(p);
-    this->file = system::ResourceSystem::GetInstance()->Create<trillek::resource::TextFile>("JSON_test", props);
+    this->file = resource::System::GetInstance()->Create<trillek::resource::TextFile>("JSON_test", props);
 
     this->document.Parse<0>(this->file->GetText().c_str());
     if (this->document.HasParseError()) {
@@ -38,7 +38,7 @@ bool JSONParser::Parse(const std::string& fname) {
     return true;
 }
 
-void JSONParser::Save(const std::string& out_directory, const std::string& fname) {
+void System::Save(const std::string& out_directory, const std::string& fname) {
     if (fname.length() > 0) {
         rapidjson::Document document;
         document.SetObject();
@@ -68,11 +68,11 @@ void JSONParser::Save(const std::string& out_directory, const std::string& fname
     }
 }
 
-std::map<std::string, std::shared_ptr<SerializerBase>> JSONParser::serializer_types;
+std::map<std::string, std::shared_ptr<SerializerBase>> System::serializer_types;
 
-void JSONParser::RegisterSerializer(std::shared_ptr<SerializerBase> serializer) {
+void System::RegisterSerializer(std::shared_ptr<SerializerBase> serializer) {
     serializer_types[serializer->GetName()] = serializer;
 }
 
-} // End of system
+} // End of json
 } // End of trillek

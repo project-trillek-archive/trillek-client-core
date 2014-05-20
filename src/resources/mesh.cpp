@@ -1,4 +1,4 @@
-#include "resources/Mesh.hpp"
+#include "resources/mesh.hpp"
 
 namespace trillek {
 namespace resource {

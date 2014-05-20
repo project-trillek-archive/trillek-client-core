@@ -8,42 +8,44 @@
 #include "systems/transform-system.hpp"
 #include "resources/transform.hpp"
 
+using namespace trillek;
+
 namespace {
     TEST(TransformSystemTest, AddTransform) {
         // Get the instance allocated, and then we can use the shortcut static mathods.
-        trillek::system::TransformSystem::GetInstance();
+        transform::System::GetInstance();
 
-        auto transform = trillek::system::TransformSystem::AddTransform(0);
+        auto transform = transform::System::AddTransform(0);
 
         EXPECT_TRUE(transform != nullptr);
     }
     TEST(TransformSystemTest, GetTransform) {
-        auto transform = trillek::system::TransformSystem::GetTransform(0);
+        auto transform = transform::System::GetTransform(0);
 
         EXPECT_TRUE(transform != nullptr);
     }
     TEST(TransformSystemTest, AddExistingTransform) {
-        auto transform = trillek::system::TransformSystem::GetTransform(0);
-        auto transform2 = trillek::system::TransformSystem::AddTransform(0);
+        auto transform = transform::System::GetTransform(0);
+        auto transform2 = transform::System::AddTransform(0);
 
         EXPECT_TRUE(transform == transform2);
     }
     TEST(TransformSystemTest, RemoveTransform) {
-        trillek::system::TransformSystem::RemoveTransform(0);
+        transform::System::RemoveTransform(0);
 
-        auto transform = trillek::system::TransformSystem::GetTransform(0);
+        auto transform = transform::System::GetTransform(0);
 
         EXPECT_TRUE(transform == nullptr);
     }
 
     TEST(TransformTest, GetTranslation) {
-        trillek::resource::Transform transform;
+        trillek::transform::Transform transform;
         glm::vec3 translation = transform.GetTranslation();
 
         EXPECT_TRUE(glm::vec3(0.0f, 0.0f, 0.0f) == translation);
     }
     TEST(TransformTest, Translate) {
-        trillek::resource::Transform transform;
+        trillek::transform::Transform transform;
         transform.Translate(glm::vec3(1.0f, 1.0f, 1.0f));
         glm::vec3 translation = transform.GetTranslation();
 
@@ -55,7 +57,7 @@ namespace {
         EXPECT_TRUE(glm::vec3(2.0f, 2.0f, 2.0f) == translation);
     }
     TEST(TransformTest, SetTranslation) {
-        trillek::resource::Transform transform;
+        trillek::transform::Transform transform;
         transform.Translate(glm::vec3(1.0f, 1.0f, 1.0f));
         glm::vec3 translation = transform.GetTranslation();
 
@@ -68,13 +70,13 @@ namespace {
     }
 
     TEST(TransformTest, GetRotation) {
-        trillek::resource::Transform transform;
+        trillek::transform::Transform transform;
         glm::vec3 rotation = transform.GetRotation();
 
         EXPECT_TRUE(glm::vec3(0.0f, 0.0f, 0.0f) == rotation);
     }
     TEST(TransformTest, Rotate) {
-        trillek::resource::Transform transform;
+        trillek::transform::Transform transform;
         transform.Rotate(glm::vec3(1.0f, 1.0f, 1.0f));
         glm::vec3 rotation = transform.GetRotation();
 
@@ -86,7 +88,7 @@ namespace {
         EXPECT_TRUE(glm::vec3(2.0f, 2.0f, 2.0f) == rotation);
     }
     TEST(TransformTest, SetRotation) {
-        trillek::resource::Transform transform;
+        trillek::transform::Transform transform;
         transform.Rotate(glm::vec3(1.0f, 1.0f, 1.0f));
         glm::vec3 rotation = transform.GetRotation();
 
@@ -99,13 +101,13 @@ namespace {
     }
 
     TEST(TransformTest, GetScale) {
-        trillek::resource::Transform transform;
+        trillek::transform::Transform transform;
         glm::vec3 scale = transform.GetScale();
 
         EXPECT_TRUE(glm::vec3(0.0f, 0.0f, 0.0f) == scale);
     }
     TEST(TransformTest, Scale) {
-        trillek::resource::Transform transform;
+        trillek::transform::Transform transform;
         transform.Scale(glm::vec3(1.0f, 1.0f, 1.0f));
         glm::vec3 scale = transform.GetScale();
 
@@ -117,7 +119,7 @@ namespace {
         EXPECT_TRUE(glm::vec3(2.0f, 2.0f, 2.0f) == scale);
     }
     TEST(TransformTest, SetScale) {
-        trillek::resource::Transform transform;
+        trillek::transform::Transform transform;
         transform.Scale(glm::vec3(1.0f, 1.0f, 1.0f));
         glm::vec3 scale = transform.GetScale();
 
@@ -130,25 +132,25 @@ namespace {
     }
 
     TEST(TransformTest, GetOrientation) {
-        trillek::resource::Transform transform;
+        trillek::transform::Transform transform;
         glm::quat orientation = transform.GetOrientation();
 
-        glm::quat qX = glm::angleAxis(0.0f, RIGHT_VECTOR);
-        glm::quat qY = glm::angleAxis(0.0f, UP_VECTOR);
-        glm::quat qZ = glm::angleAxis(0.0f, FORWARD_VECTOR);
+        glm::quat qX = glm::angleAxis(0.0f, transform::RIGHT_VECTOR);
+        glm::quat qY = glm::angleAxis(0.0f, transform::UP_VECTOR);
+        glm::quat qZ = glm::angleAxis(0.0f, transform::FORWARD_VECTOR);
         glm::quat final_orientation = qX * qY * qZ;
         final_orientation = glm::normalize(final_orientation);
 
         EXPECT_TRUE(final_orientation == orientation);
     }
     TEST(TransformTest, Orient) {
-        trillek::resource::Transform transform;
+        trillek::transform::Transform transform;
         transform.Rotate(glm::vec3(1.0f, 1.0f, 1.0f));
         glm::quat orientation = transform.GetOrientation();
 
-        glm::quat qX = glm::angleAxis(1.0f, RIGHT_VECTOR);
-        glm::quat qY = glm::angleAxis(1.0f, UP_VECTOR);
-        glm::quat qZ = glm::angleAxis(1.0f, FORWARD_VECTOR);
+        glm::quat qX = glm::angleAxis(1.0f, transform::RIGHT_VECTOR);
+        glm::quat qY = glm::angleAxis(1.0f, transform::UP_VECTOR);
+        glm::quat qZ = glm::angleAxis(1.0f, transform::FORWARD_VECTOR);
         glm::quat final_orientation = qX * qY * qZ;
         final_orientation = glm::normalize(final_orientation);
 
@@ -161,13 +163,13 @@ namespace {
         EXPECT_TRUE(final_orientation == orientation);
     }
     TEST(TransformTest, SetOrientation) {
-        trillek::resource::Transform transform;
+        trillek::transform::Transform transform;
         transform.Rotate(glm::vec3(1.0f, 1.0f, 1.0f));
         glm::quat orientation = transform.GetOrientation();
 
-        glm::quat qX = glm::angleAxis(1.0f, RIGHT_VECTOR);
-        glm::quat qY = glm::angleAxis(1.0f, UP_VECTOR);
-        glm::quat qZ = glm::angleAxis(1.0f, FORWARD_VECTOR);
+        glm::quat qX = glm::angleAxis(1.0f, transform::RIGHT_VECTOR);
+        glm::quat qY = glm::angleAxis(1.0f, transform::UP_VECTOR);
+        glm::quat qZ = glm::angleAxis(1.0f, transform::FORWARD_VECTOR);
         glm::quat final_orientation = qX * qY * qZ;
         final_orientation = glm::normalize(final_orientation);
 
@@ -176,9 +178,9 @@ namespace {
         transform.SetRotation(glm::vec3(5.0f, 5.0f, 5.0f));
         orientation = transform.GetOrientation();
 
-        qX = glm::angleAxis(5.0f, RIGHT_VECTOR);
-        qY = glm::angleAxis(5.0f, UP_VECTOR);
-        qZ = glm::angleAxis(5.0f, FORWARD_VECTOR);
+        qX = glm::angleAxis(5.0f, transform::RIGHT_VECTOR);
+        qY = glm::angleAxis(5.0f, transform::UP_VECTOR);
+        qZ = glm::angleAxis(5.0f, transform::FORWARD_VECTOR);
         final_orientation = qX * qY * qZ;
         final_orientation = glm::normalize(final_orientation);
 

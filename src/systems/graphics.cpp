@@ -1,15 +1,15 @@
-#include "systems/Graphics.hpp"
-#include "systems/ResourceSystem.h"
+#include "systems/graphics.hpp"
+#include "systems/resource-system.hpp"
 
-#include "resources/MD5Mesh.hpp"
-#include "resources/Shader.hpp"
-#include "resources/Material.hpp"
-#include "components/Renderable.hpp"
+#include "resources/md5mesh.hpp"
+#include "resources/shader.hpp"
+#include "resources/material.hpp"
+#include "components/renderable.hpp"
 
 namespace trillek {
 namespace graphics {
 
-const int* GL::Start(const unsigned int width, const unsigned int height) {
+const int* System::Start(const unsigned int width, const unsigned int height) {
     // Use the GL3 way to get the version number
     glGetIntegerv(GL_MAJOR_VERSION, &this->gl_version[0]);
     glGetIntegerv(GL_MINOR_VERSION, &this->gl_version[1]);
@@ -30,7 +30,7 @@ const int* GL::Start(const unsigned int width, const unsigned int height) {
     return this->gl_version;
 }
 
-void GL::Update(const double delta) {
+void System::Update(const double delta) {
     // Clear the backbuffer and primary depth/stencil buffer
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glViewport(0, 0, this->window_width, this->window_height); // Set the viewport size to fill the window
@@ -55,7 +55,7 @@ void GL::Update(const double delta) {
     }
 }
 
-void GL::SetViewportSize(const unsigned int width, const unsigned int height) {
+void System::SetViewportSize(const unsigned int width, const unsigned int height) {
     this->window_height = height;
     this->window_width = width;
 
@@ -74,7 +74,7 @@ void GL::SetViewportSize(const unsigned int width, const unsigned int height) {
         );
 }
 
-void GL::AddRenderable(const unsigned int entity_id, std::shared_ptr<Renderable> ren) {
+void System::AddRenderable(const unsigned int entity_id, std::shared_ptr<Renderable> ren) {
     // Loop through all the renderables and see if one exists for the given entityID.
     for (auto& r : this->renderables) {
         if (r.first == entity_id) {
@@ -119,7 +119,7 @@ void GL::AddRenderable(const unsigned int entity_id, std::shared_ptr<Renderable>
     this->material_groups.push_back(std::move(matgrp));
 }
 
-void GL::RemoveRenderable(const unsigned int entity_id) {
+void System::RemoveRenderable(const unsigned int entity_id) {
     // Loop through all the renderables and see if one exists for the given entityID.
     for (auto& r : this->renderables) {
         if (r.first == entity_id) {

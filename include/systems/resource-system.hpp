@@ -1,13 +1,13 @@
-#ifndef RESOURCESYSTEM_H_INCLUDED
-#define RESOURCESYSTEM_H_INCLUDED
+#ifndef RESOURCE_SYSTEM_HPP_INCLUDED
+#define RESOURCE_SYSTEM_HPP_INCLUDED
 
 #include <string>
 #include <memory>
 #include <map>
 #include <mutex>
 #include <vector>
-#include "Property.h"
-#include "Trillek.h"
+#include "property.hpp"
+#include "trillek.hpp"
 #include "systems/json-parser.hpp"
 
 namespace trillek {
@@ -27,17 +27,14 @@ public:
     virtual bool Initialize(const std::vector<Property> &properties) = 0;
 };
 
-} //End of resource
-
-namespace system {
 // Singleton approach derived from http://silviuardelean.ro/2012/06/05/few-singleton-approaches/ .
-class ResourceSystem : public system::SerializerBase {
+class System : public json::SerializerBase {
 private:
-    ResourceSystem() : SerializerBase("resources") { }
-    ResourceSystem(const ResourceSystem& right) : SerializerBase("resources") {
+    System() : SerializerBase("resources") { }
+    System(const System& right) : SerializerBase("resources") {
         instance = right.instance;
     }
-    ResourceSystem& operator=(const ResourceSystem& right) {
+    System& operator=(const System& right) {
         if (this != &right) {
             instance = right.instance;
         }
@@ -45,27 +42,27 @@ private:
         return *this;
     }
     static std::once_flag only_one;
-    static std::shared_ptr<ResourceSystem> instance;
+    static std::shared_ptr<System> instance;
 public:
-    static std::shared_ptr<ResourceSystem> GetInstance() {
-        std::call_once(ResourceSystem::only_one,
+    static std::shared_ptr<System> GetInstance() {
+        std::call_once(System::only_one,
             [ ] () {
-                ResourceSystem::instance.reset(new ResourceSystem());
+                System::instance.reset(new System());
 
                 // Set up the default factory for an unknown type to return false.
                 auto lambda = [ ] (const std::string& name, const std::vector<Property> &properties) {
                     return nullptr;
                 };
 
-                ResourceSystem::instance->factories[0] = lambda;
+                System::instance->factories[0] = lambda;
 
-                ResourceSystem::instance->RegisterTypes();
+                System::instance->RegisterTypes();
             }
         );
 
-        return ResourceSystem::instance;
+        return System::instance;
     }
-    ~ResourceSystem() { }
+    ~System() { }
 
     /**
     * \brief Register a type to be available for factory calls.

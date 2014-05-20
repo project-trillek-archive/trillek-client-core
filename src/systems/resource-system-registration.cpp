@@ -1,17 +1,15 @@
-#include "systems/ResourceSystem.h"
-
-#include "resources/Shader.hpp"
-#include "resources/MD5Mesh.hpp"
-#include "resources/TextFile.h"
+#include "resources/shader.hpp"
+#include "resources/md5mesh.hpp"
+#include "resources/text-file.hpp"
 
 namespace trillek {
-namespace system {
+namespace resource {
 
-void ResourceSystem::RegisterTypes() {
+void System::RegisterTypes() {
     RegisterResourceType<trillek::resource::TextFile>();
     RegisterResourceType<trillek::resource::MD5Mesh>();
     RegisterResourceType<trillek::resource::Shader>();
 }
 
-} // End of system
+} // End of resource
 } // End of trillek

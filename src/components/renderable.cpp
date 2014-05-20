@@ -1,12 +1,12 @@
-#include "components/Renderable.hpp"
-#include "resources/Material.hpp"
-#include "resources/Shader.hpp"
-#include "resources/Mesh.hpp"
+#include "components/renderable.hpp"
+#include "resources/material.hpp"
+#include "resources/shader.hpp"
+#include "resources/mesh.hpp"
 
 namespace trillek {
 namespace graphics {
 
-Renderable::Renderable() : material(std::make_shared<resource::Material>()) { }
+Renderable::Renderable() : material(std::make_shared<Material>()) { }
 Renderable::~Renderable() { }
 
 void Renderable::UpdateBufferGroups() {
@@ -85,11 +85,11 @@ std::shared_ptr<resource::Mesh> Renderable::GetMesh() const {
     return this->mesh;
 }
 
-void Renderable::SetMaterial(std::shared_ptr<resource::Material> m) {
+void Renderable::SetMaterial(std::shared_ptr<Material> m) {
     this->material = m;
 }
 
-std::shared_ptr<resource::Material> Renderable::GetMaterial() const {
+std::shared_ptr<Material> Renderable::GetMaterial() const {
     return this->material;
 }
 

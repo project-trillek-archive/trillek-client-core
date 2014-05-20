@@ -1,15 +1,15 @@
 #include "systems/json-parser.hpp"
 
-#include "systems/ResourceSystem.h"
+#include "systems/resource-system.hpp"
 #include "systems/transform-system.hpp"
 
 namespace trillek {
-namespace system {
+namespace json {
 
-void JSONParser::RegisterTypes() {
-    RegisterSerializer(ResourceSystem::GetInstance());
-    RegisterSerializer(TransformSystem::GetInstance());
+void System::RegisterTypes() {
+    RegisterSerializer(resource::System::GetInstance());
+    RegisterSerializer(transform::System::GetInstance());
 }
 
-} // End of system
+} // End of json
 } // End of trillek

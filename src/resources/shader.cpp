@@ -2,7 +2,7 @@
 //Author: Movania Muhammad Mobeen
 //Last Modified: February 2, 2011
 
-#include "resources/Shader.hpp"
+#include "resources/shader.hpp"
 #include <iostream>
 #include <fstream>
 

@@ -10,12 +10,11 @@ namespace trillek {
 namespace resource {
 
 class TextFile;
+class System;
 
-} // End of resource
+} // End of system
 
-namespace system {
-
-class ResourceSystem;
+namespace json {
 
 class SerializerBase {
 protected:
@@ -50,9 +49,9 @@ private:
     std::string name;
 };
 
-class JSONParser {
+class System {
 public:
-    JSONParser();
+    System();
 
     /**
     * \brief Parses a JSON file with the given filename.
@@ -99,7 +98,7 @@ private:
     static std::map<std::string, std::shared_ptr<SerializerBase>> serializer_types;
 };
 
-} // End of system
+} // End of json
 } // End of trillek
 
 #endif

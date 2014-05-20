@@ -8,21 +8,17 @@
 #include "systems/json-parser.hpp"
 
 namespace trillek {
-namespace resource {
+namespace transform {
 
 class Transform;
 
-} // End of resource
-
-namespace system {
-
-class TransformSystem : public SerializerBase {
+class System : public json::SerializerBase {
 private:
-    TransformSystem() : SerializerBase("transforms") { }
-    TransformSystem(const TransformSystem& right) : SerializerBase("transforms") {
+    System() : SerializerBase("transforms") { }
+    System(const System& right) : SerializerBase("transforms") {
         instance = right.instance;
     }
-    TransformSystem& operator=(const TransformSystem& right) {
+    System& operator=(const System& right) {
         if (this != &right) {
             instance = right.instance;
         }
@@ -30,18 +26,18 @@ private:
         return *this;
     }
     static std::once_flag only_one;
-    static std::shared_ptr<TransformSystem> instance;
+    static std::shared_ptr<System> instance;
 public:
-    static std::shared_ptr<TransformSystem> GetInstance() {
-        std::call_once(TransformSystem::only_one,
+    static std::shared_ptr<System> GetInstance() {
+        std::call_once(System::only_one,
             [ ] () {
-                TransformSystem::instance.reset(new TransformSystem());
-            }
+            System::instance.reset(new System());
+        }
         );
 
-        return TransformSystem::instance;
+        return System::instance;
     }
-    ~TransformSystem() { }
+    ~System() { }
 
     /**
     * \brief Gets an entity's transform.
@@ -49,7 +45,7 @@ public:
     * \param[in] const unsigned int entity_id ID of the entity to get the transform for.
     * \return std::shared_ptr<resource::Transform> The entity's transofmr (nullptr if no transform found).
     */
-    static std::shared_ptr<resource::Transform> AddTransform(const unsigned int entity_id);
+    static std::shared_ptr<Transform> AddTransform(const unsigned int entity_id);
 
     /**
     * \brief Gets an entity's transform.
@@ -57,7 +53,7 @@ public:
     * \param[in] const unsigned int entity_id ID of the entity to get the transform for.
     * \return std::shared_ptr<resource::Transform> The entity's transofmr (nullptr if no transform found).
     */
-    static std::shared_ptr<resource::Transform> GetTransform(const unsigned int entity_id);
+    static std::shared_ptr<Transform> GetTransform(const unsigned int entity_id);
 
     /**
     * \brief Gets an entity's transform.
@@ -73,10 +69,10 @@ public:
     // Inherited from SerializeBase
     virtual bool DeSerialize(rapidjson::Value& node);
 private:
-    std::map<unsigned int, std::shared_ptr<resource::Transform>> transforms;
+    std::map<unsigned int, std::shared_ptr<Transform>> transforms;
 };
 
-} // End of system
+} // End of transform
 } // End of trillek
 
 #endif

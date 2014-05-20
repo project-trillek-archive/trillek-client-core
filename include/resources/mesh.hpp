@@ -3,14 +3,14 @@
 
 #include <glm/glm.hpp>
 
-#include "systems/ResourceSystem.h"
+#include "systems/resource-system.hpp"
 
 namespace trillek {
 namespace resource {
 
 // Vertex data used for rendering or other purposes.
 struct VertexData {
-    VertexData() : position(0.0f, 0.0f, 0.0f) { }
+    VertexData() : position(0.0f, 0.0f, 0.0f), color(0.0f, 1.0f, 0.0f, 1.0f) { }
     glm::vec3 position;
     glm::vec4 color;
     glm::vec3 normal;

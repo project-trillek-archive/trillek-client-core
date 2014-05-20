@@ -3,17 +3,16 @@
 
 #include "gtest/gtest.h"
 
-#include "systems/ResourceSystem.h"
-#include "resources/TextFile.h"
+#include "systems/resource-system.hpp"
+#include "resources/text-file.hpp"
 
-using namespace trillek::system;
 using namespace trillek::resource;
 
 namespace trillek {
-    std::shared_ptr<ResourceSystem> resSys;
+    std::shared_ptr<System> resSys;
     // Check if resource types are registered correctly
     TEST(ResSysTest, Register) {
-        resSys = ResourceSystem::GetInstance();
+        resSys = System::GetInstance();
 
         // If we have a valid type id retrieved from within resource system, then registtration was valid.
         ASSERT_EQ(reflection::GetTypeID<TextFile>(), resSys->GetTypeIDFromName(reflection::GetTypeName<TextFile>()));

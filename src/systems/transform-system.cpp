@@ -2,12 +2,12 @@
 #include "resources/transform.hpp"
 
 namespace trillek {
-namespace system {
+namespace transform {
 
-std::once_flag TransformSystem::only_one;
-std::shared_ptr<TransformSystem> TransformSystem::instance = nullptr;
+std::once_flag System::only_one;
+std::shared_ptr<System> System::instance = nullptr;
 
-std::shared_ptr<resource::Transform> TransformSystem::GetTransform(const unsigned int entity_id) {
+std::shared_ptr<Transform> System::GetTransform(const unsigned int entity_id) {
     if (instance->transforms.find(entity_id) != instance->transforms.end()) {
         return instance->transforms[entity_id];
     }
@@ -15,9 +15,9 @@ std::shared_ptr<resource::Transform> TransformSystem::GetTransform(const unsigne
     return nullptr;
 }
 
-std::shared_ptr<resource::Transform> TransformSystem::AddTransform(const unsigned int entity_id) {
+std::shared_ptr<Transform> System::AddTransform(const unsigned int entity_id) {
     if (instance->transforms.find(entity_id) == instance->transforms.end()) {
-        std::shared_ptr<resource::Transform> transform = std::make_shared<resource::Transform>();
+        std::shared_ptr<Transform> transform = std::make_shared<Transform>();
 
         instance->transforms[entity_id] = transform;
     }
@@ -25,11 +25,11 @@ std::shared_ptr<resource::Transform> TransformSystem::AddTransform(const unsigne
     return instance->transforms[entity_id];
 }
 
-void TransformSystem::RemoveTransform(const unsigned int entity_id) {
+void System::RemoveTransform(const unsigned int entity_id) {
     instance->transforms.erase(entity_id);
 }
 
-bool TransformSystem::Serialize(rapidjson::Document& document) {
+bool System::Serialize(rapidjson::Document& document) {
     rapidjson::Value transform_node(rapidjson::kObjectType);
 
     for (auto entity_transform : this->transforms) {
@@ -86,7 +86,7 @@ bool TransformSystem::Serialize(rapidjson::Document& document) {
 //          }
 //      }
 //  }
-bool TransformSystem::DeSerialize(rapidjson::Value& node) {
+bool System::DeSerialize(rapidjson::Value& node) {
     if (node.IsObject()) {
         // Iterate over the entity ids.
         for (auto entity_itr = node.MemberBegin(); entity_itr != node.MemberEnd(); ++entity_itr) {
@@ -151,5 +151,5 @@ bool TransformSystem::DeSerialize(rapidjson::Value& node) {
     return false;
 }
 
-} // End of system
+} // End of transform
 } // End of trillek

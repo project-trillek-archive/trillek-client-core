@@ -13,8 +13,12 @@
 namespace trillek {
 namespace resource {
 
-class Texture;
-class Shader;
+    class Texture;
+    class Shader;
+
+} // End of resource
+
+namespace graphics {
 
 class Material {
 public:
@@ -73,7 +77,7 @@ private:
     std::shared_ptr<resource::Shader> shader;
 };
 
-} // End of resource
+} // End of graphics
 } // End of trillek
 
 #endif
