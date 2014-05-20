@@ -26,57 +26,8 @@ struct FourCC {
     }
 };
 
-template<class RT>
-class ErrorReturn {
-public:
-    RT value;
-    int error_code;
-    std::string error_text;
+template<class> class ErrorReturn;
 
-    ErrorReturn(RT val) :
-        value(val), error_code(0), error_text() {}
-    ~ErrorReturn() {}
-
-    ErrorReturn(RT val, int code) :
-        value(val), error_code(code), error_text() {}
-
-    ErrorReturn(RT val, int code, const std::string& msg) :
-        value(val), error_code(code), error_text(msg) {}
-
-    ErrorReturn(RT val, int code, std::string&& msg) :
-        value(val), error_code(code), error_text(msg) {}
-
-    ErrorReturn(const ErrorReturn &) = default;
-    ErrorReturn& operator=(const ErrorReturn &) = default;
-
-    ErrorReturn(RT val, const ErrorReturn<void> &rv) : value(val) {
-        error_code = rv.error_code;
-        error_text = rv.error_text;
-    }
-    ErrorReturn(RT val, ErrorReturn<void> &&rv) : value(val) {
-        error_code = rv.error_code;
-        error_text = std::move(rv.error_text);
-    }
-    operator bool() {
-        return error_code != 0;
-    }
-
-    RT& operator*() {
-        return value;
-    }
-
-    ErrorReturn(ErrorReturn && rv) {
-        value = std::move(rv.value);
-        error_code = rv.error_code;
-        error_text = std::move(rv.error_text);
-    }
-    ErrorReturn& operator=(ErrorReturn && rv) {
-        value = std::move(rv.value);
-        error_code = rv.error_code;
-        error_text = std::move(rv.error_text);
-        return *this;
-    }
-};
 template<>
 class ErrorReturn<void> {
 public:
@@ -142,6 +93,57 @@ public:
     }
 };
 
+template<class RT>
+class ErrorReturn {
+public:
+    RT value;
+    int error_code;
+    std::string error_text;
+
+    ErrorReturn(RT val) :
+        value(val), error_code(0), error_text() {}
+    ~ErrorReturn() {}
+
+    ErrorReturn(RT val, int code) :
+        value(val), error_code(code), error_text() {}
+
+    ErrorReturn(RT val, int code, const std::string& msg) :
+        value(val), error_code(code), error_text(msg) {}
+
+    ErrorReturn(RT val, int code, std::string&& msg) :
+        value(val), error_code(code), error_text(msg) {}
+
+    ErrorReturn(const ErrorReturn &) = default;
+    ErrorReturn& operator=(const ErrorReturn &) = default;
+
+    ErrorReturn(RT val, const ErrorReturn<void> &rv) : value(val) {
+        error_code = rv.error_code;
+        error_text = rv.error_text;
+    }
+    ErrorReturn(RT val, ErrorReturn<void> &&rv) : value(val) {
+        error_code = rv.error_code;
+        error_text = std::move(rv.error_text);
+    }
+    operator bool() {
+        return error_code != 0;
+    }
+
+    RT& operator*() {
+        return value;
+    }
+
+    ErrorReturn(ErrorReturn && rv) {
+        value = std::move(rv.value);
+        error_code = rv.error_code;
+        error_text = std::move(rv.error_text);
+    }
+    ErrorReturn& operator=(ErrorReturn && rv) {
+        value = std::move(rv.value);
+        error_code = rv.error_code;
+        error_text = std::move(rv.error_text);
+        return *this;
+    }
+};
 typedef ErrorReturn<void> void_er;
 
 uint16_t BitReverse16(uint16_t n);
