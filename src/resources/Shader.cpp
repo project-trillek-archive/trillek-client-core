@@ -25,21 +25,21 @@ Shader::~Shader(void) {
 }
 
 bool Shader::Initialize(const std::vector<Property> &properties) {
-    std::string filename = "";
+    std::string vertex_filename = "";
+    std::string fragment_filename = "";
 
     for (auto propitr = properties.begin(); propitr != properties.end(); ++propitr) {
         const Property*  p = &(*propitr);
-        if (p->GetName() == "filename") {
-            filename = p->Get<std::string>();
+        if (p->GetName() == "vertex") {
+            vertex_filename = p->Get<std::string>();
+        }
+        else if (p->GetName() == "fragment") {
+            fragment_filename = p->Get<std::string>();
         }
     }
 
-    // need to create and save the shader
-    std::string vertFilename = filename + ".vert";
-    std::string fragFilename = filename + ".frag";
-
-    LoadFromFile(GL_VERTEX_SHADER, vertFilename);
-    LoadFromFile(GL_FRAGMENT_SHADER, fragFilename);
+    LoadFromFile(GL_VERTEX_SHADER, vertex_filename);
+    LoadFromFile(GL_FRAGMENT_SHADER, fragment_filename);
     CreateAndLinkProgram();
 
     return isLoaded();
