@@ -1,4 +1,4 @@
-#include "util/Checksum.hpp"
+#include "util/checksum.hpp"
 
 namespace trillek {
 namespace util {

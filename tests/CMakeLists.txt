@@ -88,9 +88,9 @@ ENDIF (DEFINED ENV{GTEST_ROOT})
 file(GLOB_RECURSE TCCTests_SRC "tests/*.h" "main.cpp" "src/*.cpp")
 
 file(GLOB TCCExtra_SRC
-"${TCCSRC}/util/Util.cpp"
-"${TCCSRC}/util/Checksum.cpp"
-"${TCCSRC}/util/Compression.cpp"
+"${TCCSRC}/util/util.cpp"
+"${TCCSRC}/util/checksum.cpp"
+"${TCCSRC}/util/compression.cpp"
 )
 
 foreach(flag_var

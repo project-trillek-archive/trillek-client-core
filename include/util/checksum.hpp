@@ -1,7 +1,7 @@
 #ifndef CHECKSUM_HPP_INCLUDED
 #define CHECKSUM_HPP_INCLUDED
 
-#include "UtilType.hpp"
+#include "utiltype.hpp"
 
 namespace trillek {
 namespace util {

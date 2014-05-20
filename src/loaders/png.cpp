@@ -1,6 +1,6 @@
 #include "resources/pixel-buffer.hpp"
-#include "util/Compression.hpp"
-#include "util/Checksum.hpp"
+#include "util/compression.hpp"
+#include "util/checksum.hpp"
 
 namespace trillek {
 namespace resource {

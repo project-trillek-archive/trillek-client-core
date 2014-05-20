@@ -1,6 +1,6 @@
 
-#include "util/UtilType.hpp"
-#include "util/Compression.hpp"
+#include "util/utiltype.hpp"
+#include "util/compression.hpp"
 
 namespace trillek {
 namespace util {

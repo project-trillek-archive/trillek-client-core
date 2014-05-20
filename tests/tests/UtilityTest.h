@@ -3,8 +3,8 @@
 
 #include <gtest/gtest.h>
 
-#include "util/UtilType.hpp"
-#include "util/Checksum.hpp"
+#include "util/utiltype.hpp"
+#include "util/checksum.hpp"
 
 namespace trillek {
 namespace util {

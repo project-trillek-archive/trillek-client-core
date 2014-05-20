@@ -5,7 +5,7 @@
 #include <memory>
 #include <stdint.h>
 
-#include "util/UtilType.hpp"
+#include "util/utiltype.hpp"
 
 namespace trillek {
 namespace util {

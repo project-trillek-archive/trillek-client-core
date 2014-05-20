@@ -3,7 +3,7 @@
 
 #include <gtest/gtest.h>
 
-#include "util/Compression.hpp"
+#include "util/compression.hpp"
 
 namespace trillek {
 namespace util {
