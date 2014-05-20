@@ -35,7 +35,11 @@ bool OS::InitializeWindow(const int width, const int height, const std::string t
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, glMajor);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, glMinor);
 
+#if __APPLE__
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+#else
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
+#endif
 
     // Create a windowed mode window and its OpenGL context.
     this->window = glfwCreateWindow(width, height, title.c_str(), NULL, NULL);
