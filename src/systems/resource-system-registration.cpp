@@ -8,9 +8,9 @@ namespace trillek {
 namespace system {
 
 void ResourceSystem::RegisterTypes() {
-    Register<trillek::resource::TextFile>();
-    Register<trillek::resource::MD5Mesh>();
-    Register<trillek::resource::Shader>();
+    RegisterResourceType<trillek::resource::TextFile>();
+    RegisterResourceType<trillek::resource::MD5Mesh>();
+    RegisterResourceType<trillek::resource::Shader>();
 }
 
 } // End of system

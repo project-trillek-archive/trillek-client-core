@@ -14,7 +14,6 @@ namespace trillek {
     // Check if resource types are registered correctly
     TEST(ResSysTest, Register) {
         resSys = ResourceSystem::GetInstance();
-        resSys->Register<TextFile>();
 
         // If we have a valid type id retrieved from within resource system, then registtration was valid.
         ASSERT_EQ(reflection::GetTypeID<TextFile>(), resSys->GetTypeIDFromName(reflection::GetTypeName<TextFile>()));

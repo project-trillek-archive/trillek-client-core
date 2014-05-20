@@ -17,8 +17,12 @@ int main(int argCount, char **argValues) {
     trillek::system::JSONParser jparser;
     jparser.Parse("assets/tests/sample.json");
 
+    trillek::graphics::GL gl;
+    gl.Start(os.GetWindowWidth(), os.GetWindowHeight());
     while (!os.Closing()) {
         os.OSMessageLoop();
+        gl.Update(0);
+        os.SwapBuffers();
     }
 
     os.Terminate();

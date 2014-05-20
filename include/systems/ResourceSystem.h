@@ -73,7 +73,7 @@ public:
     * \return void
     */
     template<class T>
-    void Register() {
+    void RegisterResourceType() {
         // Store the type ID associated with the type name.
         this->resource_type_id[reflection::GetTypeName<T>()] = reflection::GetTypeID<T>();
 
