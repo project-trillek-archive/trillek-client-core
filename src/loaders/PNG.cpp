@@ -1,4 +1,4 @@
-#include "resources/PixelBuffer.hpp"
+#include "resources/pixel-buffer.hpp"
 #include "util/Compression.hpp"
 #include "util/Checksum.hpp"
 
