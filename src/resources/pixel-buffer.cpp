@@ -1,10 +1,11 @@
 
+#include "util/utiltype.hpp"
 #include "resources/pixel-buffer.hpp"
 
 namespace trillek {
 namespace resource {
 
-int LoadPNG(std::istream &from, PixelBuffer &);
+util::void_er LoadPNG(std::istream &from, PixelBuffer &);
 
 PixelBuffer::PixelBuffer() :
     imagewidth(0), imageheight(0), bufferpitch(0), imagebitdepth(0),

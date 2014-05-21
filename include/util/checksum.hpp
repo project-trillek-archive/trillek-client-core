@@ -14,6 +14,7 @@ struct Crc32 : public FourCC {
     void Init() {
         ldata = 0xffffffffl;
     }
+    void Update(char d);
     void Update(const std::string &d);
     void Update(const void *d, size_t l);
     void Last() {

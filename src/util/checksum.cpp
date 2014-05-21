@@ -16,7 +16,7 @@ static void GenCRC32Table()
         c = i;
         for(k = 0; k < 8; k++) {
             if(c & 1)
-                c = 0xedb88320L ^ (c >> 1);
+                c = 0xedb88320ul ^ (c >> 1);
             else
                 c = c >> 1;
         }
@@ -24,14 +24,20 @@ static void GenCRC32Table()
     }
     crc32_table_computed = true;
 }
+void Crc32::Update(char d) {
 
+    if(!crc32_table_computed)
+        GenCRC32Table();
+    ldata = crc32_table[(ldata ^ ((unsigned char)d)) & 0xff] ^ (ldata >> 8);
+
+}
 void Crc32::Update(const std::string &d) {
     uint32_t c = ldata;
     std::string::size_type n, l = d.length();
     if(!crc32_table_computed)
         GenCRC32Table();
     for(n = 0; n < l; n++) {
-        c = crc32_table[(c ^ d[n]) & 0xff] ^ (c >> 8);
+        c = crc32_table[(c ^ ((unsigned char)d[n])) & 0xff] ^ (c >> 8);
     }
     ldata = c;
 }
@@ -42,7 +48,7 @@ void Crc32::Update(const void *dv, size_t l) {
     if(!crc32_table_computed)
         GenCRC32Table();
     for(n = 0; n < l; n++) {
-        c = crc32_table[(c ^ d[n]) & 0xff] ^ (c >> 8);
+        c = crc32_table[(c ^ ((unsigned char)d[n])) & 0xff] ^ (c >> 8);
     }
     ldata = c;
 }

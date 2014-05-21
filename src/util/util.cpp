@@ -53,6 +53,23 @@ std::istream &operator>>(std::istream &f, FourCC &o) {
     }
     return f;
 }
+InputStream& operator>>(InputStream & f, FourCC & o) {
+    for(int i = 0; i < 4 && !f.eof(); i++) {
+        o.cdata[i] = f.read();
+    }
+    return f;
+}
+InputStream& operator>>(InputStream & f, uint8_t & o) {
+    o = f.read();
+    return f;
+}
+std::ostream &operator<<(std::ostream &f, FourCC &o) {
+    f << o.cdata[0];
+    f << o.cdata[1];
+    f << o.cdata[2];
+    f << o.cdata[3];
+    return f;
+}
 
 } // util
 } // trillek

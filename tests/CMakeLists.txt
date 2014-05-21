@@ -91,6 +91,9 @@ file(GLOB TCCExtra_SRC
 "${TCCSRC}/util/util.cpp"
 "${TCCSRC}/util/checksum.cpp"
 "${TCCSRC}/util/compression.cpp"
+"${TCCSRC}/loaders/png.cpp"
+"${TCCSRC}/resources/pixel-buffer.cpp"
+
 )
 
 foreach(flag_var
