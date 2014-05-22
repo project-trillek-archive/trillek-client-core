@@ -8,7 +8,7 @@
 namespace trillek {
 namespace resource {
 
-util::void_er LoadPNG(std::istream &f, PixelBuffer &pix);
+util::void_er LoadPNG(util::InputStream & f, PixelBuffer & pix);
 
 }
 }

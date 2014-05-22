@@ -15,13 +15,25 @@ TEST(ImageLoaderTest, PortableNetworkGraphic) {
     util::void_er stat;
     std::ifstream file;
 
-    file.open("assets/T1.png", std::ios::in + std::ios::binary);
+    file.open("T1.png", std::ios::in | std::ios::binary);
     EXPECT_TRUE(file.is_open());
     if(file.is_open()) {
-        stat = LoadPNG(file, image);
+        util::StdInputStream insf(file);
+        stat = LoadPNG(insf, image);
         EXPECT_FALSE(stat);
         if(stat) {
-            std::cerr << "Result: " << stat.error_text << '\n';
+            std::cerr << "Reason: " << stat.error_text << '\n';
+        }
+    }
+    file.close();
+    file.open("T2.png", std::ios::in | std::ios::binary);
+    EXPECT_TRUE(file.is_open());
+    if(file.is_open()) {
+        util::StdInputStream insf(file);
+        stat = LoadPNG(insf, image);
+        EXPECT_FALSE(stat);
+        if(stat) {
+            std::cerr << "Reason: " << stat.error_text << '\n';
         }
     }
     file.close();
