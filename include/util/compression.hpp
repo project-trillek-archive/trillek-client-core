@@ -6,6 +6,7 @@
 #include <stdint.h>
 
 #include "util/utiltype.hpp"
+#include "util/checksum.hpp"
 
 namespace trillek {
 namespace util {
@@ -22,7 +23,7 @@ public:
     virtual ~CompressionMethod() {};
     virtual bool CompressStart() = 0;
     virtual bool CompressEnd() = 0;
-    virtual bool CompressData(DataString) = 0;
+    virtual bool CompressData(const DataString &) = 0;
     virtual bool CompressHasOutput() = 0;
     virtual DataString CompressGetOutput() = 0;
 };
@@ -33,7 +34,7 @@ public:
 
     virtual bool DecompressStart() = 0;
     virtual bool DecompressEnd() = 0;
-    virtual bool DecompressData(DataString) = 0;
+    virtual bool DecompressData(const DataString &) = 0;
     virtual bool DecompressHasOutput() = 0;
     virtual DataString DecompressGetOutput() = 0;
 };
@@ -56,6 +57,7 @@ namespace algorithm {
         DataString::size_type inpos;
         uint32_t num_bits;
         uint32_t bit_buffer;
+        uint32_t num_unused;
 
         BitStreamDecoder();
 
@@ -70,6 +72,8 @@ namespace algorithm {
         /** \brief ensure bits are available
          */
         void_er Require(uint32_t n);
+
+        void_er AlignToByte();
 
         // used for bit buffer filling
         void_er LoadByte();
@@ -98,7 +102,7 @@ namespace algorithm {
         ~Inflate();
         bool DecompressStart();
         bool DecompressEnd();
-        bool DecompressData(DataString);
+        bool DecompressData(const DataString &);
         bool DecompressHasOutput();
         DataString DecompressGetOutput();
     protected:
@@ -115,7 +119,9 @@ namespace algorithm {
         void_er error_state;
         Huffman lengthcodes, distancecodes;
         InflateState readstate;
+        uint8_t s_final;
         uint16_t s_symbol;
+        Adler32 checksum;
     };
 
 } // algorithm

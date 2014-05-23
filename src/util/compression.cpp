@@ -11,6 +11,7 @@ BitStreamDecoder::BitStreamDecoder() {
     inpos = 0;
     num_bits = 0;
     bit_buffer = 0;
+    num_unused = 0;
 }
 
 void_er BitStreamDecoder::AppendData(const DataString & in)
@@ -59,7 +60,14 @@ void_er BitStreamDecoder::Require(uint32_t n) {
             if(ret) return ret;
         }
     }
-    return void_er(0);
+    return void_er();
+}
+void_er BitStreamDecoder::AlignToByte() {
+    if(num_bits & 0x7) {
+        num_unused += num_bits & 0x7;
+        GetBits(num_bits & 0x7);
+    }
+    return void_er();
 }
 void_er BitStreamDecoder::LoadFull() {
     while(num_bits <= 24) {
@@ -69,7 +77,7 @@ void_er BitStreamDecoder::LoadFull() {
         if(inpos < indata.length()) {
             bit_buffer |= indata[inpos++] << num_bits;
             num_bits += 8;
-            return void_er(0);
+            //return void_er(0);
         } else {
             return void_er(1, "Not enough data");
         }
@@ -349,7 +357,8 @@ void_er Inflate::HuffmanBlock() {
                 return void_er(-2, "Invalid distance - output too short");
             }
             while(length--) {
-                outdata.append(outdata.substr(outpos++ - distance, 1));
+                csym = outdata[outpos++ - distance];
+                outdata.append(&csym, 1);
             }
         }
     }
@@ -359,6 +368,8 @@ void_er Inflate::HuffmanBlock() {
 Inflate::Inflate() {
     outdata = DataString();
     outpos = 0;
+    s_final = 0;
+    s_symbol = 0;
 
     errored = false;
 
@@ -396,13 +407,14 @@ static const uint8_t default_distance[32] = {
     5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5
 };
 
-bool Inflate::DecompressData(DataString data) {
+bool Inflate::DecompressData(const DataString & data) {
     instream.AppendData(data);
 
-    uint32_t final_flag, type;
+    uint8_t final_flag, type;
     if(readstate == InflateState::ZLIB_HEADER) {
         instream.ReadByte();
         instream.ReadByte();
+        checksum.Init();
         readstate = InflateState::BLOCK_HEADER;
     }
 
@@ -414,6 +426,7 @@ bool Inflate::DecompressData(DataString data) {
             error_state = instream.Require(3);
             if(error_state.error_code == 1) return false;
             final_flag = (error_state = instream.GetBits(1));
+            s_final = final_flag;
             if(error_state) return true;
             type = (error_state = instream.GetBits(2));
             if(error_state) return true;
@@ -437,6 +450,9 @@ bool Inflate::DecompressData(DataString data) {
                 return true;
                 break;
             }
+        }
+        else{
+            final_flag = s_final;
         }
         switch(readstate) {
         case InflateState::BLOCK_UNCOMPRESSED:
@@ -463,7 +479,17 @@ bool Inflate::DecompressData(DataString data) {
             break;
         }
     }
-
+    checksum.Update(outdata.data(), outdata.length());
+    instream.AlignToByte();
+    uint32_t checkval;
+    checkval = instream.GetBits(8).value << 24;
+    checkval |= instream.GetBits(8).value << 16;
+    checkval |= instream.GetBits(8).value << 8;
+    checkval |= instream.GetBits(8).value;
+    checksum.Last();
+    if(checksum.ldata != checkval) {
+        return true;
+    }
     return false;
 }
 

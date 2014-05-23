@@ -57,25 +57,31 @@ void Adler32::Update(const std::string &d) {
     uint32_t c2 = (ldata >> 16) & 0xffff;
     std::string::size_type n, l = d.length();
     for(n = 0; n < l; n++) {
-        c1 = (c1 + d[n]);
-        while(c1 >= 65521ul)
-            c1 -= 65521;
-        c2 = (c2 + c1);
-        while(c2 >= 65521ul)
-            c2 -= 65521;
+        c1 += (unsigned char)d[n];
+        while(c1 >= 65521u) {
+            c1 -= 65521u;
+        }
+        c2 += c1;
+        while(c2 >= 65521u) {
+            c2 -= 65521u;
+        }
     }
     ldata = (c2 << 16) + c1;
 }
 void Adler32::Update(const void *dv, size_t l) {
     uint32_t c1 = ldata & 0xffff;
     uint32_t c2 = (ldata >> 16) & 0xffff;
-    char * d = (char*)dv;
+    unsigned char * d = (unsigned char*)dv;
     std::string::size_type n;
     for(n = 0; n < l; n++) {
-        c1 = (c1 + d[n]);
-        while(c1 >= 65521) c1 -= 65521;
-        c2 = (c2 + c1);
-        while(c2 >= 65521) c1 -= 65521;
+        c1 += d[n];
+        while(c1 >= 65521u) {
+            c1 -= 65521u;
+        }
+        c2 += c1;
+        while(c2 >= 65521u) {
+            c2 -= 65521u;
+        }
     }
     ldata = (c2 << 16) + c1;
 }
