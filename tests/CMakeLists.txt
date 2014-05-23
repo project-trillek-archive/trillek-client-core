@@ -94,8 +94,8 @@ file(GLOB TCCExtra_SRC
 "${TCCSRC}/systems/json-parser-registration.cpp"
 "${TCCSRC}/systems/transform-system.cpp"
 "${TCCSRC}/resources/transform.cpp"
-"${TCCSRC}/resources/MD5Mesh.cpp"
-"${TCCSRC}/resources/Shader.cpp"
+"${TCCSRC}/resources/md5mesh.cpp"
+"${TCCSRC}/resources/shader.cpp"
 )
 
 # For certain files we need the OpenGL symbols.
