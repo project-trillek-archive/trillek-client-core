@@ -138,11 +138,13 @@ util::void_er LoadPNG(util::InputStream & f, PixelBuffer & pix) {
     PNGTime mtime;
     PNGHeader header;
     CrcFilter chunk(f);
+    util::algorithm::Inflate decoder;
 
     void_er stat;
     int i;
     bool valid = true;
     bool needheader = true;
+    bool needpalette = false;
     bool idatmode = false;
     bool at_end = false;
 
@@ -160,7 +162,17 @@ util::void_er LoadPNG(util::InputStream & f, PixelBuffer & pix) {
         chunk.Header();
         std::cerr << chunk.type << ": " << chunk.len << '\n';
         if(chunk.type == FourCC("IDAT")) {
-            idatmode = true;
+            if(!idatmode) {
+                decoder.DecompressStart();
+                idatmode = true;
+            }
+            uint8_t c;
+            util::DataString compresseddata;
+            while(!f.eof() && chunk.len > 0) {
+                chunk >> c;
+                compresseddata.append(&c, 1);
+            }
+            decoder.DecompressData(compresseddata);
         }
         else if(chunk.type == FourCC("IEND")) {
             at_end = true;
@@ -174,6 +186,56 @@ util::void_er LoadPNG(util::InputStream & f, PixelBuffer & pix) {
                 chunk >> header.width >> header.height >> header.depth;
                 chunk >> header.colortype >> header.compression;
                 chunk >> header.filter >> header.interlace;
+                if((header.width | header.height) > (1 << 23)) {
+                    return void_er(-1, "Image size out of bounds");
+                }
+                switch(header.colortype) {
+                case 0:
+                    switch(header.depth) {
+                    case 1:
+                    case 2:
+                    case 4:
+                    case 8:
+                    case 16:
+                        // valid
+                        break;
+                    default:
+                        return void_er(-1, "Invalid color depth");
+                    }
+                    break;
+                case 3:
+                    needpalette = true;
+                    switch(header.depth) {
+                    case 1:
+                    case 2:
+                    case 4:
+                    case 8:
+                        // valid
+                        break;
+                    default:
+                        return void_er(-1, "Invalid color depth");
+                    }
+                    break;
+                case 2:
+                case 4:
+                case 6:
+                    if(header.depth != 8 && header.depth != 16) {
+                        return void_er(-1, "Invalid color depth");
+                    }
+                    break;
+                default:
+                    return void_er(-1, "Invalid color type");
+                    break;
+                }
+                if(header.filter != 0) {
+                    return void_er(-1, "Invalid/unsupported filter method");
+                }
+                if(header.compression != 0) {
+                    return void_er(-1, "Invalid/unsupported compression method");
+                }
+                if(header.interlace != 0 && header.interlace != 1) {
+                    return void_er(-1, "Invalid/unsupported interlace method");
+                }
                 // XXX: debug info
                 std::fprintf(stderr, "Image is %d x %d @%d\n", header.width, header.height, header.depth);
                 std::fprintf(stderr, "Color: %d\nCompressor: %d\nFilter: %d\nInterlace: %d\n",

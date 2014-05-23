@@ -23,7 +23,7 @@ ErrorReturn<uint8_t> BitStreamDecoder::ReadByte() {
     if(inpos < indata.length()) {
         return ErrorReturn<uint8_t>(indata[inpos++]);
     } else {
-        return ErrorReturn<uint8_t>(0, -1, "Not enough data");
+        return ErrorReturn<uint8_t>(0, 1, "Not enough data");
     }
 }
 
@@ -53,10 +53,11 @@ void_er BitStreamDecoder::Require(uint32_t n) {
         if(indata.length() - inpos < nbytes) {
             return void_er(1, "Not enough data");
         }
-    }
-    while(num_bits < n) {
-        ret = LoadByte();
-        if(ret) return ret;
+    } else {
+        while(num_bits < n) {
+            ret = LoadByte();
+            if(ret) return ret;
+        }
     }
     return void_er(0);
 }
@@ -222,6 +223,9 @@ void_er Inflate::DynamicBlock() {
     uint32_t num_codelen_codes  = (ret = instream.GetBits(4)) + 4;
     if(ret) return ret;
 
+    ret = instream.Require(num_codelen_codes * 3);
+    if(ret) return ret;
+
     n_memarrayset(codelength_sizes, (uint8_t)0, sizeof(codelength_sizes));
     for(i = 0; i < num_codelen_codes; ++i) {
         uint32_t s = (ret = instream.GetBits(3));
@@ -240,18 +244,18 @@ void_er Inflate::DynamicBlock() {
             lencodes[n++] = (uint8_t)c;
         }
         else if(c == 16) {
-            c = instream.GetBits(2) + 3;
+            c = (ret = instream.GetBits(2)) + 3;
             n_memarrayset(lencodes, n, lencodes[n - 1], c);
             n += c;
         }
         else if(c == 17) {
-            c = instream.GetBits(3) + 3;
+            c = (ret = instream.GetBits(3)) + 3;
             n_memarrayset(lencodes, n, (uint8_t)0, c);
             n += c;
         }
         else {
             //assert(c == 18);
-            c = instream.GetBits(7) + 11;
+            c = (ret = instream.GetBits(7)) + 11;
             n_memarrayset(lencodes, n, (uint8_t)0, c);
             n += c;
         }
@@ -300,21 +304,46 @@ void_er Inflate::HuffmanBlock() {
     void_er ret;
 
     while(!ret) {
-        symbol = (ret = HuffmanDecode(lengthcodes));
-        if(ret) return ret;
+        if(readstate == InflateState::BLOCK_DATA_SYMBOL) {
+            symbol = s_symbol;
+            readstate = InflateState::BLOCK_DATA;
+        } else {
+            symbol = (ret = HuffmanDecode(lengthcodes));
+            if(ret) return ret;
+        }
         if(symbol < 256) {
             csym = (unsigned char)symbol;
             outdata.append(&csym, 1);
         } else if(symbol == 256) {
             return void_er();
         } else {
+            ret = instream.Require(18+16);
+            if(ret) {
+                s_symbol = symbol;
+                readstate = InflateState::BLOCK_DATA_SYMBOL;
+                return ret;
+            }
             symbol -= 257;
             length = length_base[symbol];
-            if(length_extra[symbol]) length += instream.GetBits(length_extra[symbol]);
+            if(length_extra[symbol]) length += (ret = instream.GetBits(length_extra[symbol]));
+            if(ret) {
+                s_symbol = symbol;
+                readstate = InflateState::BLOCK_DATA_SYMBOL;
+                return ret;
+            }
             symbol = (ret = HuffmanDecode(distancecodes));
-            if(ret) return ret;
+            if(ret) {
+                s_symbol = symbol;
+                readstate = InflateState::BLOCK_DATA_SYMBOL;
+                return ret;
+            }
             distance = dist_base[symbol];
-            if(dist_extra[symbol]) distance += instream.GetBits(dist_extra[symbol]);
+            if(dist_extra[symbol]) distance += (ret = instream.GetBits(dist_extra[symbol]));
+            if(ret) {
+                s_symbol = symbol;
+                readstate = InflateState::BLOCK_DATA_SYMBOL;
+                return ret;
+            }
             outpos = outdata.length();
             if(outpos < distance) {
                 return void_er(-2, "Invalid distance - output too short");
@@ -374,40 +403,63 @@ bool Inflate::DecompressData(DataString data) {
     if(readstate == InflateState::ZLIB_HEADER) {
         instream.ReadByte();
         instream.ReadByte();
+        readstate = InflateState::BLOCK_HEADER;
     }
-    readstate = InflateState::BLOCK_HEADER;
+
+    error_state.error_code = 0;
     final_flag = 0;
+
     while(!final_flag && !error_state) {
-        final_flag = (error_state = instream.GetBits(1));
-        if(error_state) return true;
-        type = (error_state = instream.GetBits(2));
-        if(error_state) return true;
-        switch(type) {
-        case 0:
-            error_state = UncompressedBlock();
+        if(readstate == InflateState::BLOCK_HEADER) {
+            error_state = instream.Require(3);
+            if(error_state.error_code == 1) return false;
+            final_flag = (error_state = instream.GetBits(1));
             if(error_state) return true;
-            break;
-        case 1:
-        case 2:
-            if(type == 1) {
+            type = (error_state = instream.GetBits(2));
+            if(error_state) return true;
+            switch(type) {
+            case 0:
+                readstate = InflateState::BLOCK_UNCOMPRESSED;
+                break;
+            case 1:
                 // use fixed code lengths
                 error_state = lengthcodes.Build(default_length, 288);
                 if(error_state) return true;
                 error_state = distancecodes.Build(default_distance, 32);
                 if(error_state) return true;
+                readstate = InflateState::BLOCK_DATA;
+                break;
+            case 2:
+                readstate = InflateState::BLOCK_DYNAMIC;
+                break;
+            case 3:
+                readstate = InflateState::BAD_STREAM;
+                return true;
+                break;
             }
-            else {
-                error_state = DynamicBlock();
-                if(error_state) return true;
-            }
-            error_state = HuffmanBlock();
+        }
+        switch(readstate) {
+        case InflateState::BLOCK_UNCOMPRESSED:
+            error_state = UncompressedBlock();
+            if(error_state.error_code == 1) return false;
             if(error_state) return true;
+            readstate = InflateState::BLOCK_HEADER;
             break;
-        case 3:
-            return false;
+        case InflateState::BLOCK_DYNAMIC:
+            error_state = DynamicBlock();
+            if(error_state.error_code == 1) return false;
+            if(error_state) return true;
+            readstate = InflateState::BLOCK_DATA;
+            // fall through
+        case InflateState::BLOCK_DATA:
+        case InflateState::BLOCK_DATA_SYMBOL:
+            error_state = HuffmanBlock();
+            if(error_state.error_code == 1) return false;
+            if(error_state) return true;
+            readstate = InflateState::BLOCK_HEADER;
             break;
         default:
-            return true;
+            return false;
             break;
         }
     }

@@ -84,6 +84,12 @@ namespace algorithm {
     enum class InflateState : uint32_t {
         ZLIB_HEADER,
         BLOCK_HEADER,
+        END_OF_STREAM,
+        BAD_STREAM,
+        BLOCK_UNCOMPRESSED,
+        BLOCK_DYNAMIC,
+        BLOCK_DATA,
+        BLOCK_DATA_SYMBOL,
     };
 
     class Inflate : public DecompressionMethod {
@@ -109,6 +115,7 @@ namespace algorithm {
         void_er error_state;
         Huffman lengthcodes, distancecodes;
         InflateState readstate;
+        uint16_t s_symbol;
     };
 
 } // algorithm
