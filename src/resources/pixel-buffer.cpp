@@ -41,7 +41,7 @@ PixelBuffer::PixelBuffer(uint32_t width, uint32_t height, uint32_t bitspersample
     imagewidth = 0;
     imageheight = 0;
     imagebitdepth = 0;
-    imagemode = 0;
+    imagemode = ImageColorMode::MONOCHROME;
     image_x = 0;
     image_y = 0;
     dirty = false;
@@ -98,11 +98,12 @@ bool PixelBuffer::Create(uint32_t width, uint32_t height, uint32_t bitspersample
     dirty = true;
     bufferpitch = (width * bitspersample * imagepixelsize);
     bufferpitch = (bufferpitch >> 3) + ((bufferpitch & 0x7) ? 1 : 0);
+
     blockptr = std::unique_ptr<uint8_t[]>(new uint8_t[bufferpitch * height]);
     return true;
 }
 
-bool PixelBuffer::IsDirty() {
+bool PixelBuffer::IsDirty() const {
     return dirty;
 }
 void PixelBuffer::Invalidate() {

@@ -17,8 +17,6 @@ enum class ImageColorMode : uint32_t {
     COLOR_RGBA = 6,
 };
 
-typedef std::allocator<unsigned char> image_allocator;
-
 class PixelBuffer;
 
 class PixelBuffer : public ResourceBase {
