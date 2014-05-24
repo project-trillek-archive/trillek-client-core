@@ -54,13 +54,13 @@ std::istream &operator>>(std::istream &f, FourCC &o) {
     return f;
 }
 InputStream& operator>>(InputStream & f, FourCC & o) {
-    for(int i = 0; i < 4 && !f.eof(); i++) {
-        o.cdata[i] = f.read();
+    for(int i = 0; i < 4 && !f.End(); i++) {
+        o.cdata[i] = f.Read();
     }
     return f;
 }
 InputStream& operator>>(InputStream & f, uint8_t & o) {
-    o = f.read();
+    o = f.Read();
     return f;
 }
 std::ostream &operator<<(std::ostream &f, FourCC &o) {

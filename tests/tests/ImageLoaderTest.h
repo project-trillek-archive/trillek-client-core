@@ -19,7 +19,7 @@ TEST(ImageLoaderTest, PortableNetworkGraphic) {
     EXPECT_TRUE(file.is_open());
     if(file.is_open()) {
         util::StdInputStream insf(file);
-        stat = LoadPNG(insf, image);
+        stat = png::Load(insf, image);
         EXPECT_FALSE(stat);
         if(stat) {
             std::cerr << "Reason: " << stat.error_text << '\n';
@@ -30,7 +30,7 @@ TEST(ImageLoaderTest, PortableNetworkGraphic) {
     EXPECT_TRUE(file.is_open());
     if(file.is_open()) {
         util::StdInputStream insf(file);
-        stat = LoadPNG(insf, image);
+        stat = png::Load(insf, image);
         EXPECT_FALSE(stat);
         if(stat) {
             std::cerr << "Reason: " << stat.error_text << '\n';

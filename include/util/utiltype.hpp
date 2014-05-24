@@ -156,9 +156,8 @@ public:
     InputStream(InputStream &&) {}
     virtual InputStream& operator=(InputStream &&) = 0;
 
-    virtual bool eof() = 0;
-    virtual uint8_t read() = 0;
-    virtual bool close() = 0;
+    virtual bool End() = 0;
+    virtual uint8_t Read() = 0;
 };
 
 class StdInputStream : public InputStream {
@@ -170,14 +169,11 @@ public:
 
     StdInputStream(StdInputStream && x) : inputstream(x.inputstream) {}
 
-    virtual bool eof() {
+    virtual bool End() {
         return inputstream.eof();
     }
-    virtual uint8_t read() {
+    virtual uint8_t Read() {
         return (uint8_t)inputstream.get();
-    }
-    virtual bool close() {
-        return false;
     }
 
 protected:
@@ -188,16 +184,13 @@ class InputFilter : public InputStream {
 public:
     InputFilter(InputStream & f) : forward(f) {}
     virtual InputStream& operator=(InputStream &&) { return *this; }
-    virtual bool eof() {
-        return forward.eof();
+    virtual bool End() {
+        return forward.End();
     }
-    virtual uint8_t read() {
-        return filter(forward.read());
+    virtual uint8_t Read() {
+        return Filter(forward.Read());
     }
-    virtual bool close() {
-        return forward.close();
-    }
-    virtual uint8_t filter(uint8_t i) {
+    virtual uint8_t Filter(uint8_t i) {
         return i;
     }
 protected:

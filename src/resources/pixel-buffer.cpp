@@ -126,7 +126,7 @@ bool PixelBuffer::Initialize(const std::vector<Property> &properties) {
 
     if(f.is_open()) {
         util::StdInputStream insf(f);
-        LoadPNG(insf, *this);
+        png::Load(insf, *this);
         f.close();
 
         return true;

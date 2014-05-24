@@ -510,6 +510,9 @@ bool Inflate::DecompressData(const DataString & data) {
             readstate = InflateState::BLOCK_HEADER;
             break;
         case InflateState::BLOCK_DYNAMIC:
+        case InflateState::BLOCK_DYNAMIC_CODELEN:
+        case InflateState::BLOCK_DYNAMIC_SYMREAD:
+        case InflateState::BLOCK_DYNAMIC_SYMEXT:
             error_state = DynamicBlock();
             if(error_state.error_code == 1) return false;
             if(error_state) return true;

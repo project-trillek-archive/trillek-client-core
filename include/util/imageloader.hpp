@@ -7,10 +7,11 @@
 
 namespace trillek {
 namespace resource {
-
-util::void_er LoadPNG(util::InputStream & f, PixelBuffer & pix);
-
+namespace png {
+util::void_er Load(util::InputStream & f, PixelBuffer & pix);
 }
-}
+
+} // resource
+} // trillek
 
 #endif

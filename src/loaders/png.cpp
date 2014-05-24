@@ -8,15 +8,16 @@
 
 namespace trillek {
 namespace resource {
+namespace png {
 
 typedef uint32_t PNGLong;
 typedef uint16_t PNGShort;
 
 util::InputStream& operator>>(util::InputStream & f, PNGLong & o) {
     int c;
-    for(int i = 0; i < 4 && !f.eof(); i++) {
+    for(int i = 0; i < 4 && !f.End(); i++) {
         o <<= 8;
-        c = f.read();
+        c = f.Read();
         if(c > -1) {
             o |= (unsigned char)c;
         }
@@ -25,9 +26,9 @@ util::InputStream& operator>>(util::InputStream & f, PNGLong & o) {
 }
 util::InputStream& operator>>(util::InputStream & f, PNGShort & o) {
     int c;
-    for(int i = 0; i < 2 && !f.eof(); i++) {
+    for(int i = 0; i < 2 && !f.End(); i++) {
         o <<= 8;
-        c = f.read();
+        c = f.Read();
         if(c > -1) {
             o |= (unsigned char)c;
         }
@@ -99,7 +100,7 @@ public:
     util::FourCC type;
     util::algorithm::Crc32 crc;
 
-    uint8_t filter(uint8_t i) {
+    uint8_t Filter(uint8_t i) {
         crc.Update((char)i);
         len--;
         return i;
@@ -124,7 +125,7 @@ public:
     }
 };
 
-util::void_er LoadPNG(util::InputStream & f, PixelBuffer & pix) {
+util::void_er Load(util::InputStream & f, resource::PixelBuffer & pix) {
     using util::void_er;
     using util::FourCC;
     const unsigned char magic[] = {137, 80, 78, 71, 13, 10, 26, 10};
@@ -149,16 +150,16 @@ util::void_er LoadPNG(util::InputStream & f, PixelBuffer & pix) {
     bool at_end = false;
 
     // check magic number
-    for(i = 0; i < 8 && !f.eof(); i++) {
-        if(magic[i] != f.read()) {
+    for(i = 0; i < 8 && !f.End(); i++) {
+        if(magic[i] != f.Read()) {
             valid = false;
         }
     }
-    if(f.eof()) return void_er(-1, "Unexpected end of file");
+    if(f.End()) return void_er(-1, "Unexpected end of file");
     if(!valid || i < 8) return void_er(-1, "Bad magic number");
 
     // process chunks
-    while(!f.eof() && !stat && !at_end) {
+    while(!f.End() && !stat && !at_end) {
         chunk.Header();
         std::cerr << chunk.type << ": " << chunk.len << '\n';
         if(chunk.type == FourCC("IDAT")) {
@@ -168,7 +169,7 @@ util::void_er LoadPNG(util::InputStream & f, PixelBuffer & pix) {
             }
             uint8_t c;
             util::DataString compresseddata;
-            while(!f.eof() && chunk.len > 0) {
+            while(!f.End() && chunk.len > 0) {
                 chunk >> c;
                 compresseddata.append(&c, 1);
             }
@@ -315,7 +316,7 @@ util::void_er LoadPNG(util::InputStream & f, PixelBuffer & pix) {
             std::string textdata;
             uint8_t c;
 
-            while(!f.eof() && chunk.len > 0) {
+            while(!f.End() && chunk.len > 0) {
                 chunk >> c;
                 if(c == 0) {
                     break;
@@ -324,7 +325,7 @@ util::void_er LoadPNG(util::InputStream & f, PixelBuffer & pix) {
                     keyword.append((char*)&c, 1);
                 }
             }
-            while(!f.eof() && chunk.len > 0) {
+            while(!f.End() && chunk.len > 0) {
                 chunk >> c;
                 textdata.append((char*)&c, 1);
             }
@@ -342,7 +343,7 @@ util::void_er LoadPNG(util::InputStream & f, PixelBuffer & pix) {
             uint8_t method = 0;
             uint8_t c;
 
-            while(!f.eof() && chunk.len > 0) {
+            while(!f.End() && chunk.len > 0) {
                 chunk >> c;
                 if(c == 0) {
                     break;
@@ -351,10 +352,10 @@ util::void_er LoadPNG(util::InputStream & f, PixelBuffer & pix) {
                     keyword.append((char*)&c, 1);
                 }
             }
-            if(!f.eof() && chunk.len > 0) {
+            if(!f.End() && chunk.len > 0) {
                 chunk >> method;
             }
-            while(!f.eof() && chunk.len > 0) {
+            while(!f.End() && chunk.len > 0) {
                 chunk >> c;
                 compresseddata.append(&c, 1);
             }
@@ -373,8 +374,8 @@ util::void_er LoadPNG(util::InputStream & f, PixelBuffer & pix) {
                 return void_er(-1, "Unsupported critical chunk");
             }
         }
-        while(!f.eof() && chunk.len > 0) {
-            chunk.crc.Update(f.read());
+        while(!f.End() && chunk.len > 0) {
+            chunk.crc.Update(f.Read());
             chunk.len--;
         }
         f >> inlong; // get the CRC
@@ -387,5 +388,6 @@ util::void_er LoadPNG(util::InputStream & f, PixelBuffer & pix) {
     return stat;
 }
 
+} // png
 } // resource
 } // trillek
