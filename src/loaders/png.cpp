@@ -24,6 +24,7 @@ util::InputStream& operator>>(util::InputStream & f, PNGLong & o) {
     }
     return f;
 }
+
 util::InputStream& operator>>(util::InputStream & f, PNGShort & o) {
     int c;
     for(int i = 0; i < 2 && !f.End(); i++) {
@@ -45,6 +46,7 @@ struct PNGHeader {
     uint8_t filter;
     uint8_t interlace;
 };
+
 struct PNGTime {
     PNGShort year;
     uint8_t month;
@@ -53,6 +55,7 @@ struct PNGTime {
     uint8_t minute;
     uint8_t second;
 };
+
 struct PNGColor {
     union {
         PNGShort value;
@@ -72,6 +75,7 @@ struct PNGColor {
         blue = 0;
     }
 };
+
 util::InputStream& operator>>(util::InputStream & f, PNGColor & o) {
     switch(o.type) {
     case 0:
@@ -90,6 +94,7 @@ util::InputStream& operator>>(util::InputStream & f, PNGColor & o) {
     }
     return f;
 }
+
 class CrcFilter : public util::InputFilter {
 public:
     CrcFilter(InputStream & f) :
@@ -122,6 +127,179 @@ public:
         forward >> len >> type;
         crc.Init();
         crc.Update(type.cdata, 4);
+    }
+};
+
+// base class for PNG filter types, also acts as the null filter type
+class FilterType {
+public:
+    virtual ~FilterType() {}
+
+    /** \brief filter a scanline with the reconstruct function
+     * \param inbuffer pointer to serialized byte stream
+     * \param inbuffersize max number of bytes that can be read from inbuffer
+     * \param outupbuffer pointer to the previous scanline in the output buffer, is at least pixelwidth bytes long
+     * \param outbuffer pointer to the buffer to write bytes to
+     * \param outbuffersize max number of bytes that can be written, relative to start of outbuffer
+     * \param pixelwidth number of bytes in a pixel
+     * \param outstep number of bytes to advance 1 pixel, relative to the start of pixel
+     * \param outupstep number of bytes to advance the outupbuffer 1 pixel
+     */
+    virtual void ProcessScanlineR(const uint8_t * inbuffer, size_t inbuffersize
+        , const uint8_t * outupbuffer, uint8_t * outbuffer, size_t outbuffersize
+        , uint32_t pixelwidth, uint32_t outstep, uint32_t outupstep) {
+
+        size_t outpixel = 0;
+        size_t pixelbyte = 0;
+        size_t inbyte = 0;
+        for(outpixel = 0; inbyte < inbuffersize; outpixel += outstep) {
+            for(pixelbyte = 0; pixelbyte < pixelwidth; pixelbyte++) {
+                if(outpixel + pixelbyte >= outbuffersize) return;
+                outbuffer[outpixel + pixelbyte] = inbuffer[inbyte++];
+            }
+        }
+    }
+};
+
+class FilterTypeSub : public FilterType {
+public:
+    // reconstruct with the "Sub" filter
+    virtual void ProcessScanlineR(const uint8_t * inbuffer, size_t inbuffersize
+        , const uint8_t * outupbuffer, uint8_t * outbuffer, size_t outbuffersize
+        , uint32_t pixelwidth, uint32_t outstep, uint32_t outupstep) {
+
+        size_t outpixel = 0;
+        size_t pixelbyte = 0;
+        size_t lastpixel = 0;
+        size_t inbyte = 0;
+
+        // do the first pixel special (since the previous pixel is assumed 0)
+        for(pixelbyte = 0; pixelbyte < pixelwidth; pixelbyte++) {
+            if(pixelbyte >= outbuffersize) return;
+            outbuffer[pixelbyte] = inbuffer[inbyte++];
+        }
+        for(outpixel = outstep; inbyte < inbuffersize; outpixel += outstep) {
+            for(pixelbyte = 0; pixelbyte < pixelwidth; pixelbyte++) {
+                if(outpixel + pixelbyte >= outbuffersize) return;
+                // "a" and "x" come from the PNG spec
+                uint8_t x = inbuffer[inbyte++];
+                uint8_t a = outbuffer[lastpixel + pixelbyte];
+                outbuffer[outpixel + pixelbyte] = x + a;
+            }
+            lastpixel = outpixel;
+        }
+    }
+};
+
+class FilterTypeUp : public FilterType {
+public:
+    // reconstruct with the "Up" filter
+    virtual void ProcessScanlineR(const uint8_t * inbuffer, size_t inbuffersize
+        , const uint8_t * outupbuffer, uint8_t * outbuffer, size_t outbuffersize
+        , uint32_t pixelwidth, uint32_t outstep, uint32_t outupstep) {
+
+        size_t outpixel = 0;
+        size_t pixelbyte = 0;
+        size_t uppixel = 0;
+        size_t inbyte = 0;
+
+        for(outpixel = outstep; inbyte < inbuffersize; outpixel += outstep) {
+            for(pixelbyte = 0; pixelbyte < pixelwidth; pixelbyte++) {
+                if(outpixel + pixelbyte >= outbuffersize) return;
+                // "b" and "x" come from the PNG spec
+                uint8_t x = inbuffer[inbyte++];
+                uint8_t b = outupbuffer[uppixel + pixelbyte];
+                outbuffer[outpixel + pixelbyte] = x + b;
+            }
+            uppixel += outupstep;
+        }
+    }
+};
+
+class FilterTypeAverage : public FilterType {
+public:
+    // reconstruct with the "Average" filter
+    virtual void ProcessScanlineR(const uint8_t * inbuffer, size_t inbuffersize
+        , const uint8_t * outupbuffer, uint8_t * outbuffer, size_t outbuffersize
+        , uint32_t pixelwidth, uint32_t outstep, uint32_t outupstep) {
+
+        size_t outpixel = 0;
+        size_t pixelbyte = 0;
+        size_t lastpixel = 0;
+        size_t uppixel = 0;
+        size_t inbyte = 0;
+
+        // do the first pixel special (since the previous pixel is assumed 0)
+        for(pixelbyte = 0; pixelbyte < pixelwidth; pixelbyte++) {
+            if(pixelbyte >= outbuffersize) return;
+            outbuffer[pixelbyte] = inbuffer[inbyte++];
+        }
+        uppixel = outupstep;
+        for(outpixel = outstep; inbyte < inbuffersize; outpixel += outstep) {
+            for(pixelbyte = 0; pixelbyte < pixelwidth; pixelbyte++) {
+                if(outpixel + pixelbyte >= outbuffersize) return;
+                // "b", "a", "x" come from the PNG spec
+                uint8_t x = inbuffer[inbyte++];
+                uint32_t a = outbuffer[lastpixel + pixelbyte];
+                uint32_t b = outupbuffer[uppixel + pixelbyte];
+                outbuffer[outpixel + pixelbyte] = x + (uint8_t)((a + b) >> 1);
+            }
+            lastpixel = outpixel;
+            uppixel += outupstep;
+        }
+    }
+};
+
+static __inline uint8_t PaethFunction(uint8_t a, uint8_t b, uint8_t c) {
+    int32_t p = a;
+    p += b;
+    p -= c;
+    int32_t pa, pb, pc;
+    pa = p - (int32_t)a;
+    pb = p - (int32_t)b;
+    pc = p - (int32_t)c;
+    pa = pa < 0 ? -pa : pa;
+    pb = pb < 0 ? -pb : pb;
+    pc = pc < 0 ? -pc : pc;
+    if(pa <= pb && pa <= pc) return a;
+    if(pb <= pc) return b;
+    return c;
+}
+
+class FilterTypePaeth : public FilterType {
+public:
+    // reconstruct with the "Paeth" filter
+    virtual void ProcessScanlineR(const uint8_t * inbuffer, size_t inbuffersize
+        , const uint8_t * outupbuffer, uint8_t * outbuffer, size_t outbuffersize
+        , uint32_t pixelwidth, uint32_t outstep, uint32_t outupstep) {
+
+        size_t outpixel = 0;
+        size_t pixelbyte = 0;
+        size_t lastpixel = 0;
+        size_t uppixel = 0;
+        size_t lastuppixel = 0;
+        size_t inbyte = 0;
+
+        // do the first pixel special (since the previous pixel is assumed 0)
+        for(pixelbyte = 0; pixelbyte < pixelwidth; pixelbyte++) {
+            if(pixelbyte >= outbuffersize) return;
+            outbuffer[pixelbyte] = inbuffer[inbyte++];
+        }
+        uppixel = outupstep;
+        for(outpixel = outstep; inbyte < inbuffersize; outpixel += outstep) {
+            for(pixelbyte = 0; pixelbyte < pixelwidth; pixelbyte++) {
+                if(outpixel + pixelbyte >= outbuffersize) return;
+                // "c", "b", "a", "x" come from the PNG spec
+                uint8_t x = inbuffer[inbyte++];
+                uint32_t a = outbuffer[lastpixel + pixelbyte];
+                uint32_t b = outupbuffer[uppixel + pixelbyte];
+                uint32_t c = outupbuffer[lastuppixel + pixelbyte];
+                outbuffer[outpixel + pixelbyte] = x + PaethFunction(a, b, c);
+            }
+            lastpixel = outpixel;
+            lastuppixel = uppixel;
+            uppixel += outupstep;
+        }
     }
 };
 
