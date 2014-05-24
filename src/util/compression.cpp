@@ -216,65 +216,113 @@ void_er Inflate::DynamicBlock() {
     static const uint8_t ALPHABET_LENGTHS[19] = {
         16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15
     };
-    std::unique_ptr<Huffman> codelength(new Huffman());
+
     uint8_t lencodes[286 + 32 + 137];//padding for maximum single op
     uint8_t codelength_sizes[19];
     void_er ret;
     uint32_t i, n;
 
-    ret = instream.Require(14);
-    if(ret) return ret;
-    uint32_t num_literal_codes  = (ret = instream.GetBits(5)) + 257;
-    if(ret) return ret;
-    uint32_t num_distance_codes = (ret = instream.GetBits(5)) + 1;
-    if(ret) return ret;
-    uint32_t num_codelen_codes  = (ret = instream.GetBits(4)) + 4;
-    if(ret) return ret;
-
-    ret = instream.Require(num_codelen_codes * 3);
-    if(ret) return ret;
-
-    n_memarrayset(codelength_sizes, (uint8_t)0, sizeof(codelength_sizes));
-    for(i = 0; i < num_codelen_codes; ++i) {
-        uint32_t s = (ret = instream.GetBits(3));
+    if(readstate == InflateState::BLOCK_DYNAMIC) {
+        ret = instream.Require(14);
         if(ret) return ret;
-        codelength_sizes[ALPHABET_LENGTHS[i]] = (uint8_t)s;
+        s_num_literal_codes  = (ret = instream.GetBits(5)) + 257;
+        if(ret) return ret;
+        s_num_distance_codes = (ret = instream.GetBits(5)) + 1;
+        if(ret) return ret;
+        s_num_codelen_codes  = (ret = instream.GetBits(4)) + 4;
+        if(ret) return ret;
+        readstate = InflateState::BLOCK_DYNAMIC_CODELEN;
     }
-    ret = codelength->Build(codelength_sizes, 19);
-    if(ret) return ret;
 
-    n = 0;
-    while(n < num_literal_codes + num_distance_codes) {
-        uint16_t c = (ret = HuffmanDecode(*codelength));
+    if(readstate == InflateState::BLOCK_DYNAMIC_CODELEN) {
+        ret = instream.Require(s_num_codelen_codes * 3);
         if(ret) return ret;
-        if( !(c >= 0u && c < 19u) ) return void_er(-2, "Invalid decode");
-        if(c < 16u) {
-            lencodes[n++] = (uint8_t)c;
+
+        s_codelength = std::unique_ptr<Huffman>(new Huffman());
+
+        n_memarrayset(codelength_sizes, (uint8_t)0, sizeof(codelength_sizes));
+        for(i = 0; i < s_num_codelen_codes; ++i) {
+            uint32_t s = (ret = instream.GetBits(3));
+            if(ret) return ret;
+            codelength_sizes[ALPHABET_LENGTHS[i]] = (uint8_t)s;
         }
-        else if(c == 16) {
-            c = (ret = instream.GetBits(2)) + 3;
-            n_memarrayset(lencodes, n, lencodes[n - 1], c);
-            n += c;
+        ret = s_codelength->Build(codelength_sizes, 19);
+        if(ret) {
+            readstate = InflateState::BAD_STREAM;
+            return ret;
         }
-        else if(c == 17) {
-            c = (ret = instream.GetBits(3)) + 3;
-            n_memarrayset(lencodes, n, (uint8_t)0, c);
-            n += c;
+
+        n = 0;
+        readstate = InflateState::BLOCK_DYNAMIC_SYMREAD;
+        s_lencodes = std::unique_ptr<InflateLengthCode>(new InflateLengthCode);
+    }
+    else {
+        n = s_codenum;
+    }
+
+    while(n < s_num_literal_codes + s_num_distance_codes) {
+        s_codenum = n;
+        uint16_t sym, lc;
+        if(readstate == InflateState::BLOCK_DYNAMIC_SYMREAD) {
+            sym = (ret = HuffmanDecode(*s_codelength));
+            if(ret) {
+                return ret;
+            }
+            readstate = InflateState::BLOCK_DYNAMIC_SYMEXT;
+        } else {
+            sym = s_symbol;
+        }
+        if( !(sym >= 0u && sym < 19u) ) return void_er(-2, "Invalid decode");
+        if(sym < 16u) {
+            s_lencodes->v[n++] = (uint8_t)sym;
+        }
+        else if(sym == 16) {
+            lc = (ret = instream.GetBits(2)) + 3;
+            if(ret.error_code == 1) {
+                s_symbol = sym;
+                return ret;
+            }
+            n_memarrayset(s_lencodes->v, n, s_lencodes->v[n - 1], lc);
+            n += lc;
+        }
+        else if(sym == 17) {
+            lc = (ret = instream.GetBits(3)) + 3;
+            if(ret.error_code == 1) {
+                s_symbol = sym;
+                return ret;
+            }
+            n_memarrayset(s_lencodes->v, n, (uint8_t)0, lc);
+            n += lc;
         }
         else {
-            //assert(c == 18);
-            c = (ret = instream.GetBits(7)) + 11;
-            n_memarrayset(lencodes, n, (uint8_t)0, c);
-            n += c;
+            //assert(sym == 18);
+            lc = (ret = instream.GetBits(7)) + 11;
+            if(ret.error_code == 1) {
+                s_symbol = sym;
+                return ret;
+            }
+            n_memarrayset(s_lencodes->v, n, (uint8_t)0, lc);
+            n += lc;
         }
+        readstate = InflateState::BLOCK_DYNAMIC_SYMREAD;
     }
-    if(n != num_literal_codes + num_distance_codes) {
+    s_codelength.reset();
+    if(n != s_num_literal_codes + s_num_distance_codes) {
+        readstate = InflateState::BAD_STREAM;
         return void_er(-3, "Bad code lengths");
     }
-    ret = lengthcodes.Build(lencodes, num_literal_codes);
-    if(ret) return ret;
-    ret = distancecodes.Build(lencodes + num_literal_codes, num_distance_codes);
-    if(ret) return ret;
+    ret = lengthcodes.Build(s_lencodes->v, s_num_literal_codes);
+    if(ret) {
+        readstate = InflateState::BAD_STREAM;
+        return ret;
+    }
+    ret = distancecodes.Build(s_lencodes->v + s_num_literal_codes, s_num_distance_codes);
+    if(ret) {
+        readstate = InflateState::BAD_STREAM;
+        return ret;
+    }
+
+    s_lencodes.reset();
 
     return void_er();
 }

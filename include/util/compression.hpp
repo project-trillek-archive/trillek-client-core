@@ -92,8 +92,15 @@ namespace algorithm {
         BAD_STREAM,
         BLOCK_UNCOMPRESSED,
         BLOCK_DYNAMIC,
+        BLOCK_DYNAMIC_CODELEN,
+        BLOCK_DYNAMIC_SYMREAD,
+        BLOCK_DYNAMIC_SYMEXT,
         BLOCK_DATA,
         BLOCK_DATA_SYMBOL,
+    };
+
+    struct InflateLengthCode {
+        uint8_t v[455];
     };
 
     class Inflate : public DecompressionMethod {
@@ -122,6 +129,14 @@ namespace algorithm {
         uint8_t s_final;
         uint16_t s_symbol;
         Adler32 checksum;
+        uint32_t s_num_literal_codes;
+        uint32_t s_num_distance_codes;
+        uint32_t s_num_codelen_codes;
+        uint32_t s_codenum;
+
+        std::unique_ptr<Huffman> s_codelength;
+        // 286 + 32 + 137
+        std::unique_ptr<InflateLengthCode> s_lencodes;
     };
 
 } // algorithm
