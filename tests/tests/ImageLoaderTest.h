@@ -10,6 +10,13 @@
 namespace trillek {
 namespace resource {
 
+TEST(ImageLoaderTest, CreatePixelBuffer) {
+    PixelBuffer image;
+    EXPECT_TRUE(image.Create(200, 200, 8, ImageColorMode::COLOR_RGBA));
+    EXPECT_EQ(200 * 4, image.Pitch());
+    EXPECT_NE(nullptr, image.GetBlockBase());
+}
+
 TEST(ImageLoaderTest, PortableNetworkGraphic) {
     PixelBuffer image;
     util::void_er stat;

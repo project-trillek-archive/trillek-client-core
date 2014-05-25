@@ -2,6 +2,8 @@
 #include "util/utiltype.hpp"
 #include "util/imageloader.hpp"
 #include "resources/pixel-buffer.hpp"
+#include <cstring>
+#include <fstream>
 
 namespace trillek {
 namespace resource {
@@ -86,8 +88,10 @@ bool PixelBuffer::Create(uint32_t width, uint32_t height, uint32_t bitspersample
         break;
     default:
         pixelsize = 0;
+        return false;
         break;
     }
+    writelock.lock();
     imagepixelsize = pixelsize;
     imagewidth = width;
     imageheight = height;
@@ -100,6 +104,12 @@ bool PixelBuffer::Create(uint32_t width, uint32_t height, uint32_t bitspersample
     bufferpitch = (bufferpitch >> 3) + ((bufferpitch & 0x7) ? 1 : 0);
 
     blockptr = std::unique_ptr<uint8_t[]>(new uint8_t[bufferpitch * height]);
+    if(!blockptr) {
+        writelock.unlock();
+        return false;
+    }
+    std::memset(blockptr.get(), 0, bufferpitch * height);
+    writelock.unlock();
     return true;
 }
 
@@ -111,6 +121,25 @@ void PixelBuffer::Invalidate() {
 }
 void PixelBuffer::Validate() {
     dirty = false;
+}
+
+const uint8_t * PixelBuffer::GetBlockBase() const {
+    if(blockptr) {
+        return blockptr.get();
+    }
+    return nullptr;
+}
+
+uint8_t * PixelBuffer::LockWrite() {
+    if(blockptr) {
+        writelock.lock();
+        return blockptr.get();
+    }
+    return nullptr;
+}
+
+void PixelBuffer::UnlockWrite() {
+    writelock.unlock();
 }
 
 bool PixelBuffer::Initialize(const std::vector<Property> &properties) {
@@ -135,5 +164,5 @@ bool PixelBuffer::Initialize(const std::vector<Property> &properties) {
     return false;
 }
 
-}
+} // resource
 } // trillek

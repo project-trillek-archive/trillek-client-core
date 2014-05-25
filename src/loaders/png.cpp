@@ -303,6 +303,10 @@ public:
     }
 };
 
+class InterlaceType {
+
+};
+
 util::void_er Load(util::InputStream & f, resource::PixelBuffer & pix) {
     using util::void_er;
     using util::FourCC;
@@ -339,7 +343,6 @@ util::void_er Load(util::InputStream & f, resource::PixelBuffer & pix) {
     // process chunks
     while(!f.End() && !stat && !at_end) {
         chunk.Header();
-        std::cerr << chunk.type << ": " << chunk.len << '\n';
         if(chunk.type == FourCC("IDAT")) {
             if(!idatmode) {
                 decoder.DecompressStart();
@@ -351,7 +354,11 @@ util::void_er Load(util::InputStream & f, resource::PixelBuffer & pix) {
                 chunk >> c;
                 compresseddata.append(&c, 1);
             }
-            decoder.DecompressData(compresseddata);
+            if(decoder.DecompressData(compresseddata)) {
+                if(decoder.ErrorState().error_code != 1) {
+                    return decoder.ErrorState();
+                }
+            }
         }
         else if(chunk.type == FourCC("IEND")) {
             at_end = true;
@@ -452,11 +459,15 @@ util::void_er Load(util::InputStream & f, resource::PixelBuffer & pix) {
             background.type = header.colortype;
             chunk >> background;
             // XXX: debug info
-            if(background.type == 0 || background.type == 4) std::fprintf(stderr, "Background: Y %d\n", background.value);
+            if(background.type == 0 || background.type == 4) {
+                std::fprintf(stderr, "Background: Y %d\n", background.value);
+            }
             if(background.type == 2 || background.type == 6) {
                 std::fprintf(stderr, "Background: RGB %d %d %d\n", background.red, background.green, background.blue);
             }
-            if(background.type == 3) std::fprintf(stderr, "Background: I %d\n", background.index);
+            if(background.type == 3) {
+                std::fprintf(stderr, "Background: I %d\n", background.index);
+            }
         }
         else if(chunk.type == FourCC("pHYs")) {
             if(chunkcounts.count(chunk.type.ldata)) {

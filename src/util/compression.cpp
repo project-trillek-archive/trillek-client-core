@@ -210,17 +210,17 @@ ErrorReturn<uint16_t> Inflate::HuffmanDecode(const Huffman& z) {
 }
 
 void_er Inflate::UncompressedBlock() {
-    return void_er();
+    return void_er(-404, "UncompressedBlock not implemented");
 }
 void_er Inflate::DynamicBlock() {
     static const uint8_t ALPHABET_LENGTHS[19] = {
         16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15
     };
 
-    uint8_t lencodes[286 + 32 + 137];//padding for maximum single op
+    //uint8_t lencodes[286 + 32 + 137];//padding for maximum single op
     uint8_t codelength_sizes[19];
     void_er ret;
-    uint32_t i, n;
+    uint32_t n;
 
     if(readstate == InflateState::BLOCK_DYNAMIC) {
         ret = instream.Require(14);
@@ -241,7 +241,7 @@ void_er Inflate::DynamicBlock() {
         s_codelength = std::unique_ptr<Huffman>(new Huffman());
 
         n_memarrayset(codelength_sizes, (uint8_t)0, sizeof(codelength_sizes));
-        for(i = 0; i < s_num_codelen_codes; ++i) {
+        for(uint32_t i = 0; i < s_num_codelen_codes; ++i) {
             uint32_t s = (ret = instream.GetBits(3));
             if(ret) return ret;
             codelength_sizes[ALPHABET_LENGTHS[i]] = (uint8_t)s;
@@ -460,14 +460,16 @@ bool Inflate::DecompressData(const DataString & data) {
 
     uint8_t final_flag, type;
     if(readstate == InflateState::ZLIB_HEADER) {
-        instream.ReadByte();
-        instream.ReadByte();
+        error_state = instream.Require(16);
+        if(error_state.error_code == 1) return false;
+        instream.GetBits(8).value;
+        instream.GetBits(8).value;
         checksum.Init();
         readstate = InflateState::BLOCK_HEADER;
     }
 
     error_state.error_code = 0;
-    final_flag = 0;
+    final_flag = readstate == InflateState::END_OF_STREAM ? 1 : 0;
 
     while(!final_flag && !error_state) {
         if(readstate == InflateState::BLOCK_HEADER) {
@@ -515,30 +517,44 @@ bool Inflate::DecompressData(const DataString & data) {
         case InflateState::BLOCK_DYNAMIC_SYMEXT:
             error_state = DynamicBlock();
             if(error_state.error_code == 1) return false;
-            if(error_state) return true;
+            if(error_state) {
+                return true;
+            }
             readstate = InflateState::BLOCK_DATA;
             // fall through
         case InflateState::BLOCK_DATA:
         case InflateState::BLOCK_DATA_SYMBOL:
             error_state = HuffmanBlock();
             if(error_state.error_code == 1) return false;
-            if(error_state) return true;
+            if(error_state) {
+                return true;
+            }
             readstate = InflateState::BLOCK_HEADER;
+            if(final_flag) {
+                readstate = InflateState::END_OF_STREAM;
+            }
+            break;
+        case InflateState::BAD_STREAM:
+            error_state = void_er(-3, "Bad stream");
+            return true;
             break;
         default:
             return false;
             break;
         }
     }
-    checksum.Update(outdata.data(), outdata.length());
     instream.AlignToByte();
+    error_state = instream.Require(32);
+    if(error_state.error_code == 1) return false;
     uint32_t checkval;
     checkval = instream.GetBits(8).value << 24;
     checkval |= instream.GetBits(8).value << 16;
     checkval |= instream.GetBits(8).value << 8;
     checkval |= instream.GetBits(8).value;
+    checksum.Update(outdata.data(), outdata.length());
     checksum.Last();
     if(checksum.ldata != checkval) {
+        error_state = void_er(-3, "Checksum failed");
         return true;
     }
     return false;

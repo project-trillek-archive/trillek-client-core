@@ -112,6 +112,8 @@ namespace algorithm {
         bool DecompressData(const DataString &);
         bool DecompressHasOutput();
         DataString DecompressGetOutput();
+
+        const void_er& ErrorState() const { return error_state; }
     protected:
         ErrorReturn<uint16_t> HuffmanDecode(const Huffman&);
         void_er UncompressedBlock();

@@ -1,9 +1,7 @@
 #ifndef PIXELBUFFER_HPP_INCLUDED
 #define PIXELBUFFER_HPP_INCLUDED
 
-#include <istream>
 #include "systems/ResourceSystem.h"
-#include <fstream>
 #include <mutex>
 
 namespace trillek {
@@ -48,6 +46,7 @@ public:
 
     /** \brief Create a copy of a pixel buffer.
      * \param pbuf the pixel buffer to copy from
+     * \return true on success
      */
     bool CreateCopy(const PixelBuffer & pbuf);
 
@@ -55,6 +54,7 @@ public:
      * \param pbuf the pixel buffer to copy from
      * \param bitspersample the number of bits in a single channel, usually 8
      * \param mode greyscale (Monochrome) or color (RGB), and whether there is alpha or no alpha
+     * \return true on success
      */
     bool CreateCopy(const PixelBuffer & pbuf, uint32_t bitspersample, ImageColorMode mode);
 
@@ -63,6 +63,7 @@ public:
      * \param height the height of the buffer in pixels
      * \param bitspersample the number of bits in a single channel, usually 8
      * \param mode greyscale (Monochrome) or color (RGB), and whether there is alpha or no alpha
+     * \return true on success
      */
     bool Create(uint32_t width, uint32_t height, uint32_t bitspersample, ImageColorMode mode);
 
@@ -77,7 +78,7 @@ public:
      * This function is intended for loading pixel data from the buffer.
      * \return uint8_t * base image address or nullptr if invalid.
      */
-    const uint8_t * GetBlockBase();
+    const uint8_t * GetBlockBase() const;
 
     /**
      * \brief Locks image for writing and gets pointer to base address of image data.
@@ -90,9 +91,10 @@ public:
      */
     void UnlockWrite();
 
-    uint32_t GetWidth() const { return imagewidth; }
-    uint32_t GetHeight() const { return imageheight; }
-    uint32_t GetPitch() const { return bufferpitch; }
+    uint32_t Width() const { return imagewidth; }
+    uint32_t Height() const { return imageheight; }
+    uint32_t Pitch() const { return bufferpitch; }
+    uint32_t PixelSize() const { return imagepixelsize; }
 
     // meta data, used by some formats such as cursors
     uint32_t image_x;
