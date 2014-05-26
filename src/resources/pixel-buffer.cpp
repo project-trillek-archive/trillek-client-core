@@ -71,6 +71,26 @@ PixelBuffer & PixelBuffer::operator=(PixelBuffer && rv) {
     return *this;
 }
 
+void PixelBuffer::PPMDebug() {
+    // output a PPM image to stderr as a debug feature
+    std::fprintf(stderr, "P6\n%d\n%d\n%d\n", imagewidth, imageheight, (1 << imagebitdepth) - 1);
+    if(!blockptr) return;
+    uint8_t * p = blockptr.get();
+    switch(imagemode) {
+    case ImageColorMode::COLOR_RGB:
+        for(uint32_t i = 0; i < bufferpitch * imageheight; i++) {
+            std::fputc(p[i], stderr);
+        }
+        break;
+    case ImageColorMode::COLOR_RGBA:
+        for(uint32_t b = 0, i = 0; i < bufferpitch * imageheight; i++, b++) {
+            if(b == 4) b = 0;
+            if(b < 3) std::fputc(p[i], stderr); // only output RGB
+        }
+        break;
+    }
+}
+
 bool PixelBuffer::Create(uint32_t width, uint32_t height, uint32_t bitspersample, ImageColorMode mode) {
     uint8_t pixelsize;
     switch(mode) {
@@ -100,8 +120,8 @@ bool PixelBuffer::Create(uint32_t width, uint32_t height, uint32_t bitspersample
     image_x = 0;
     image_y = 0;
     dirty = true;
-    bufferpitch = (width * bitspersample * imagepixelsize);
-    bufferpitch = (bufferpitch >> 3) + ((bufferpitch & 0x7) ? 1 : 0);
+    bufferpitch = (bitspersample * imagepixelsize);
+    bufferpitch = width * ((bufferpitch >> 3) + ((bufferpitch & 0x7) ? 1 : 0));
 
     blockptr = std::unique_ptr<uint8_t[]>(new uint8_t[bufferpitch * height]);
     if(!blockptr) {

@@ -96,6 +96,9 @@ public:
     uint32_t Pitch() const { return bufferpitch; }
     uint32_t PixelSize() const { return imagepixelsize; }
 
+    // output a PPM image to stderr as a debug feature
+    void PPMDebug();
+
     // meta data, used by some formats such as cursors
     uint32_t image_x;
     uint32_t image_y;

@@ -42,6 +42,9 @@ TEST(ImageLoaderTest, PortableNetworkGraphic) {
         if(stat) {
             std::cerr << "Reason: " << stat.error_text << '\n';
         }
+        /*else {
+            image.PPMDebug();
+        }*/
     }
     file.close();
 }

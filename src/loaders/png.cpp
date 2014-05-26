@@ -203,7 +203,7 @@ public:
         size_t uppixel = 0;
         size_t inbyte = 0;
 
-        for(outpixel = outstep; inbyte < inbuffersize; outpixel += outstep) {
+        for(outpixel = 0; inbyte < inbuffersize; outpixel += outstep) {
             for(pixelbyte = 0; pixelbyte < pixelwidth; pixelbyte++) {
                 if(outpixel + pixelbyte >= outbuffersize) return;
                 // "b" and "x" come from the PNG spec
@@ -250,6 +250,7 @@ public:
     }
 };
 
+// Paeth function from the PNG spec
 static __inline uint8_t PaethFunction(uint8_t a, uint8_t b, uint8_t c) {
     int32_t p = a;
     p += b;
@@ -283,7 +284,9 @@ public:
         // do the first pixel special (since the previous pixel is assumed 0)
         for(pixelbyte = 0; pixelbyte < pixelwidth; pixelbyte++) {
             if(pixelbyte >= outbuffersize) return;
-            outbuffer[pixelbyte] = inbuffer[inbyte++];
+            uint8_t x = inbuffer[inbyte++];
+            uint32_t b = outupbuffer[uppixel + pixelbyte];
+            outbuffer[pixelbyte] = x + PaethFunction(0, b, 0);
         }
         uppixel = outupstep;
         for(outpixel = outstep; inbyte < inbuffersize; outpixel += outstep) {
@@ -303,8 +306,212 @@ public:
     }
 };
 
-class InterlaceType {
+struct FilterMethodTable {
+    uint32_t count;
+    FilterType * items[10];
+};
 
+class InterlaceType {
+public:
+    FilterMethodTable & filters;
+    const PNGHeader & header;
+    uint32_t pixelbytes;
+    uint32_t linelength;
+    uint32_t pass;
+    uint32_t line;
+    uint32_t inpos;
+
+    InterlaceType(FilterMethodTable & ftable, const PNGHeader & head)
+        : filters(ftable), header(head) {
+        pass = 0;
+        line = 0;
+        inpos = 0;
+        switch(header.depth) {
+        case 1:
+            if(header.colortype == 3) {
+                pixelbytes = 4;
+            }
+            else {
+                pixelbytes = 1;
+                linelength = (header.width / 8) + (header.width & 0x7 ? 1 : 0);
+            }
+            break;
+        case 2:
+            if(header.colortype == 3) {
+                pixelbytes = 4;
+            }
+            else {
+                pixelbytes = 1;
+                linelength = (header.width / 4) + (header.width & 0x3 ? 1 : 0);
+            }
+            break;
+        case 4:
+            if(header.colortype == 3) {
+                pixelbytes = 4;
+            }
+            else {
+                pixelbytes = 1;
+                linelength = (header.width / 2) + (header.width & 0x1 ? 1 : 0);
+            }
+            break;
+        case 8:
+        case 16:
+            switch(header.colortype) {
+            case 0:
+                pixelbytes = (header.depth / 8);
+                break;
+            case 2:
+                pixelbytes = 3 * (header.depth / 8);
+                break;
+            case 3:
+                pixelbytes = 4;
+                break;
+            case 4:
+                pixelbytes = 2 * (header.depth / 8);
+                break;
+            case 6:
+                pixelbytes = 4 * (header.depth / 8);
+                break;
+            default:
+                pixelbytes = 0;
+                break;
+            }
+            linelength = header.width * pixelbytes;
+            break;
+        default:
+            linelength = 0;
+            pixelbytes = 0;
+            break;
+        }
+    }
+    virtual ~InterlaceType() {}
+
+    virtual uint32_t Deinterlace(const util::DataString & linedata, resource::PixelBuffer & pix) {
+        if(linedata.length() < header.height + (header.height * linelength)) {
+            return 0;
+        }
+        uint32_t ft;
+        uint8_t * pixel_ptr = pix.LockWrite();
+        uint8_t zero[16];
+        uint8_t * pixelline_ptr;
+        uint8_t * pixelupline_ptr;
+        uint32_t maxlen = linedata.length();
+
+        if(pixel_ptr == nullptr) {
+            return 0;
+        }
+        for(int i = 0; i < 16; i++) zero[i] = 0;
+        if(0 == line) {
+            ft = linedata[inpos++];
+            if(inpos + linelength > maxlen) {
+                return 0;
+            }
+            if(ft < filters.count) {
+                filters.items[ft]->ProcessScanlineR(linedata.data() + inpos
+                    , linelength, zero, pixel_ptr, linelength
+                    , pixelbytes, pixelbytes, 0);
+            }
+            inpos += linelength;
+        }
+        pixelupline_ptr = pixel_ptr;
+        pixelline_ptr = pixel_ptr + pix.Pitch();
+        for(;line < header.height; line++) {
+            ft = linedata[inpos++];
+            if(inpos + linelength > maxlen) {
+                return 0;
+            }
+            if(ft < filters.count) {
+                filters.items[ft]->ProcessScanlineR(linedata.data() + inpos
+                    , linelength, pixelupline_ptr, pixelline_ptr, linelength
+                    , pixelbytes, pixelbytes, pixelbytes);
+            }
+            pixelupline_ptr = pixelline_ptr;
+            pixelline_ptr += pix.Pitch();
+            inpos += linelength;
+        }
+        pix.UnlockWrite();
+        return 0;
+    }
+};
+
+class InterlaceTypeAdam7 : public InterlaceType {
+public:
+    InterlaceTypeAdam7(FilterMethodTable & ftable, const PNGHeader & head)
+        : InterlaceType(ftable, head) {}
+
+    virtual uint32_t Deinterlace(const util::DataString & linedata, resource::PixelBuffer & pix) {
+        uint32_t ft;
+        const uint32_t pass_coloffset[7] = {
+            0, 4, 0, 2, 0, 1, 0
+        };
+        const uint32_t pass_colstep[7] = {
+            8, 8, 4, 4, 2, 2, 1
+        };
+        const uint32_t pass_rowoffset[7] = {
+            0, 0, 4, 0, 2, 0, 1
+        };
+        const uint32_t pass_rowstep[7] = {
+            8, 8, 8, 4, 4, 2, 2
+        };
+        uint32_t passlinelength;
+        uint8_t * pixel_ptr = pix.LockWrite();
+        uint8_t zero[16];
+        uint8_t * pixelline_ptr;
+        uint8_t * pixelupline_ptr;
+        uint32_t maxlen = linedata.length();
+        uint32_t offsetcolbytes;
+        uint32_t stepcolbytes;
+
+        if(pixel_ptr == nullptr) {
+            return 0;
+        }
+        for(int i = 0; i < 16; i++) zero[i] = 0;
+
+        for(;pass < 7; pass++) {
+            passlinelength = header.width / pass_colstep[pass];
+            if(pass_coloffset[pass] > header.width & 0x7) {
+                passlinelength--;
+            }
+            passlinelength *= pixelbytes;
+            offsetcolbytes = pass_coloffset[pass] * pixelbytes;
+            stepcolbytes = pass_colstep[pass] * pixelbytes;
+            pixelline_ptr = pixel_ptr + offsetcolbytes + (pix.Pitch() * pass_rowoffset[pass]);
+
+            ft = linedata[inpos++];
+            if(inpos + passlinelength > maxlen) {
+                return 0;
+            }
+            if(ft < filters.count) {
+                filters.items[ft]->ProcessScanlineR(linedata.data() + inpos, passlinelength
+                    , zero, pixelline_ptr
+                    , (header.width * pixelbytes) - offsetcolbytes
+                    , pixelbytes, stepcolbytes, 0);
+            }
+            inpos += passlinelength;
+            pixelupline_ptr = pixelline_ptr;
+            pixelline_ptr += (pix.Pitch() * pass_rowstep[pass]);
+
+            for(line = pass_rowoffset[pass] + pass_rowstep[pass];
+                line < header.height;
+                line += pass_rowstep[pass]) {
+                ft = linedata[inpos++];
+                if(inpos + passlinelength > maxlen) {
+                    return 0;
+                }
+                if(ft < filters.count) {
+                    filters.items[ft]->ProcessScanlineR(linedata.data() + inpos, passlinelength
+                        , pixelupline_ptr, pixelline_ptr
+                        , (header.width * pixelbytes) - offsetcolbytes
+                        , pixelbytes, stepcolbytes, stepcolbytes);
+                }
+                pixelupline_ptr = pixelline_ptr;
+                pixelline_ptr += pix.Pitch() * pass_rowstep[pass];
+                inpos += passlinelength;
+            }
+        }
+        pix.UnlockWrite();
+        return 0;
+    }
 };
 
 util::void_er Load(util::InputStream & f, resource::PixelBuffer & pix) {
@@ -322,6 +529,20 @@ util::void_er Load(util::InputStream & f, resource::PixelBuffer & pix) {
     PNGHeader header;
     CrcFilter chunk(f);
     util::algorithm::Inflate decoder;
+    std::unique_ptr<InterlaceType> interlace;
+    FilterMethodTable filtermethod;
+    FilterType filter_null;
+    FilterTypeSub filter_sub;
+    FilterTypeUp filter_up;
+    FilterTypeAverage filter_average;
+    FilterTypePaeth filter_paeth;
+
+    filtermethod.count = 5;
+    filtermethod.items[0] = &filter_null;
+    filtermethod.items[1] = &filter_sub;
+    filtermethod.items[2] = &filter_up;
+    filtermethod.items[3] = &filter_average;
+    filtermethod.items[4] = &filter_paeth;
 
     void_er stat;
     int i;
@@ -361,6 +582,9 @@ util::void_er Load(util::InputStream & f, resource::PixelBuffer & pix) {
             }
         }
         else if(chunk.type == FourCC("IEND")) {
+            if(interlace && decoder.DecompressHasOutput()) {
+                interlace->Deinterlace(decoder.DecompressGetOutput(), pix);
+            }
             at_end = true;
         }
         else if(idatmode) {
@@ -375,42 +599,65 @@ util::void_er Load(util::InputStream & f, resource::PixelBuffer & pix) {
                 if((header.width | header.height) > (1 << 23)) {
                     return void_er(-1, "Image size out of bounds");
                 }
-                switch(header.colortype) {
-                case 0:
-                    switch(header.depth) {
-                    case 1:
-                    case 2:
-                    case 4:
-                    case 8:
-                    case 16:
-                        // valid
-                        break;
-                    default:
-                        return void_er(-1, "Invalid color depth");
-                    }
-                    break;
-                case 3:
-                    needpalette = true;
-                    switch(header.depth) {
-                    case 1:
-                    case 2:
-                    case 4:
-                    case 8:
-                        // valid
-                        break;
-                    default:
-                        return void_er(-1, "Invalid color depth");
-                    }
-                    break;
+                switch(header.depth) {
+                case 1:
                 case 2:
                 case 4:
-                case 6:
-                    if(header.depth != 8 && header.depth != 16) {
-                        return void_er(-1, "Invalid color depth");
+                    switch(header.colortype) {
+                    case 0:
+                        pix.Create(header.width, header.height, 8, ImageColorMode::MONOCHROME);
+                        break;
+                    case 3:
+                        needpalette = true;
+                        break;
+                    default:
+                        return void_er(-1, "Invalid color depth for mode");
+                        break;
+                    }
+                    break;
+                case 8:
+                    switch(header.colortype) {
+                    case 0:
+                        pix.Create(header.width, header.height, header.depth, ImageColorMode::MONOCHROME);
+                        break;
+                    case 2:
+                        pix.Create(header.width, header.height, header.depth, ImageColorMode::COLOR_RGB);
+                        break;
+                    case 3:
+                        needpalette = true;
+                        break;
+                    case 4:
+                        pix.Create(header.width, header.height, header.depth, ImageColorMode::MONOCHROME_A);
+                        break;
+                    case 6:
+                        pix.Create(header.width, header.height, header.depth, ImageColorMode::COLOR_RGBA);
+                        break;
+                    default:
+                        return void_er(-1, "Invalid color depth for mode");
+                        break;
+                    }
+                    break;
+                case 16:
+                    switch(header.colortype) {
+                    case 0:
+                        pix.Create(header.width, header.height, header.depth, ImageColorMode::MONOCHROME);
+                        break;
+                    case 2:
+                        pix.Create(header.width, header.height, header.depth, ImageColorMode::COLOR_RGB);
+                        break;
+                    case 4:
+                        pix.Create(header.width, header.height, header.depth, ImageColorMode::MONOCHROME_A);
+                        break;
+                    case 6:
+                        pix.Create(header.width, header.height, header.depth, ImageColorMode::COLOR_RGBA);
+                        break;
+                    default:
+                        return void_er(-1, "Invalid color depth for mode");
+                        break;
                     }
                     break;
                 default:
-                    return void_er(-1, "Invalid color type");
+                    return void_er(-1, "Invalid color depth");
                     break;
                 }
                 if(header.filter != 0) {
@@ -419,13 +666,21 @@ util::void_er Load(util::InputStream & f, resource::PixelBuffer & pix) {
                 if(header.compression != 0) {
                     return void_er(-1, "Invalid/unsupported compression method");
                 }
-                if(header.interlace != 0 && header.interlace != 1) {
+                switch(header.interlace) {
+                case 0:
+                    interlace = std::unique_ptr<InterlaceType>(new InterlaceType(filtermethod, header));
+                    break;
+                case 1:
+                    interlace = std::unique_ptr<InterlaceType>(new InterlaceTypeAdam7(filtermethod, header));
+                    break;
+                default:
                     return void_er(-1, "Invalid/unsupported interlace method");
+                    break;
                 }
                 // XXX: debug info
-                std::fprintf(stderr, "Image is %d x %d @%d\n", header.width, header.height, header.depth);
-                std::fprintf(stderr, "Color: %d\nCompressor: %d\nFilter: %d\nInterlace: %d\n",
-                        header.colortype, header.compression, header.filter, header.interlace);
+                //std::fprintf(stderr, "Image is %d x %d @%d\n", header.width, header.height, header.depth);
+                //std::fprintf(stderr, "Color: %d\nCompressor: %d\nFilter: %d\nInterlace: %d\n",
+                //		header.colortype, header.compression, header.filter, header.interlace);
                 needheader = false;
             } else {
                 return void_er(-1, "Multiple header chunks");
@@ -436,7 +691,7 @@ util::void_er Load(util::InputStream & f, resource::PixelBuffer & pix) {
                 return void_er(-1, "Multiple gAMA chunk");
             }
             chunk >> gama;
-            std::cerr << "Gama: " << gama << '\n';
+            // XXX std::cerr << "Gama: " << gama << '\n';
             chunkcounts[chunk.type.ldata] = 1;
         }
         else if(chunk.type == FourCC("tIME")) {
@@ -448,7 +703,8 @@ util::void_er Load(util::InputStream & f, resource::PixelBuffer & pix) {
             chunk >> mtime.year >> mtime.month >> mtime.day;
             chunk >> mtime.hour >> mtime.minute >> mtime.second;
             // XXX: debug info
-            std::fprintf(stderr, "Modification: %d:%d:%d %dD %dM %dY\n",mtime.hour, mtime.minute, mtime.second, mtime.day, mtime.month, mtime.year);
+            //std::fprintf(stderr, "Modification: %d:%d:%d %dD %dM %dY\n"
+            //, mtime.hour, mtime.minute, mtime.second, mtime.day, mtime.month, mtime.year);
         }
         else if(chunk.type == FourCC("bKGD")) {
             if(chunkcounts.count(chunk.type.ldata)) {
@@ -460,13 +716,14 @@ util::void_er Load(util::InputStream & f, resource::PixelBuffer & pix) {
             chunk >> background;
             // XXX: debug info
             if(background.type == 0 || background.type == 4) {
-                std::fprintf(stderr, "Background: Y %d\n", background.value);
+                //std::fprintf(stderr, "Background: Y %d\n", background.value);
             }
             if(background.type == 2 || background.type == 6) {
-                std::fprintf(stderr, "Background: RGB %d %d %d\n", background.red, background.green, background.blue);
+                //std::fprintf(stderr, "Background: RGB %d %d %d\n"
+                //, background.red, background.green, background.blue);
             }
             if(background.type == 3) {
-                std::fprintf(stderr, "Background: I %d\n", background.index);
+                //std::fprintf(stderr, "Background: I %d\n", background.index);
             }
         }
         else if(chunk.type == FourCC("pHYs")) {
@@ -478,12 +735,12 @@ util::void_er Load(util::InputStream & f, resource::PixelBuffer & pix) {
             uint8_t unit;
             chunk >> pix_x >> pix_y >> unit;
             // XXX: debug info
-            std::fprintf(stderr, "Pixelsize: %d x %d ", pix_x, pix_y);
+            //std::fprintf(stderr, "Pixelsize: %d x %d ", pix_x, pix_y);
             if(unit == 1) {
-                std::fprintf(stderr, "pixels/m\n");
+                //std::fprintf(stderr, "pixels/meter\n");
             }
             else {
-                std::fprintf(stderr, "unknown\n");
+                //std::fprintf(stderr, "unknown\n");
             }
         }
         else if(chunk.type == FourCC("tRNS")) {
@@ -494,6 +751,7 @@ util::void_er Load(util::InputStream & f, resource::PixelBuffer & pix) {
 
             trans.type = header.colortype;
             chunk >> trans;
+            // TODO: mode 3 (indexed color) requires an array
         }
         else if(chunk.type == FourCC("tEXt")) {
             if(chunkcounts.count(chunk.type.ldata)) {

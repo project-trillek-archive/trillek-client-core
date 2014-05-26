@@ -115,7 +115,8 @@ static void n_memarrayset(T (&mem)[max], std::size_t start, const T value, std::
     for(std::size_t i = start; i < end; i++) mem[i] = value;
 }
 // Inflate decoder Huffman functions are based on the public domain
-// zlib decode - Sean Barrett, originally found in SOIL and modified for C++
+// zlib decode - Sean Barrett, originally found in SOIL
+// modifications for C++ and state keeping - Meisaka Yukara
 
 void_er Huffman::Build(const uint8_t *sizelist, uint32_t num) {
     uint32_t i;
