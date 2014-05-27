@@ -6,6 +6,8 @@
 #include <iostream>
 #include <cstdio>
 
+//#define PNG_PROGRESSIVE_DISPLAY
+
 namespace trillek {
 namespace resource {
 namespace png {
@@ -316,6 +318,7 @@ public:
     FilterMethodTable & filters;
     const PNGHeader & header;
     uint32_t pixelbytes;
+    uint32_t steppixelbytes;
     uint32_t linelength;
     uint32_t pass;
     uint32_t line;
@@ -329,28 +332,34 @@ public:
         switch(header.depth) {
         case 1:
             if(header.colortype == 3) {
-                pixelbytes = 4;
+                pixelbytes = 1;
+                steppixelbytes = 4;
             }
             else {
                 pixelbytes = 1;
+                steppixelbytes = 1;
                 linelength = (header.width / 8) + (header.width & 0x7 ? 1 : 0);
             }
             break;
         case 2:
             if(header.colortype == 3) {
-                pixelbytes = 4;
+                pixelbytes = 1;
+                steppixelbytes = 4;
             }
             else {
                 pixelbytes = 1;
+                steppixelbytes = 1;
                 linelength = (header.width / 4) + (header.width & 0x3 ? 1 : 0);
             }
             break;
         case 4:
             if(header.colortype == 3) {
-                pixelbytes = 4;
+                pixelbytes = 1;
+                steppixelbytes = 4;
             }
             else {
                 pixelbytes = 1;
+                steppixelbytes = 1;
                 linelength = (header.width / 2) + (header.width & 0x1 ? 1 : 0);
             }
             break;
@@ -359,27 +368,34 @@ public:
             switch(header.colortype) {
             case 0:
                 pixelbytes = (header.depth / 8);
+                steppixelbytes = pixelbytes;
                 break;
             case 2:
                 pixelbytes = 3 * (header.depth / 8);
+                steppixelbytes = pixelbytes;
                 break;
             case 3:
-                pixelbytes = 4;
+                pixelbytes = 1;
+                steppixelbytes = 4;
                 break;
             case 4:
                 pixelbytes = 2 * (header.depth / 8);
+                steppixelbytes = pixelbytes;
                 break;
             case 6:
                 pixelbytes = 4 * (header.depth / 8);
+                steppixelbytes = pixelbytes;
                 break;
             default:
                 pixelbytes = 0;
+                steppixelbytes = pixelbytes;
                 break;
             }
             linelength = header.width * pixelbytes;
             break;
         default:
             linelength = 0;
+            steppixelbytes = 0;
             pixelbytes = 0;
             break;
         }
@@ -409,7 +425,7 @@ public:
             if(ft < filters.count) {
                 filters.items[ft]->ProcessScanlineR(linedata.data() + inpos
                     , linelength, zero, pixel_ptr, linelength
-                    , pixelbytes, pixelbytes, 0);
+                    , pixelbytes, steppixelbytes, 0);
             }
             inpos += linelength;
         }
@@ -423,7 +439,7 @@ public:
             if(ft < filters.count) {
                 filters.items[ft]->ProcessScanlineR(linedata.data() + inpos
                     , linelength, pixelupline_ptr, pixelline_ptr, linelength
-                    , pixelbytes, pixelbytes, pixelbytes);
+                    , pixelbytes, steppixelbytes, steppixelbytes);
             }
             pixelupline_ptr = pixelline_ptr;
             pixelline_ptr += pix.Pitch();
@@ -473,8 +489,8 @@ public:
                 passlinelength--;
             }
             passlinelength *= pixelbytes;
-            offsetcolbytes = pass_coloffset[pass] * pixelbytes;
-            stepcolbytes = pass_colstep[pass] * pixelbytes;
+            offsetcolbytes = pass_coloffset[pass] * steppixelbytes;
+            stepcolbytes = pass_colstep[pass] * steppixelbytes;
             pixelline_ptr = pixel_ptr + offsetcolbytes + (pix.Pitch() * pass_rowoffset[pass]);
 
             ft = linedata[inpos++];
@@ -484,7 +500,7 @@ public:
             if(ft < filters.count) {
                 filters.items[ft]->ProcessScanlineR(linedata.data() + inpos, passlinelength
                     , zero, pixelline_ptr
-                    , (header.width * pixelbytes) - offsetcolbytes
+                    , (header.width * steppixelbytes) - offsetcolbytes
                     , pixelbytes, stepcolbytes, 0);
             }
             inpos += passlinelength;
@@ -501,13 +517,55 @@ public:
                 if(ft < filters.count) {
                     filters.items[ft]->ProcessScanlineR(linedata.data() + inpos, passlinelength
                         , pixelupline_ptr, pixelline_ptr
-                        , (header.width * pixelbytes) - offsetcolbytes
+                        , (header.width * steppixelbytes) - offsetcolbytes
                         , pixelbytes, stepcolbytes, stepcolbytes);
                 }
                 pixelupline_ptr = pixelline_ptr;
                 pixelline_ptr += pix.Pitch() * pass_rowstep[pass];
                 inpos += passlinelength;
             }
+
+#ifdef PNG_PROGRESSIVE_DISPLAY
+            // progressive extrapolation
+            pixelupline_ptr = pixel_ptr + (pix.Pitch() * pass_rowoffset[pass]);
+            passlinelength  = header.width;
+            if(passlinelength >= pass_coloffset[pass]) {
+                passlinelength -= pass_coloffset[pass];
+            }
+            passlinelength *= steppixelbytes;
+            for(line = 0; line < header.height; line += pass_rowstep[pass]) {
+                pixelline_ptr = pixelupline_ptr;
+                for(uint32_t pixelcpb = pass_coloffset[pass] * steppixelbytes;
+                    pixelcpb < passlinelength;
+                    pixelcpb += pass_colstep[pass] * steppixelbytes) {
+                    for(uint32_t pixelcp = steppixelbytes;
+                        pixelcp < (pass_colstep[pass] - pass_coloffset[pass]) * steppixelbytes;
+                        pixelcp += steppixelbytes) {
+                        for(uint32_t pxi = 0; pxi < steppixelbytes; pxi++) {
+                            pixelline_ptr[pxi + pixelcp+pixelcpb] = pixelupline_ptr[pxi+pixelcpb];
+                        }
+                    }
+                }
+                pixelline_ptr += pix.Pitch();
+                for(uint32_t lp = pass_rowoffset[pass] + 1;
+                    lp < pass_rowstep[pass] && line+lp < header.height;
+                    lp++) {
+                    for(uint32_t pixelcpb = pass_coloffset[pass] * steppixelbytes;
+                        pixelcpb < passlinelength;
+                        pixelcpb += pass_colstep[pass] * steppixelbytes) {
+                        for(uint32_t pixelcp = 0;
+                            pixelcp < pass_colstep[pass] * steppixelbytes;
+                            pixelcp ++) {
+                            pixelline_ptr[pixelcp+pixelcpb] = pixelupline_ptr[pixelcp+pixelcpb];
+                        }
+                    }
+                    pixelline_ptr += pix.Pitch();
+                }
+                pixelupline_ptr += pix.Pitch() * pass_rowstep[pass];
+            }
+            pix.Invalidate();
+#endif
+
         }
         pix.UnlockWrite();
         return 0;
