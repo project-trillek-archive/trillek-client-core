@@ -11,12 +11,6 @@
 namespace trillek {
 namespace util {
 
-typedef std::basic_string<
-    unsigned char,
-    std::char_traits<unsigned char>,
-    std::allocator<unsigned char>
-> DataString;
-
 class CompressionMethod {
 public:
     CompressionMethod() {}
@@ -35,6 +29,7 @@ public:
     virtual bool DecompressStart() = 0;
     virtual bool DecompressEnd() = 0;
     virtual bool DecompressData(const DataString &) = 0;
+    virtual bool DecompressData(const DataString &&) = 0;
     virtual bool DecompressHasOutput() = 0;
     virtual DataString DecompressGetOutput() = 0;
 };
@@ -55,6 +50,7 @@ namespace algorithm {
     struct BitStreamDecoder {
         DataString indata;
         DataString::size_type inpos;
+        DataString::size_type inlength;
         uint32_t num_bits;
         uint32_t bit_buffer;
         uint32_t num_unused;
@@ -65,23 +61,23 @@ namespace algorithm {
          */
         void_er AppendData(const DataString & in);
 
-        /** \brief get a byte from the stream
-         */
-        ErrorReturn<uint8_t> ReadByte();
-
         /** \brief ensure bits are available
+         * \return true if more bits are required than available
          */
-        void_er Require(uint32_t n);
+        bool Require(uint32_t n);
 
-        void_er AlignToByte();
+        void Flush(); /// Clear consumed bytes from buffer
+
+        void AlignToByte();
 
         // used for bit buffer filling
-        void_er LoadByte();
-        void_er LoadFull();
+        uint32_t LoadByte();
+        uint32_t LoadFull();
 
+        void DropBits(uint32_t);
         /** \brief get bits out of the stream
          */
-        ErrorReturn<uint32_t> GetBits(uint32_t n);
+        int32_t GetBits(uint32_t n);
 
     };
 
@@ -91,6 +87,7 @@ namespace algorithm {
         END_OF_STREAM,
         BAD_STREAM,
         BLOCK_UNCOMPRESSED,
+        BLOCK_UNCOMPRESSED_DATA,
         BLOCK_DYNAMIC,
         BLOCK_DYNAMIC_CODELEN,
         BLOCK_DYNAMIC_SYMREAD,
@@ -110,12 +107,14 @@ namespace algorithm {
         bool DecompressStart();
         bool DecompressEnd();
         bool DecompressData(const DataString &);
+        bool DecompressData(const DataString &&);
         bool DecompressHasOutput();
         DataString DecompressGetOutput();
 
         const void_er& ErrorState() const { return error_state; }
     protected:
-        ErrorReturn<uint16_t> HuffmanDecode(const Huffman&);
+        bool DecompressPass();
+        uint16_t HuffmanDecode(const Huffman&);
         void_er UncompressedBlock();
         void_er DynamicBlock();
 

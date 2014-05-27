@@ -12,31 +12,23 @@ namespace algorithm {
 TEST(DecompressorTest, BitBuffering) {
     const unsigned char testdata[] = { 0xA5u, 0x4Eu };
     BitStreamDecoder inf;
-    void_er st;
     EXPECT_EQ(2, sizeof(testdata));
-    inf.indata.append(testdata, sizeof(testdata));
-    EXPECT_EQ(0x5, st = inf.GetBits(4));
-    EXPECT_EQ(std::string(), st.error_text);
-    EXPECT_EQ(0xA, st = inf.GetBits(4));
-    EXPECT_EQ(std::string(), st.error_text);
-    EXPECT_EQ(0x2, st = inf.GetBits(2));
-    EXPECT_EQ(std::string(), st.error_text);
-    EXPECT_EQ(0x3, st = inf.GetBits(2));
-    EXPECT_EQ(std::string(), st.error_text);
-    EXPECT_EQ(0x0, st = inf.GetBits(2));
-    EXPECT_EQ(std::string(), st.error_text);
-    EXPECT_EQ(0x1, st = inf.GetBits(2));
-    EXPECT_EQ(std::string(), st.error_text);
+    inf.AppendData(DataString(testdata, sizeof(testdata)));
+    EXPECT_EQ(0x5, inf.GetBits(4));
+    EXPECT_EQ(0xA, inf.GetBits(4));
+    EXPECT_EQ(0x2, inf.GetBits(2));
+    EXPECT_EQ(0x3, inf.GetBits(2));
+    EXPECT_EQ(0x0, inf.GetBits(2));
+    EXPECT_EQ(0x1, inf.GetBits(2));
 
-    EXPECT_EQ(0x0, st = inf.GetBits(1));
-    EXPECT_EQ(true, ((bool)st));
-    EXPECT_EQ(-5, inf.GetBits(42).error_code);
+    EXPECT_EQ(-1, inf.GetBits(1));
+    EXPECT_EQ(-5, inf.GetBits(42));
 
-    EXPECT_EQ(1, inf.LoadByte().error_code);
-    EXPECT_EQ(1, inf.LoadFull().error_code);
+    EXPECT_EQ(1, inf.LoadByte());
+    EXPECT_EQ(1, inf.LoadFull());
     inf.bit_buffer = -1;
-    EXPECT_EQ(-2, inf.LoadByte().error_code);
-    EXPECT_EQ(-2, inf.LoadFull().error_code);
+    EXPECT_EQ(2, inf.LoadByte());
+    EXPECT_EQ(2, inf.LoadFull());
 }
 
 TEST(DecompressorTest, InflateSomething) {

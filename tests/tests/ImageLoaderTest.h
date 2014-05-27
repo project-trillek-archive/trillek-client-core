@@ -17,7 +17,7 @@ TEST(ImageLoaderTest, CreatePixelBuffer) {
     EXPECT_NE(nullptr, image.GetBlockBase());
 }
 
-TEST(ImageLoaderTest, PortableNetworkGraphic) {
+TEST(ImageLoaderTest, PortableNetworkGraphic1) {
     PixelBuffer image;
     util::void_er stat;
     std::ifstream file;
@@ -29,10 +29,18 @@ TEST(ImageLoaderTest, PortableNetworkGraphic) {
         stat = png::Load(insf, image);
         EXPECT_FALSE(stat);
         if(stat) {
-            std::cerr << "Reason: " << stat.error_text << '\n';
+            std::cout << "Reason: " << stat.Text() << " - " << stat.line << '\n';
+        }
+        else {
+            //image.PPMDebug();
         }
     }
     file.close();
+}
+TEST(ImageLoaderTest, PortableNetworkGraphic2) {
+    PixelBuffer image;
+    util::void_er stat;
+    std::ifstream file;
     file.open("T2.png", std::ios::in | std::ios::binary);
     EXPECT_TRUE(file.is_open());
     if(file.is_open()) {
@@ -40,11 +48,11 @@ TEST(ImageLoaderTest, PortableNetworkGraphic) {
         stat = png::Load(insf, image);
         EXPECT_FALSE(stat);
         if(stat) {
-            std::cerr << "Reason: " << stat.error_text << '\n';
+            std::cout << "Reason: " << stat.Text() << " - " << stat.line << '\n';
         }
-        /*else {
-            image.PPMDebug();
-        }*/
+        else {
+            //image.PPMDebug();
+        }
     }
     file.close();
 }

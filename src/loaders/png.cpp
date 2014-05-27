@@ -570,12 +570,10 @@ util::void_er Load(util::InputStream & f, resource::PixelBuffer & pix) {
                 idatmode = true;
             }
             uint8_t c;
-            util::DataString compresseddata;
-            while(!f.End() && chunk.len > 0) {
-                chunk >> c;
-                compresseddata.append(&c, 1);
-            }
-            if(decoder.DecompressData(compresseddata)) {
+            util::DataString compresseddata = f.Read(chunk.len);
+            chunk.len = 0;
+            chunk.crc.Update(compresseddata.data(), compresseddata.length());
+            if(decoder.DecompressData(std::move(compresseddata))) {
                 if(decoder.ErrorState().error_code != 1) {
                     return decoder.ErrorState();
                 }
