@@ -30,7 +30,7 @@ const int* System::Start(const unsigned int width, const unsigned int height) {
     return this->gl_version;
 }
 
-void System::Update(const double delta) {
+void System::Update(const double delta) const {
     // Clear the backbuffer and primary depth/stencil buffer
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glViewport(0, 0, this->window_width, this->window_height); // Set the viewport size to fill the window
@@ -43,12 +43,18 @@ void System::Update(const double delta) {
         glUniformMatrix4fv((*shader)("view"), 1, GL_FALSE, &this->view_matrix[0][0]);
         glUniformMatrix4fv((*shader)("projection"), 1, GL_FALSE, &this->projection_matrix[0][0]);
 
-        for (size_t i = 0; i < matgrp.renderables.size(); ++i) {
-            matgrp.material->ActivateTexture(i, 0);
-            for (auto& ren : matgrp.renderables[i]) {
-                const auto& bufgrp = ren->GetBufferGroup(i);
+        for (const auto& texgrp : matgrp.texture_groups) {
+            // Activate all textures for this texture group.
+            for (size_t tex_index = 0; tex_index < texgrp.texture_indexes.size(); ++tex_index) {
+                matgrp.material->ActivateTexture(texgrp.texture_indexes[tex_index], tex_index);
+            }
+            
+            // Loop through each renderable group.
+            for (const auto& rengrp : texgrp.renderable_groups) {
+                const auto& bufgrp = rengrp.renderable->GetBufferGroup(rengrp.buffer_group_index);
                 glBindVertexArray(bufgrp->vao);
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufgrp->ibo);
+
                 glDrawElements(GL_TRIANGLES, bufgrp->ibo_count, GL_UNSIGNED_INT, 0);
             }
         }
@@ -93,39 +99,76 @@ void System::AddRenderable(const unsigned int entity_id, std::shared_ptr<Rendera
         return;
     }
 
-    for (auto& matgrp : this->material_groups) {
-        if (matgrp.material == mat) {
-            // TODO: For each buffer group store the renderbale at the correct texture index.
-            matgrp.renderables[0].push_back(ren);
+    MaterialGroup* matgrp = nullptr;
+    for (auto& mg : this->material_groups) {
+        if (mg.material == mat) {
+            matgrp = &mg;
         }
     }
 
-    // There wasn't one, so add it.
-    MaterialGroup matgrp;
-    matgrp.material = mat;
+    // There wasn't an existing material group so add one.
+    if (matgrp == nullptr) {
+        MaterialGroup mg;
+        this->material_groups.push_back(mg);
+        matgrp = &this->material_groups.back();
 
-    std::list<std::shared_ptr<Renderable>> renlist;
-    renlist.push_back(ren);
-    for (size_t i = 0; i < ren->GetBufferGroupCount(); ++i) {
-        matgrp.renderables.push_back(renlist);
+        matgrp->material = mat;
+
+        const auto& shader = mat->GetShader();
+        shader->Use();
+        shader->AddUniform("view");
+        shader->AddUniform("projection");
+        shader->UnUse();
     }
 
-    const auto& shader = mat->GetShader();
-    shader->Use();
-    shader->AddUniform("view");
-    shader->AddUniform("projection");
-    shader->UnUse();
+    for (size_t i = 0; i < ren->GetBufferGroupCount(); ++i) {
+        MaterialGroup::TextureGroup texgrp;
+        texgrp.texture_indexes.push_back(0);
 
-    this->material_groups.push_back(std::move(matgrp));
+        MaterialGroup::TextureGroup::RenderableGroup rengrp;
+        rengrp.renderable = ren;
+        rengrp.buffer_group_index = i;
+
+        texgrp.renderable_groups.push_back(std::move(rengrp));
+        matgrp->texture_groups.push_back(std::move(texgrp));
+    }
 }
 
 void System::RemoveRenderable(const unsigned int entity_id) {
     // Loop through all the renderables and see if one exists for the given entityID.
     for (auto& r : this->renderables) {
         if (r.first == entity_id) {
-            for (auto& matgrp : this->material_groups) {
-                for (auto& renlist : matgrp.renderables) {
-                    renlist.remove(r.second);
+            auto& matgrp_itr = this->material_groups.begin();
+            while (matgrp_itr != this->material_groups.end()) {
+                auto& texgrp_itr = matgrp_itr->texture_groups.begin();
+                while (texgrp_itr != matgrp_itr->texture_groups.end()) {
+
+                    auto& rengrp_itr = texgrp_itr->renderable_groups.begin();
+                    while (rengrp_itr != texgrp_itr->renderable_groups.end()) {
+                        // Check if the renderblae is the one we are looking for an remove it.
+                        if (rengrp_itr->renderable == r.second) {
+                            rengrp_itr = texgrp_itr->renderable_groups.erase(rengrp_itr);
+                        }
+                        else {
+                            ++rengrp_itr;
+                        }
+                    }
+
+                    // Check if the texture group is empty and remove it from the list.
+                    if (texgrp_itr->renderable_groups.size() == 0) {
+                        texgrp_itr = matgrp_itr->texture_groups.erase(texgrp_itr);
+                    }
+                    else {
+                        ++texgrp_itr;
+                    }
+                }
+
+                // Check if the material group is empty and remove it from the list.
+                if (matgrp_itr->texture_groups.size() == 0) {
+                    matgrp_itr = this->material_groups.erase(matgrp_itr);
+                }
+                else {
+                    ++matgrp_itr;
                 }
             }
             this->renderables.remove(r);

@@ -19,9 +19,15 @@ class Renderable;
 
 struct MaterialGroup {
     std::shared_ptr<Material> material;
-    // Each vector contains a list of renderables.
-    // The vector's index matches the texture index in the material.
-    std::vector<std::list<std::shared_ptr<Renderable>>> renderables;
+    struct TextureGroup {
+        std::vector<size_t> texture_indexes;
+        struct RenderableGroup {
+            std::shared_ptr<Renderable> renderable;
+            size_t buffer_group_index;
+        };
+        std::list<RenderableGroup> renderable_groups;
+    };
+    std::list<TextureGroup> texture_groups;
 };
 
 class System {
@@ -45,7 +51,7 @@ public:
     * \return void
     */
     // TODO: This is a niave update render method. Please replace me.
-    void Update(const double delta);
+    void Update(const double delta) const;
 
     /**
     * \brief Sets the viewport width and height.

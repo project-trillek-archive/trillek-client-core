@@ -89,7 +89,11 @@ public:
     * \return std::shared_ptr<BufferGroup> The requested buffer group.
     */
     std::shared_ptr<BufferGroup> GetBufferGroup(const size_t index) const {
-        return this->buffer_groups[index];
+        if (index < this->buffer_groups.size()) {
+            return this->buffer_groups[index];
+        }
+
+        return nullptr;
     }
 private:
     std::vector<std::shared_ptr<BufferGroup>> buffer_groups; // Render buffer ID group
