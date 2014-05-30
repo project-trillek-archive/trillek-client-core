@@ -138,12 +138,12 @@ void System::RemoveRenderable(const unsigned int entity_id) {
     // Loop through all the renderables and see if one exists for the given entityID.
     for (auto& r : this->renderables) {
         if (r.first == entity_id) {
-            auto& matgrp_itr = this->material_groups.begin();
+            auto matgrp_itr = this->material_groups.begin();
             while (matgrp_itr != this->material_groups.end()) {
-                auto& texgrp_itr = matgrp_itr->texture_groups.begin();
+                auto texgrp_itr = matgrp_itr->texture_groups.begin();
                 while (texgrp_itr != matgrp_itr->texture_groups.end()) {
 
-                    auto& rengrp_itr = texgrp_itr->renderable_groups.begin();
+                    auto rengrp_itr = texgrp_itr->renderable_groups.begin();
                     while (rengrp_itr != texgrp_itr->renderable_groups.end()) {
                         // Check if the renderblae is the one we are looking for an remove it.
                         if (rengrp_itr->renderable == r.second) {
