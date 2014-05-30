@@ -3,6 +3,9 @@
 #include "systems/transform-system.hpp"
 #include "systems/resource-system.hpp"
 #include "systems/graphics.hpp"
+#include <cstddef>
+
+size_t gAllocatedSize = 0;
 
 int main(int argCount, char **argValues) {
     trillek::OS os;
