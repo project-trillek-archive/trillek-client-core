@@ -90,6 +90,27 @@ void PixelBuffer::PPMDebug() {
         break;
     }
 }
+void PixelBuffer::PPMDebug(const char * ofile) {
+    // output a PPM image to stderr as a debug feature
+    std::fstream file(ofile, std::ios::out | std::ios::binary);
+    if(!file.is_open()) {
+        return;
+    }
+    file << "P6\n" << imagewidth << '\n' << imageheight << '\n';
+    file << ((1 << imagebitdepth) - 1) << '\n';
+    if(!blockptr) return;
+    uint8_t * p = blockptr.get();
+    switch(imagemode) {
+    case ImageColorMode::COLOR_RGB:
+        file.write((char*)p, bufferpitch * imageheight);
+        break;
+    case ImageColorMode::COLOR_RGBA:
+        for(uint32_t i = 0; i < bufferpitch * imageheight; i+= 4) {
+            file.write((char*)(p+i), 3); // only output RGB
+        }
+        break;
+    }
+}
 
 bool PixelBuffer::Create(uint32_t width, uint32_t height, uint32_t bitspersample, ImageColorMode mode) {
     uint8_t pixelsize;

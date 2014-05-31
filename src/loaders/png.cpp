@@ -490,10 +490,13 @@ public:
         for(int i = 0; i < 16; i++) zero[i] = 0;
 
         for(;pass < 7; pass++) {
-            passlinelength = header.width / pass_colstep[pass];
-            if(pass_coloffset[pass] > header.width & 0x7) {
-                passlinelength--;
+            passlinelength = (header.width-pass_coloffset[pass]) / pass_colstep[pass];
+            if((header.width - pass_coloffset[pass]) & (pass_colstep[pass] - 1)) {
+                passlinelength++;
             }
+            //if(pass_coloffset[pass] > ((header.width) & (pass_colstep[pass] - 1))) {
+            //	passlinelength--;
+            //}
             if(pixelsperbyte) {
                 if(passlinelength & (pixelsperbyte - 1)) {
                     passlinelength += pixelsperbyte;
@@ -551,31 +554,46 @@ public:
                 passlinelength /= pixelsperbyte;
             }
             passlinelength *= steppixelbytes;
-            for(line = 0; line < header.height; line += pass_rowstep[pass]) {
+            stepcolbytes = pass_colstep[pass] * steppixelbytes;
+            offsetcolbytes = pass_coloffset[pass] * steppixelbytes;
+            for(line = pass_rowoffset[pass]; line < header.height; line += pass_rowstep[pass]) {
                 pixelline_ptr = pixelupline_ptr;
-                for(uint32_t pixelcpb = pass_coloffset[pass] * steppixelbytes;
-                    pixelcpb < passlinelength;
-                    pixelcpb += pass_colstep[pass] * steppixelbytes) {
+                uint32_t pixelcpb;
+                for(pixelcpb = offsetcolbytes;
+                    pixelcpb + (stepcolbytes) < passlinelength;
+                    pixelcpb += stepcolbytes) {
                     for(uint32_t pixelcp = steppixelbytes;
-                        pixelcp < (pass_colstep[pass] - pass_coloffset[pass]) * steppixelbytes;
+                        pixelcp + pixelcpb < passlinelength && pixelcp < (stepcolbytes - offsetcolbytes);
                         pixelcp += steppixelbytes) {
                         for(uint32_t pxi = 0; pxi < steppixelbytes; pxi++) {
-                            pixelline_ptr[pxi + pixelcp+pixelcpb] = pixelupline_ptr[pxi+pixelcpb];
+                            pixelline_ptr[pxi + pixelcp + pixelcpb] = pixelupline_ptr[pxi + pixelcpb];
                         }
+                    }
+                }
+                for(uint32_t pixelcp = steppixelbytes;
+                    pixelcp + pixelcpb < passlinelength;
+                    pixelcp += steppixelbytes) {
+                    for(uint32_t pxi = 0; pxi < steppixelbytes; pxi++) {
+                        pixelline_ptr[pxi + pixelcp + pixelcpb] = pixelupline_ptr[pxi + pixelcpb];
                     }
                 }
                 pixelline_ptr += pix.Pitch();
                 for(uint32_t lp = pass_rowoffset[pass] + 1;
                     lp < pass_rowstep[pass] && line+lp < header.height;
                     lp++) {
-                    for(uint32_t pixelcpb = pass_coloffset[pass] * steppixelbytes;
-                        pixelcpb < passlinelength;
-                        pixelcpb += pass_colstep[pass] * steppixelbytes) {
+                    uint32_t pixelcpb;
+                    for(pixelcpb = offsetcolbytes;
+                        pixelcpb + stepcolbytes < passlinelength;
+                        pixelcpb += stepcolbytes) {
                         for(uint32_t pixelcp = 0;
-                            pixelcp < pass_colstep[pass] * steppixelbytes;
+                            pixelcp < stepcolbytes - offsetcolbytes;
                             pixelcp ++) {
                             pixelline_ptr[pixelcp+pixelcpb] = pixelupline_ptr[pixelcp+pixelcpb];
                         }
+                    }
+                    while(pixelcpb < passlinelength) {
+                        pixelline_ptr[pixelcpb] = pixelupline_ptr[pixelcpb];
+                        pixelcpb++;
                     }
                     pixelline_ptr += pix.Pitch();
                 }
@@ -583,6 +601,9 @@ public:
             }
             pix.Invalidate();
 #endif
+            // XXX: Debugging of passes
+            const char * passes[] = {"P1.ppm", "P2.ppm", "P3.ppm", "P4.ppm", "P5.ppm", "P6.ppm", "P7.ppm"};
+            pix.PPMDebug(passes[pass]);
 
         }
         pix.UnlockWrite();
