@@ -10,6 +10,7 @@ bin/
 ## eclipse
 .cproject
 .project
+.settings
 
 #################################
 ## Code::Blocks

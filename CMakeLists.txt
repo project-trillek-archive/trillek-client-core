@@ -68,8 +68,12 @@ IF (WIN32 AND NOT MINGW) # Windows
 ENDIF (WIN32 AND NOT MINGW)
 
 FIND_PACKAGE(GLM REQUIRED)
+# Force using radians as degrees are depcrecated
+ADD_DEFINITIONS(-DGLM_FORCE_RADIANS)
+
 FIND_PACKAGE(OpenGL REQUIRED)
 FIND_PACKAGE(GLFW3 REQUIRED)
+FIND_PACKAGE(RapidJSON REQUIRED)
 
 # Give these some dummy values and if the platform is LINUX or OSX they will be set accordingly.
 SET(X11_LIBRARIES "")

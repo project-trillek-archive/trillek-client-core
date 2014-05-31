@@ -1,7 +1,7 @@
 #ifndef PIXELBUFFER_HPP_INCLUDED
 #define PIXELBUFFER_HPP_INCLUDED
 
-#include "systems/ResourceSystem.h"
+#include "systems/resource-system.hpp"
 #include <mutex>
 
 namespace trillek {

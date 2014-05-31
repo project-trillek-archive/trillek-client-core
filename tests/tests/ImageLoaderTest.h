@@ -22,7 +22,7 @@ TEST(ImageLoaderTest, PortableNetworkGraphic1) {
     util::void_er stat;
     std::ifstream file;
 
-    file.open("T1.png", std::ios::in | std::ios::binary);
+    file.open("assets/T1.png", std::ios::in | std::ios::binary);
     EXPECT_TRUE(file.is_open());
     if(file.is_open()) {
         util::StdInputStream insf(file);
@@ -41,7 +41,7 @@ TEST(ImageLoaderTest, PortableNetworkGraphic2) {
     PixelBuffer image;
     util::void_er stat;
     std::ifstream file;
-    file.open("T2.png", std::ios::in | std::ios::binary);
+    file.open("assets/T2.png", std::ios::in | std::ios::binary);
     EXPECT_TRUE(file.is_open());
     if(file.is_open()) {
         util::StdInputStream insf(file);

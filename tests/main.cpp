@@ -7,6 +7,9 @@
 #include "tests/UtilityTest.h"
 #include "tests/DecompressorTest.h"
 #include "tests/ImageLoaderTest.h"
+#include "tests/transform-system-test.h"
+
+size_t gAllocatedSize = 0;
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
