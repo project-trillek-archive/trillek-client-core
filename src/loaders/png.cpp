@@ -318,6 +318,7 @@ public:
     FilterMethodTable & filters;
     const PNGHeader & header;
     uint32_t pixelbytes;
+    uint32_t pixelsperbyte;
     uint32_t steppixelbytes;
     uint32_t linelength;
     uint32_t pass;
@@ -329,39 +330,43 @@ public:
         pass = 0;
         line = 0;
         inpos = 0;
+        pixelsperbyte = 0;
         switch(header.depth) {
         case 1:
+            pixelbytes = 1;
+            pixelsperbyte = 8;
             if(header.colortype == 3) {
-                pixelbytes = 1;
-                steppixelbytes = 4;
+                steppixelbytes = 4 * pixelsperbyte;
             }
             else {
-                pixelbytes = 1;
-                steppixelbytes = 1;
-                linelength = (header.width / 8) + (header.width & 0x7 ? 1 : 0);
+                steppixelbytes = pixelsperbyte;
             }
+            linelength  = (header.width / pixelsperbyte);
+            linelength += (header.width & (pixelsperbyte - 1) ? 1 : 0);
             break;
         case 2:
+            pixelbytes = 1;
+            pixelsperbyte = 4;
             if(header.colortype == 3) {
-                pixelbytes = 1;
-                steppixelbytes = 4;
+                steppixelbytes = 4 * pixelsperbyte;
             }
             else {
-                pixelbytes = 1;
-                steppixelbytes = 1;
-                linelength = (header.width / 4) + (header.width & 0x3 ? 1 : 0);
+                steppixelbytes = pixelsperbyte;
             }
+            linelength  = (header.width / pixelsperbyte);
+            linelength += (header.width & (pixelsperbyte - 1) ? 1 : 0);
             break;
         case 4:
+            pixelbytes = 1;
+            pixelsperbyte = 2;
             if(header.colortype == 3) {
-                pixelbytes = 1;
-                steppixelbytes = 4;
+                steppixelbytes = 4 * pixelsperbyte;
             }
             else {
-                pixelbytes = 1;
-                steppixelbytes = 1;
-                linelength = (header.width / 2) + (header.width & 0x1 ? 1 : 0);
+                steppixelbytes = pixelsperbyte;
             }
+            linelength  = (header.width / pixelsperbyte);
+            linelength += (header.width & (pixelsperbyte - 1) ? 1 : 0);
             break;
         case 8:
         case 16:
@@ -403,6 +408,7 @@ public:
     virtual ~InterlaceType() {}
 
     virtual uint32_t Deinterlace(const util::DataString & linedata, resource::PixelBuffer & pix) {
+        // 1 byte at beginning of every line + the lines
         if(linedata.length() < header.height + (header.height * linelength)) {
             return 0;
         }
@@ -488,6 +494,12 @@ public:
             if(pass_coloffset[pass] > header.width & 0x7) {
                 passlinelength--;
             }
+            if(pixelsperbyte) {
+                if(passlinelength & (pixelsperbyte - 1)) {
+                    passlinelength += pixelsperbyte;
+                }
+                passlinelength /= pixelsperbyte;
+            }
             passlinelength *= pixelbytes;
             offsetcolbytes = pass_coloffset[pass] * steppixelbytes;
             stepcolbytes = pass_colstep[pass] * steppixelbytes;
@@ -531,6 +543,12 @@ public:
             passlinelength  = header.width;
             if(passlinelength >= pass_coloffset[pass]) {
                 passlinelength -= pass_coloffset[pass];
+            }
+            if(pixelsperbyte) {
+                if(passlinelength & (pixelsperbyte - 1)) {
+                    passlinelength += pixelsperbyte;
+                }
+                passlinelength /= pixelsperbyte;
             }
             passlinelength *= steppixelbytes;
             for(line = 0; line < header.height; line += pass_rowstep[pass]) {
