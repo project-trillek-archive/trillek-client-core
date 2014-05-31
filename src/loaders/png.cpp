@@ -331,6 +331,8 @@ public:
     uint32_t pass;
     uint32_t line;
     uint32_t inpos;
+    const PNGPaletteEntry *pal;
+    uint32_t palcount;
 
     InterlaceType(FilterMethodTable & ftable, const PNGHeader & head)
         : filters(ftable), header(head) {
@@ -338,6 +340,8 @@ public:
         line = 0;
         inpos = 0;
         pixelsperbyte = 0;
+        palcount = 0;
+        pal = nullptr;
         switch(header.depth) {
         case 1:
             pixelbytes = 1;
@@ -414,6 +418,69 @@ public:
     }
     virtual ~InterlaceType() {}
 
+    void AssignPalette(const PNGPaletteEntry * p, uint32_t psize) {
+        pal = p;
+        palcount = psize;
+    }
+
+    virtual uint32_t Deindex(uint8_t * pixel_ptr, resource::PixelBuffer & pix) {
+        uint8_t * pixelline_ptr;
+        uint8_t * pixellimit_ptr = pixel_ptr + (header.height * pix.Pitch());
+        uint8_t pixeldata;
+        uint8_t colorindex;
+        uint32_t subpixel;
+        uint32_t outlinelength = header.width * 4;
+        uint32_t indexstep = 4;
+        uint32_t shiftmax = pixelsperbyte - 1;
+        uint32_t shiftsize;
+        if(pixelsperbyte) {
+            shiftsize = 8 / pixelsperbyte;
+        }
+        else {
+            shiftsize = 0;
+        }
+        if(pixel_ptr == nullptr || pal == nullptr || palcount < 1) {
+            return 5;
+        }
+
+        pixelline_ptr = pixel_ptr;
+        for(line = 0; line < header.height; line++) {
+            subpixel = 0;
+            if(pixelsperbyte > 1) {
+                for(uint32_t colpixel = 0; colpixel < outlinelength; ) {
+                    for(subpixel = 0, pixeldata = pixelline_ptr[colpixel];
+                        subpixel < pixelsperbyte && colpixel < outlinelength;
+                        subpixel++, colpixel += indexstep) {
+                        colorindex  = pixeldata >> (shiftsize * (shiftmax - subpixel));
+                        colorindex &= (1 << shiftsize) - 1;
+                        if(pixelline_ptr + colpixel + 3 >= pixellimit_ptr) {
+                            return 1;
+                        }
+                        if(colorindex < palcount) {
+                            pixelline_ptr[colpixel  ] = pal[colorindex].red;
+                            pixelline_ptr[colpixel+1] = pal[colorindex].green;
+                            pixelline_ptr[colpixel+2] = pal[colorindex].blue;
+                            pixelline_ptr[colpixel+3] = pal[colorindex].alpha;
+                        }
+                    }
+                }
+            }
+            else {
+                for(uint32_t colpixel = 0; colpixel < outlinelength; colpixel += indexstep) {
+                    colorindex = pixelline_ptr[colpixel];
+                    if(colorindex < palcount) {
+                        pixelline_ptr[colpixel  ] = pal[colorindex].red;
+                        pixelline_ptr[colpixel+1] = pal[colorindex].green;
+                        pixelline_ptr[colpixel+2] = pal[colorindex].blue;
+                        pixelline_ptr[colpixel+3] = pal[colorindex].alpha;
+                    }
+                }
+            }
+            pixelline_ptr += pix.Pitch();
+        }
+        return 0;
+    }
+
     virtual uint32_t Deinterlace(const util::DataString & linedata, resource::PixelBuffer & pix) {
         // 1 byte at beginning of every line + the lines
         if(linedata.length() < header.height + (header.height * linelength)) {
@@ -433,14 +500,12 @@ public:
         for(int i = 0; i < 16; i++) zero[i] = 0;
         if(0 == line) {
             ft = linedata[inpos++];
-            if(inpos + linelength > maxlen) {
-                pix.UnlockWrite();
-                return 0;
-            }
-            if(ft < filters.count) {
-                filters.items[ft]->ProcessScanlineR(linedata.data() + inpos
-                    , linelength, zero, pixel_ptr, outlinelength
-                    , pixelbytes, steppixelbytes, 0);
+            if(inpos + linelength <= maxlen) {
+                if(ft < filters.count) {
+                    filters.items[ft]->ProcessScanlineR(linedata.data() + inpos
+                        , linelength, zero, pixel_ptr, outlinelength
+                        , pixelbytes, steppixelbytes, 0);
+                }
             }
             inpos += linelength;
         }
@@ -449,8 +514,7 @@ public:
         for(;line < header.height; line++) {
             ft = linedata[inpos++];
             if(inpos + linelength > maxlen) {
-                pix.UnlockWrite();
-                return 0;
+                break;
             }
             if(ft < filters.count) {
                 filters.items[ft]->ProcessScanlineR(linedata.data() + inpos
@@ -461,20 +525,40 @@ public:
             pixelline_ptr += pix.Pitch();
             inpos += linelength;
         }
+        if(header.colortype == 3) {
+            Deindex(pixel_ptr, pix);
+        }
         pix.UnlockWrite();
         return 0;
     }
+};
 
-    virtual uint32_t Deindex(resource::PixelBuffer & pix, const PNGPaletteEntry *pal, uint32_t palcount) {
+class InterlaceTypeAdam7 : public InterlaceType {
+public:
+    const uint32_t pass_coloffset[7] = {
+        0, 4, 0, 2, 0, 1, 0
+    };
+    const uint32_t pass_colstep[7] = {
+        8, 8, 4, 4, 2, 2, 1
+    };
+    const uint32_t pass_rowoffset[7] = {
+        0, 0, 4, 0, 2, 0, 1
+    };
+    const uint32_t pass_rowstep[7] = {
+        8, 8, 8, 4, 4, 2, 2
+    };
 
-        uint8_t * pixel_ptr = pix.LockWrite();
+    InterlaceTypeAdam7(FilterMethodTable & ftable, const PNGHeader & head)
+        : InterlaceType(ftable, head) {}
+
+    virtual uint32_t Deindex(uint8_t * pixel_ptr, resource::PixelBuffer & pix) {
         uint8_t * pixelline_ptr;
         uint8_t * pixellimit_ptr = pixel_ptr + (header.height * pix.Pitch());
         uint8_t pixeldata;
         uint8_t colorindex;
         uint32_t subpixel;
         uint32_t outlinelength = header.width * 4;
-        uint32_t indexstep = (pixelsperbyte * 4);
+        uint32_t indexstep = (pass_colstep[pass] * 4);
         uint32_t shiftmax = pixelsperbyte - 1;
         uint32_t shiftsize;
         if(pixelsperbyte) {
@@ -483,22 +567,23 @@ public:
         else {
             shiftsize = 0;
         }
-        if(pixel_ptr == nullptr) {
-            return 0;
+        if(pixel_ptr == nullptr || pal == nullptr || palcount < 1) {
+            return 5;
         }
 
         pixelline_ptr = pixel_ptr;
-        for(line = 0; line < header.height; line++) {
+        pixelline_ptr += pass_rowoffset[pass] * pix.Pitch();
+        for(line = pass_rowoffset[pass]; line < header.height; line += pass_rowstep[pass]) {
             subpixel = 0;
             if(pixelsperbyte > 1) {
-                for(uint32_t colpixel = 0; colpixel < outlinelength; ) {
+                for(uint32_t colpixel = pass_coloffset[pass] * 4; colpixel < outlinelength; ) {
                     for(subpixel = 0, pixeldata = pixelline_ptr[colpixel];
                         subpixel < pixelsperbyte && colpixel < outlinelength;
-                        subpixel++, colpixel += 4) {
+                        subpixel++, colpixel += indexstep) {
                         colorindex  = pixeldata >> (shiftsize * (shiftmax - subpixel));
                         colorindex &= (1 << shiftsize) - 1;
                         if(pixelline_ptr + colpixel + 3 >= pixellimit_ptr) {
-                            colpixel -= 4;
+                            return 1;
                         }
                         if(colorindex < palcount) {
                             pixelline_ptr[colpixel  ] = pal[colorindex].red;
@@ -510,7 +595,8 @@ public:
                 }
             }
             else {
-                for(uint32_t colpixel = 0; colpixel < outlinelength; colpixel += steppixelbytes) {
+                for(uint32_t colpixel = pass_coloffset[pass] * 4;
+                        colpixel < outlinelength; colpixel += indexstep) {
                     colorindex = pixelline_ptr[colpixel];
                     if(colorindex < palcount) {
                         pixelline_ptr[colpixel  ] = pal[colorindex].red;
@@ -520,33 +606,14 @@ public:
                     }
                 }
             }
-            pixelline_ptr += pix.Pitch();
+            pixelline_ptr += pass_rowstep[pass] * pix.Pitch();
         }
-
-        pix.UnlockWrite();
         return 0;
     }
-};
-
-class InterlaceTypeAdam7 : public InterlaceType {
-public:
-    InterlaceTypeAdam7(FilterMethodTable & ftable, const PNGHeader & head)
-        : InterlaceType(ftable, head) {}
 
     virtual uint32_t Deinterlace(const util::DataString & linedata, resource::PixelBuffer & pix) {
         uint32_t ft;
-        const uint32_t pass_coloffset[7] = {
-            0, 4, 0, 2, 0, 1, 0
-        };
-        const uint32_t pass_colstep[7] = {
-            8, 8, 4, 4, 2, 2, 1
-        };
-        const uint32_t pass_rowoffset[7] = {
-            0, 0, 4, 0, 2, 0, 1
-        };
-        const uint32_t pass_rowstep[7] = {
-            8, 8, 8, 4, 4, 2, 2
-        };
+
         uint32_t passlinelength;
         uint8_t * pixel_ptr = pix.LockWrite();
         uint8_t zero[16];
@@ -612,6 +679,11 @@ public:
                 pixelupline_ptr = pixelline_ptr;
                 pixelline_ptr += pix.Pitch() * pass_rowstep[pass];
                 inpos += passlinelength;
+            }
+
+            // Process indexed color
+            if(header.colortype == 3) {
+                Deindex(pixel_ptr, pix);
             }
 
 #ifdef PNG_PROGRESSIVE_DISPLAY
@@ -755,10 +827,10 @@ util::void_er Load(util::InputStream & f, resource::PixelBuffer & pix) {
         }
         else if(chunk.type == FourCC("IEND")) {
             if(interlace && decoder.DecompressHasOutput()) {
-                interlace->Deinterlace(decoder.DecompressGetOutput(), pix);
                 if(header.colortype == 3 && palette) {
-                    interlace->Deindex(pix, palette.get(), paletteread);
+                    interlace->AssignPalette(palette.get(), paletteread);
                 }
+                interlace->Deinterlace(decoder.DecompressGetOutput(), pix);
             }
             at_end = true;
         }
