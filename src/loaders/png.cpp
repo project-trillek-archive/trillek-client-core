@@ -78,6 +78,13 @@ struct PNGColor {
     }
 };
 
+struct PNGPaletteEntry {
+    uint8_t red;
+    uint8_t green;
+    uint8_t blue;
+    uint8_t alpha;
+};
+
 util::InputStream& operator>>(util::InputStream & f, PNGColor & o) {
     switch(o.type) {
     case 0:
@@ -418,6 +425,7 @@ public:
         uint8_t * pixelline_ptr;
         uint8_t * pixelupline_ptr;
         uint32_t maxlen = linedata.length();
+        uint32_t outlinelength = header.width * steppixelbytes;
 
         if(pixel_ptr == nullptr) {
             return 0;
@@ -426,11 +434,12 @@ public:
         if(0 == line) {
             ft = linedata[inpos++];
             if(inpos + linelength > maxlen) {
+                pix.UnlockWrite();
                 return 0;
             }
             if(ft < filters.count) {
                 filters.items[ft]->ProcessScanlineR(linedata.data() + inpos
-                    , linelength, zero, pixel_ptr, linelength
+                    , linelength, zero, pixel_ptr, outlinelength
                     , pixelbytes, steppixelbytes, 0);
             }
             inpos += linelength;
@@ -440,17 +449,80 @@ public:
         for(;line < header.height; line++) {
             ft = linedata[inpos++];
             if(inpos + linelength > maxlen) {
+                pix.UnlockWrite();
                 return 0;
             }
             if(ft < filters.count) {
                 filters.items[ft]->ProcessScanlineR(linedata.data() + inpos
-                    , linelength, pixelupline_ptr, pixelline_ptr, linelength
+                    , linelength, pixelupline_ptr, pixelline_ptr, outlinelength
                     , pixelbytes, steppixelbytes, steppixelbytes);
             }
             pixelupline_ptr = pixelline_ptr;
             pixelline_ptr += pix.Pitch();
             inpos += linelength;
         }
+        pix.UnlockWrite();
+        return 0;
+    }
+
+    virtual uint32_t Deindex(resource::PixelBuffer & pix, const PNGPaletteEntry *pal, uint32_t palcount) {
+
+        uint8_t * pixel_ptr = pix.LockWrite();
+        uint8_t * pixelline_ptr;
+        uint8_t * pixellimit_ptr = pixel_ptr + (header.height * pix.Pitch());
+        uint8_t pixeldata;
+        uint8_t colorindex;
+        uint32_t subpixel;
+        uint32_t outlinelength = header.width * 4;
+        uint32_t indexstep = (pixelsperbyte * 4);
+        uint32_t shiftmax = pixelsperbyte - 1;
+        uint32_t shiftsize;
+        if(pixelsperbyte) {
+            shiftsize = 8 / pixelsperbyte;
+        }
+        else {
+            shiftsize = 0;
+        }
+        if(pixel_ptr == nullptr) {
+            return 0;
+        }
+
+        pixelline_ptr = pixel_ptr;
+        for(line = 0; line < header.height; line++) {
+            subpixel = 0;
+            if(pixelsperbyte > 1) {
+                for(uint32_t colpixel = 0; colpixel < outlinelength; ) {
+                    for(subpixel = 0, pixeldata = pixelline_ptr[colpixel];
+                        subpixel < pixelsperbyte && colpixel < outlinelength;
+                        subpixel++, colpixel += 4) {
+                        colorindex  = pixeldata >> (shiftsize * (shiftmax - subpixel));
+                        colorindex &= (1 << shiftsize) - 1;
+                        if(pixelline_ptr + colpixel + 3 >= pixellimit_ptr) {
+                            colpixel -= 4;
+                        }
+                        if(colorindex < palcount) {
+                            pixelline_ptr[colpixel  ] = pal[colorindex].red;
+                            pixelline_ptr[colpixel+1] = pal[colorindex].green;
+                            pixelline_ptr[colpixel+2] = pal[colorindex].blue;
+                            pixelline_ptr[colpixel+3] = pal[colorindex].alpha;
+                        }
+                    }
+                }
+            }
+            else {
+                for(uint32_t colpixel = 0; colpixel < outlinelength; colpixel += steppixelbytes) {
+                    colorindex = pixelline_ptr[colpixel];
+                    if(colorindex < palcount) {
+                        pixelline_ptr[colpixel  ] = pal[colorindex].red;
+                        pixelline_ptr[colpixel+1] = pal[colorindex].green;
+                        pixelline_ptr[colpixel+2] = pal[colorindex].blue;
+                        pixelline_ptr[colpixel+3] = pal[colorindex].alpha;
+                    }
+                }
+            }
+            pixelline_ptr += pix.Pitch();
+        }
+
         pix.UnlockWrite();
         return 0;
     }
@@ -510,6 +582,7 @@ public:
 
             ft = linedata[inpos++];
             if(inpos + passlinelength > maxlen) {
+                pix.UnlockWrite();
                 return 0;
             }
             if(ft < filters.count) {
@@ -527,6 +600,7 @@ public:
                 line += pass_rowstep[pass]) {
                 ft = linedata[inpos++];
                 if(inpos + passlinelength > maxlen) {
+                    pix.UnlockWrite();
                     return 0;
                 }
                 if(ft < filters.count) {
@@ -627,6 +701,9 @@ util::void_er Load(util::InputStream & f, resource::PixelBuffer & pix) {
     CrcFilter chunk(f);
     util::algorithm::Inflate decoder;
     std::unique_ptr<InterlaceType> interlace;
+    std::unique_ptr<PNGPaletteEntry[]> palette;
+    uint32_t palettesize = 0;
+    uint32_t paletteread = 0;
     FilterMethodTable filtermethod;
     FilterType filter_null;
     FilterTypeSub filter_sub;
@@ -679,6 +756,9 @@ util::void_er Load(util::InputStream & f, resource::PixelBuffer & pix) {
         else if(chunk.type == FourCC("IEND")) {
             if(interlace && decoder.DecompressHasOutput()) {
                 interlace->Deinterlace(decoder.DecompressGetOutput(), pix);
+                if(header.colortype == 3 && palette) {
+                    interlace->Deindex(pix, palette.get(), paletteread);
+                }
             }
             at_end = true;
         }
@@ -704,6 +784,7 @@ util::void_er Load(util::InputStream & f, resource::PixelBuffer & pix) {
                         break;
                     case 3:
                         needpalette = true;
+                        pix.Create(header.width, header.height, 8, ImageColorMode::COLOR_RGBA);
                         break;
                     default:
                         return void_er(-1, "Invalid color depth for mode");
@@ -720,6 +801,7 @@ util::void_er Load(util::InputStream & f, resource::PixelBuffer & pix) {
                         break;
                     case 3:
                         needpalette = true;
+                        pix.Create(header.width, header.height, 8, ImageColorMode::COLOR_RGBA);
                         break;
                     case 4:
                         pix.Create(header.width, header.height, header.depth, ImageColorMode::MONOCHROME_A);
@@ -761,6 +843,10 @@ util::void_er Load(util::InputStream & f, resource::PixelBuffer & pix) {
                 if(header.compression != 0) {
                     return void_er(-1, "Invalid/unsupported compression method");
                 }
+                if(needpalette) {
+                    palettesize = 1 << header.depth;
+                    palette = std::unique_ptr<PNGPaletteEntry[]>(new PNGPaletteEntry[palettesize]);
+                }
                 switch(header.interlace) {
                 case 0:
                     interlace = std::unique_ptr<InterlaceType>(new InterlaceType(filtermethod, header));
@@ -779,6 +865,28 @@ util::void_er Load(util::InputStream & f, resource::PixelBuffer & pix) {
                 needheader = false;
             } else {
                 return void_er(-1, "Multiple header chunks");
+            }
+        }
+        else if(chunk.type == FourCC("PLTE")) {
+            if(chunkcounts.count(chunk.type.ldata)) {
+                return void_er(-1, "Multiple PLTE chunk");
+            }
+            if(!palettesize) {
+                palettesize = 256;
+                palette = std::unique_ptr<PNGPaletteEntry[]>(new PNGPaletteEntry[palettesize]);
+            }
+            while(chunk.len > 0 && paletteread < palettesize) {
+                chunk >> palette[paletteread].red;
+                if(!chunk.len) {
+                    return void_er(-1, "Invalid PLTE chunk");
+                }
+                chunk >> palette[paletteread].green;
+                if(!chunk.len) {
+                    return void_er(-1, "Invalid PLTE chunk");
+                }
+                chunk >> palette[paletteread].blue;
+                palette[paletteread].alpha = 0xff;
+                paletteread++;
             }
         }
         else if(chunk.type == FourCC("gAMA")) {
@@ -871,7 +979,7 @@ util::void_er Load(util::InputStream & f, resource::PixelBuffer & pix) {
                 chunk >> c;
                 textdata.append((char*)&c, 1);
             }
-            // We do nothing with the text
+            // TODO: something with the text, log it maybe
         }
         else if(chunk.type == FourCC("zTXt")) {
             if(chunkcounts.count(chunk.type.ldata)) {
@@ -909,7 +1017,7 @@ util::void_er Load(util::InputStream & f, resource::PixelBuffer & pix) {
             inf.DecompressData(compresseddata);
             inf.DecompressEnd();
             textdata = inf.DecompressGetOutput();
-            // We do nothing with the text
+            // TODO: something with the text, log it maybe
         }
         else {
             if(chunk.IsCritical()) {
