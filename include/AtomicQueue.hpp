@@ -5,11 +5,12 @@
 #include <atomic>
 #include <list>
 #include <memory>
+#include <TrillekAllocator.hpp>
 
 namespace trillek {
 
     template<class T>
-    using atomic_queue = std::list<T>;
+    using atomic_queue = std::list<T, TrillekAllocator<T>>;
 
     /** \brief A thread-safe queue implementation with atomic operations
      */
