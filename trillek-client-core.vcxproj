@@ -1,0 +1,39 @@
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<ItemGroup>
+		<ProjectConfiguration Include="Debug|Win32">
+			<Configuration>Debug</Configuration>
+			<Platform>Win32</Platform>
+		</ProjectConfiguration>
+		<ProjectConfiguration Include="Release|Win32">
+			<Configuration>Release</Configuration>
+			<Platform>Win32</Platform>
+		</ProjectConfiguration>
+	</ItemGroup>
+	<Import Project="$(VCTargetsPath)\Microsoft.Cpp.default.props" />
+	<PropertyGroup>
+		<ConfigurationType>Application</ConfigurationType>
+		<PlatformToolset>v120</PlatformToolset>
+	</PropertyGroup>
+	<Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+	<ItemDefinitionGroup>
+		<Link>
+			<GenerateDebugInformation>true</GenerateDebugInformation>
+			<AdditionalDependencies>
+				glew-1.10.0\lib\Release\Win32\glew32.lib;
+				glfw-3.0.4.bin.WIN32\lib-msvc120\glfw3.lib
+			</AdditionalDependencies>
+		</Link>
+	</ItemDefinitionGroup>	
+	<ItemGroup>
+		<ClCompile Include="src/main.cpp">
+			<AdditionalIncludeDirectories>
+				include/;
+				glew-1.10.0/include/;
+				glfw-3.0.4.bin.WIN32/include/;
+				rapidjson/include/;
+				glm/;
+			</AdditionalIncludeDirectories>
+		</ClCompile>
+	</ItemGroup>
+	<Import Project="$(VCTargetsPath)\Microsoft.Cpp.Targets" />
+</Project>
