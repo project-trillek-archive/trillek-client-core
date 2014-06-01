@@ -189,6 +189,7 @@ bool PixelBuffer::Initialize(const std::vector<Property> &properties) {
         std::string name = p.GetName();
         if(name == "filename") {
             fname = p.Get<std::string>();
+            meta.push_back(Property(p));
         }
     }
 

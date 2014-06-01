@@ -6,7 +6,9 @@
 #include <iostream>
 #include <cstdio>
 
+// Experimental / Debug options
 //#define PNG_PROGRESSIVE_DISPLAY
+//#define PNG_DEBUG_OUTPUT
 
 namespace trillek {
 namespace resource {
@@ -926,19 +928,23 @@ util::void_er Load(util::InputStream & f, resource::PixelBuffer & pix) {
                 }
                 switch(header.interlace) {
                 case 0:
+                    pix.meta.push_back(Property("interlace", false));
                     interlace = std::unique_ptr<InterlaceType>(new InterlaceType(filtermethod, header));
                     break;
                 case 1:
+                    pix.meta.push_back(Property("interlace", true));
                     interlace = std::unique_ptr<InterlaceType>(new InterlaceTypeAdam7(filtermethod, header));
                     break;
                 default:
                     return void_er(-1, "Invalid/unsupported interlace method");
                     break;
                 }
+#ifdef PNG_DEBUG_OUTPUT
                 // XXX: debug info
-                //std::fprintf(stderr, "Image is %d x %d @%d\n", header.width, header.height, header.depth);
-                //std::fprintf(stderr, "Color: %d\nCompressor: %d\nFilter: %d\nInterlace: %d\n",
-                //		header.colortype, header.compression, header.filter, header.interlace);
+                std::fprintf(stderr, "Image is %d x %d @%d\n", header.width, header.height, header.depth);
+                std::fprintf(stderr, "Color: %d\nCompressor: %d\nFilter: %d\nInterlace: %d\n",
+                        header.colortype, header.compression, header.filter, header.interlace);
+#endif
                 needheader = false;
             } else {
                 return void_er(-1, "Multiple header chunks");
@@ -952,7 +958,7 @@ util::void_er Load(util::InputStream & f, resource::PixelBuffer & pix) {
                 palettesize = 256;
                 palette = std::unique_ptr<PNGPaletteEntry[]>(new PNGPaletteEntry[palettesize]);
             }
-            while(chunk.len > 0 && paletteread < palettesize) {
+            while(chunk.len > 0 && !chunk.End() && paletteread < palettesize) {
                 chunk >> palette[paletteread].red;
                 if(!chunk.len) {
                     return void_er(-1, "Invalid PLTE chunk");
@@ -971,7 +977,10 @@ util::void_er Load(util::InputStream & f, resource::PixelBuffer & pix) {
                 return void_er(-1, "Multiple gAMA chunk");
             }
             chunk >> gama;
-            // XXX std::cerr << "Gama: " << gama << '\n';
+            pix.meta.push_back(Property("gama", (uint32_t)gama));
+#ifdef PNG_DEBUG_OUTPUT
+            std::cerr << "Gama: " << gama << '\n';
+#endif
             chunkcounts[chunk.type.ldata] = 1;
         }
         else if(chunk.type == FourCC("tIME")) {
@@ -982,9 +991,12 @@ util::void_er Load(util::InputStream & f, resource::PixelBuffer & pix) {
 
             chunk >> mtime.year >> mtime.month >> mtime.day;
             chunk >> mtime.hour >> mtime.minute >> mtime.second;
+            pix.meta.push_back(Property("modified", mtime));
+#ifdef PNG_DEBUG_OUTPUT
             // XXX: debug info
-            //std::fprintf(stderr, "Modification: %d:%d:%d %dD %dM %dY\n"
-            //, mtime.hour, mtime.minute, mtime.second, mtime.day, mtime.month, mtime.year);
+            std::fprintf(stderr, "Modification: %d:%d:%d %dD %dM %dY\n"
+                , mtime.hour, mtime.minute, mtime.second, mtime.day, mtime.month, mtime.year);
+#endif
         }
         else if(chunk.type == FourCC("bKGD")) {
             if(chunkcounts.count(chunk.type.ldata)) {
@@ -994,17 +1006,20 @@ util::void_er Load(util::InputStream & f, resource::PixelBuffer & pix) {
 
             background.type = header.colortype;
             chunk >> background;
+            pix.meta.push_back(Property("background", background));
+#ifdef PNG_DEBUG_OUTPUT
             // XXX: debug info
             if(background.type == 0 || background.type == 4) {
-                //std::fprintf(stderr, "Background: Y %d\n", background.value);
+                std::fprintf(stderr, "Background: Y %d\n", background.value);
             }
             if(background.type == 2 || background.type == 6) {
-                //std::fprintf(stderr, "Background: RGB %d %d %d\n"
-                //, background.red, background.green, background.blue);
+                std::fprintf(stderr, "Background: RGB %d %d %d\n"
+                    , background.red, background.green, background.blue);
             }
             if(background.type == 3) {
-                //std::fprintf(stderr, "Background: I %d\n", background.index);
+                std::fprintf(stderr, "Background: I %d\n", background.index);
             }
+#endif
         }
         else if(chunk.type == FourCC("pHYs")) {
             if(chunkcounts.count(chunk.type.ldata)) {
@@ -1014,14 +1029,18 @@ util::void_er Load(util::InputStream & f, resource::PixelBuffer & pix) {
             PNGLong pix_x, pix_y;
             uint8_t unit;
             chunk >> pix_x >> pix_y >> unit;
+            pix.meta.push_back(Property("scale-x", (uint32_t)pix_x));
+            pix.meta.push_back(Property("scale-y", (uint32_t)pix_y));
+#ifdef PNG_DEBUG_OUTPUT
             // XXX: debug info
-            //std::fprintf(stderr, "Pixelsize: %d x %d ", pix_x, pix_y);
+            std::fprintf(stderr, "Pixelsize: %d x %d ", pix_x, pix_y);
             if(unit == 1) {
-                //std::fprintf(stderr, "pixels/meter\n");
+                std::fprintf(stderr, "pixels/meter\n");
             }
             else {
-                //std::fprintf(stderr, "unknown\n");
+                std::fprintf(stderr, "unknown\n");
             }
+#endif
         }
         else if(chunk.type == FourCC("tRNS")) {
             if(chunkcounts.count(chunk.type.ldata)) {
@@ -1030,8 +1049,15 @@ util::void_er Load(util::InputStream & f, resource::PixelBuffer & pix) {
             chunkcounts[chunk.type.ldata] = 1;
 
             trans.type = header.colortype;
-            chunk >> trans;
-            // TODO: mode 3 (indexed color) requires an array
+            if(header.colortype == 3 && palette) {
+                uint32_t tindex = 0;
+                while(chunk.len && !chunk.End() && tindex < palettesize) {
+                    chunk >> palette[tindex++].alpha;
+                }
+            }
+            else {
+                chunk >> trans;
+            }
         }
         else if(chunk.type == FourCC("tEXt")) {
             if(chunkcounts.count(chunk.type.ldata)) {
@@ -1057,6 +1083,10 @@ util::void_er Load(util::InputStream & f, resource::PixelBuffer & pix) {
                 textdata.append((char*)&c, 1);
             }
             // TODO: something with the text, log it maybe
+            pix.meta.push_back(Property(keyword, textdata));
+#ifdef PNG_DEBUG_OUTPUT
+            std::cerr << "Keyword: \"" << keyword << "\" = \"" << textdata << "\"\n";
+#endif
         }
         else if(chunk.type == FourCC("zTXt")) {
             if(chunkcounts.count(chunk.type.ldata)) {
@@ -1095,6 +1125,14 @@ util::void_er Load(util::InputStream & f, resource::PixelBuffer & pix) {
             inf.DecompressEnd();
             textdata = inf.DecompressGetOutput();
             // TODO: something with the text, log it maybe
+
+            std::string stringdata((const char*)textdata.data(), textdata.length());
+            pix.meta.push_back(Property(keyword, stringdata));
+#ifdef PNG_DEBUG_OUTPUT
+            std::cerr << "zKeyword: \"" << keyword << "\" = \"";
+            std::cerr.write((const char*)textdata.data(), textdata.length());
+            std::cerr << "\"\n";
+#endif
         }
         else {
             if(chunk.IsCritical()) {
@@ -1108,7 +1146,9 @@ util::void_er Load(util::InputStream & f, resource::PixelBuffer & pix) {
         f >> inlong; // get the CRC
         chunk.crc.Last();
         if(chunk.crc.ldata != inlong) {
+#ifdef PNG_DEBUG_OUTPUT
             std::cerr << inlong << "!=" << chunk.crc.ldata << '\n';
+#endif
             return void_er(-1, "CRC Failure");
         }
     }

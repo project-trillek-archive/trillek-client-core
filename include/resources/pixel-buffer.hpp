@@ -103,6 +103,7 @@ public:
     // meta data, used by some formats such as cursors
     uint32_t image_x;
     uint32_t image_y;
+    std::vector<Property> meta;
 
 protected:
     uint32_t imagewidth;
@@ -119,5 +120,12 @@ protected:
 };
 
 } // resource
+
+namespace reflection {
+
+template <> inline const char* GetTypeName<resource::PixelBuffer>() { return "PixelBuffer"; }
+template <> inline const unsigned int GetTypeID<resource::PixelBuffer>() { return 1003; }
+
+} // reflection
 } // trillek
 #endif
