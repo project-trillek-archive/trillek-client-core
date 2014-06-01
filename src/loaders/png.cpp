@@ -643,7 +643,12 @@ public:
                 passlinelength /= pixelsperbyte;
             }
             passlinelength *= pixelbytes;
-            offsetcolbytes = pass_coloffset[pass] * steppixelbytes;
+            if(pixelsperbyte > 1) {
+                offsetcolbytes = pass_coloffset[pass] * 4;
+            }
+            else {
+                offsetcolbytes = pass_coloffset[pass] * steppixelbytes;
+            }
             stepcolbytes = pass_colstep[pass] * steppixelbytes;
             pixelline_ptr = pixel_ptr + offsetcolbytes + (pix.Pitch() * pass_rowoffset[pass]);
 
