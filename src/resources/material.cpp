@@ -7,11 +7,11 @@ namespace graphics {
 Material::Material() { }
 Material::~Material() { }
 
-void Material::SetShader(std::shared_ptr<resource::Shader> s) {
+void Material::SetShader(std::shared_ptr<Shader> s) {
     this->shader = s;
 }
 
-size_t Material::AddTexture(std::shared_ptr<resource::Texture> t) {
+size_t Material::AddTexture(std::shared_ptr<Texture> t) {
     for (size_t i = 0; i < this->textures.size(); ++i) {
         if (this->textures[i].first == t) {
             return i;
@@ -27,7 +27,7 @@ size_t Material::AddTexture(std::shared_ptr<resource::Texture> t) {
     return this->textures.size();
 }
 
-size_t Material::GetTextureIndex(std::shared_ptr<resource::Texture> t) {
+size_t Material::GetTextureIndex(std::shared_ptr<Texture> t) {
     for (size_t i = 0; i < this->textures.size(); ++i) {
         if (this->textures[i].first == t) {
             return i;

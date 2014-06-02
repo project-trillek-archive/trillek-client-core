@@ -123,7 +123,7 @@ protected:
 
 namespace reflection {
 
-template <> inline const char* GetTypeName<resource::PixelBuffer>() { return "PixelBuffer"; }
+template <> inline const char* GetTypeName<resource::PixelBuffer>() { return "Image"; }
 template <> inline const unsigned int GetTypeID<resource::PixelBuffer>() { return 1003; }
 
 } // reflection

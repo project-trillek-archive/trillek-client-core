@@ -9,7 +9,7 @@ namespace resource {
 void System::RegisterTypes() {
     RegisterResourceType<trillek::resource::TextFile>();
     RegisterResourceType<trillek::resource::MD5Mesh>();
-    RegisterResourceType<trillek::resource::Shader>();
+    RegisterResourceType<trillek::graphics::Shader>();
     RegisterResourceType<trillek::resource::PixelBuffer>();
 }
 

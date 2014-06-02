@@ -9,7 +9,7 @@
 // Experimental / Debug options
 //#define PNG_PROGRESSIVE_DISPLAY
 //#define PNG_BEBUG_PASSES
-#define PNG_DEBUG_OUTPUT
+//#define PNG_DEBUG_OUTPUT
 
 namespace trillek {
 namespace resource {

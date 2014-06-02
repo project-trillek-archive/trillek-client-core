@@ -7,7 +7,7 @@
 #include <fstream>
 
 namespace trillek {
-namespace resource {
+namespace graphics {
 
 Shader::Shader(void) {
     _totalShaders = 0;
