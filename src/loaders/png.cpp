@@ -8,7 +8,8 @@
 
 // Experimental / Debug options
 //#define PNG_PROGRESSIVE_DISPLAY
-//#define PNG_DEBUG_OUTPUT
+//#define PNG_BEBUG_PASSES
+#define PNG_DEBUG_OUTPUT
 
 namespace trillek {
 namespace resource {
@@ -243,7 +244,9 @@ public:
         // do the first pixel special (since the previous pixel is assumed 0)
         for(pixelbyte = 0; pixelbyte < pixelwidth; pixelbyte++) {
             if(pixelbyte >= outbuffersize) return;
-            outbuffer[pixelbyte] = inbuffer[inbyte++];
+            uint8_t x = inbuffer[inbyte++];
+            uint32_t b = outupbuffer[pixelbyte];
+            outbuffer[pixelbyte] = x + (uint8_t)(b >> 1);
         }
         uppixel = outupstep;
         for(outpixel = outstep; inbyte < inbuffersize; outpixel += outstep) {
@@ -267,9 +270,9 @@ static __inline uint8_t PaethFunction(uint8_t a, uint8_t b, uint8_t c) {
     p += b;
     p -= c;
     int32_t pa, pb, pc;
-    pa = p - (int32_t)a;
-    pb = p - (int32_t)b;
-    pc = p - (int32_t)c;
+    pa = p - a;
+    pb = p - b;
+    pc = p - c;
     pa = pa < 0 ? -pa : pa;
     pb = pb < 0 ? -pb : pb;
     pc = pc < 0 ? -pc : pc;
@@ -305,9 +308,9 @@ public:
                 if(outpixel + pixelbyte >= outbuffersize) return;
                 // "c", "b", "a", "x" come from the PNG spec
                 uint8_t x = inbuffer[inbyte++];
-                uint32_t a = outbuffer[lastpixel + pixelbyte];
-                uint32_t b = outupbuffer[uppixel + pixelbyte];
-                uint32_t c = outupbuffer[lastuppixel + pixelbyte];
+                uint8_t a = outbuffer[lastpixel + pixelbyte];
+                uint8_t b = outupbuffer[uppixel + pixelbyte];
+                uint8_t c = outupbuffer[lastuppixel + pixelbyte];
                 outbuffer[outpixel + pixelbyte] = x + PaethFunction(a, b, c);
             }
             lastpixel = outpixel;
@@ -754,10 +757,11 @@ public:
             }
             pix.Invalidate();
 #endif
+#ifdef PNG_BEBUG_PASSES
             // XXX: Debugging of passes
             const char * passes[] = {"P1.ppm", "P2.ppm", "P3.ppm", "P4.ppm", "P5.ppm", "P6.ppm", "P7.ppm"};
             pix.PPMDebug(passes[pass]);
-
+#endif
         }
         pix.UnlockWrite();
         return 0;
