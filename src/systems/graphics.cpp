@@ -2,8 +2,8 @@
 #include "systems/resource-system.hpp"
 
 #include "resources/md5mesh.hpp"
-#include "resources/shader.hpp"
-#include "resources/material.hpp"
+#include "graphics/shader.hpp"
+#include "graphics/material.hpp"
 #include "components/renderable.hpp"
 
 namespace trillek {
@@ -48,7 +48,7 @@ void System::Update(const double delta) const {
             for (size_t tex_index = 0; tex_index < texgrp.texture_indexes.size(); ++tex_index) {
                 matgrp.material->ActivateTexture(texgrp.texture_indexes[tex_index], tex_index);
             }
-            
+
             // Loop through each renderable group.
             for (const auto& rengrp : texgrp.renderable_groups) {
                 const auto& bufgrp = rengrp.renderable->GetBufferGroup(rengrp.buffer_group_index);
@@ -88,7 +88,7 @@ void System::AddRenderable(const unsigned int entity_id, std::shared_ptr<Rendera
             return;
         }
     }
-            
+
     // No entry exists for the given entity ID, so add it.
     this->renderables.push_back(std::make_pair(entity_id, ren));
 

@@ -1,4 +1,4 @@
-#include "resources/shader.hpp"
+#include "graphics/shader.hpp"
 #include "resources/md5mesh.hpp"
 #include "resources/pixel-buffer.hpp"
 #include "resources/text-file.hpp"

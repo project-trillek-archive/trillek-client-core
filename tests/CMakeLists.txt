@@ -100,7 +100,7 @@ file(GLOB TCCExtra_SRC
 "${TCCSRC}/resources/pixel-buffer.cpp"
 "${TCCSRC}/resources/transform.cpp"
 "${TCCSRC}/resources/md5mesh.cpp"
-"${TCCSRC}/resources/shader.cpp"
+"${TCCSRC}/graphics/shader.cpp"
 
 )
 

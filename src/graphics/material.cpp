@@ -1,5 +1,6 @@
-#include "resources/material.hpp"
-#include "resources/shader.hpp"
+#include "graphics/material.hpp"
+#include "graphics/shader.hpp"
+#include "graphics/texture.hpp"
 
 namespace trillek {
 namespace graphics {
@@ -18,11 +19,8 @@ size_t Material::AddTexture(std::shared_ptr<Texture> t) {
         }
     }
 
-    // TODO: Generate the texture ID and copy the pixel data
-    GLuint tex_id = 0;
-
     // The texture wasn't found in the list so add it.
-    this->textures.push_back(std::make_pair(t, tex_id));
+    this->textures.push_back(std::make_pair(t, t->GetID()));
 
     return this->textures.size();
 }

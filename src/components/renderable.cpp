@@ -1,6 +1,6 @@
 #include "components/renderable.hpp"
-#include "resources/material.hpp"
-#include "resources/shader.hpp"
+#include "graphics/material.hpp"
+#include "graphics/shader.hpp"
 #include "resources/mesh.hpp"
 
 namespace trillek {

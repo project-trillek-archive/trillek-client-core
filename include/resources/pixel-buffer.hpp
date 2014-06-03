@@ -95,6 +95,7 @@ public:
     uint32_t Height() const { return imageheight; }
     uint32_t Pitch() const { return bufferpitch; }
     uint32_t PixelSize() const { return imagepixelsize; }
+    ImageColorMode GetFormat() const { return imagemode; }
 
     // output a PPM image to stderr or file as a debug feature
     void PPMDebug();
