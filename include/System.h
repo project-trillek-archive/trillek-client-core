@@ -3,12 +3,12 @@
 
 namespace trillek {
 
-    class System {
+    class SystemBase {
 
     public:
 
-        System() {};
-        virtual ~System() {};
+        SystemBase() {};
+        virtual ~SystemBase() {};
 
         /** \brief Handle incoming events to update data
          *

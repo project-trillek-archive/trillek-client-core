@@ -23,7 +23,7 @@ namespace trillek {
 
     using namespace std::chrono;
 
-    class System;
+    class SystemBase;
 
     typedef std::function<int(void)> block_t;
     typedef std::list<block_t> chain_t;
@@ -175,7 +175,7 @@ namespace trillek {
          * \param m std::mutex& a mutex held while there is still a running thread
          *
          */
-        void Initialize(unsigned int nr_thread, std::queue<System*>&& systems, std::mutex& m);
+        void Initialize(unsigned int nr_thread, std::queue<SystemBase*>&& systems, std::mutex& m);
 
         /** \brief Execute a task using the current thread
          *
@@ -204,10 +204,10 @@ namespace trillek {
         /** \brief Main loop of each thread
          *
          * \param now start time
-         * \param system System* system to attach
+         * \param system SystemBase* system to attach
          *
          */
-        void DayWork(const frame_tp& now, System* system);
+        void DayWork(const frame_tp& now, SystemBase* system);
 
         std::priority_queue<std::shared_ptr<TaskRequestBase>> taskqueue;
         std::condition_variable countercheck;

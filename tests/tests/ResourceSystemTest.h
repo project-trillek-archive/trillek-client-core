@@ -3,16 +3,16 @@
 
 #include "gtest/gtest.h"
 
-#include "systems/ResourceSystem.h"
-#include "resources/TextFile.h"
+#include "systems/resource-system.hpp"
+#include "resources/text-file.hpp"
 
 using namespace trillek::resource;
 
 namespace trillek {
-    std::shared_ptr<ResourceSystem> resSys = ResourceSystem::GetInstance();
+    std::shared_ptr<System> resSys;
     // Check if resource types are registered correctly
     TEST(ResSysTest, Register) {
-        resSys->Register<TextFile>();
+        resSys = System::GetInstance();
 
         // If we have a valid type id retrieved from within resource system, then registtration was valid.
         ASSERT_EQ(reflection::GetTypeID<TextFile>(), resSys->GetTypeIDFromName(reflection::GetTypeName<TextFile>()));
@@ -21,7 +21,7 @@ namespace trillek {
     // Create a resource at compile time when type information is known.
     TEST(ResSysTest, CreateCompileTime) {
         std::vector<Property> props;
-        Property p("filename", std::string("test.txt"));
+        Property p("filename", std::string("assets/tests/test.txt"));
         props.push_back(p);
 
         std::shared_ptr<TextFile> file = resSys->Create<TextFile>("test", props);
@@ -42,7 +42,7 @@ namespace trillek {
     // Create a resource at runtime when type information is not known.
     TEST(ResSysTest, CreateRunTime) {
         std::vector<Property> props;
-        Property p("filename", std::string("test.txt"));
+        Property p("filename", std::string("assets/tests/test.txt"));
         props.push_back(p);
 
         // If we have a valid type id retrieved from within resource system, then registtration was valid.
@@ -74,7 +74,7 @@ namespace trillek {
     // Create a resource at runtime when type information is not known.
     TEST(ResSysTest, CreateInvalidType) {
         std::vector<Property> props;
-        Property p("filename", std::string("test.txt"));
+        Property p("filename", std::string("assets/tests/test.txt"));
         props.push_back(p);
 
         // If we have a valid type id retrieved from within resource system, then registtration was valid.
@@ -90,7 +90,7 @@ namespace trillek {
     // Attempt to create a resource that already has been created. It should return the already created resource.
     TEST(ResSysTest, CreateAlreadyCreated) {
         std::vector<Property> props;
-        Property p("filename", std::string("test.txt"));
+        Property p("filename", std::string("assets/tests/test.txt"));
         props.push_back(p);
 
         std::shared_ptr<TextFile> file = resSys->Create<TextFile>("test", props);
@@ -109,7 +109,7 @@ namespace trillek {
         std::shared_ptr<TextFile> file(new TextFile());
 
         std::vector<Property> props;
-        Property p("filename", std::string("test.txt"));
+        Property p("filename", std::string("assets/tests/test.txt"));
         props.push_back(p);
 
         file->Initialize(props);
@@ -133,7 +133,7 @@ namespace trillek {
         std::shared_ptr<TextFile> file(new TextFile());
 
         std::vector<Property> props;
-        Property p("filename", std::string("test.txt"));
+        Property p("filename", std::string("assets/tests/test.txt"));
         props.push_back(p);
 
         file->Initialize(props);

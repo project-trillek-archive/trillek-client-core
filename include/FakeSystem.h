@@ -6,7 +6,7 @@
 
 namespace trillek {
 
-    class FakeSystem : public System {
+    class FakeSystem : public SystemBase {
 
     public:
 

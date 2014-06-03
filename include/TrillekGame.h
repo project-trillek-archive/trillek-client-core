@@ -3,7 +3,8 @@
 
 #include "TrillekScheduler.h"
 #include "FakeSystem.h"
-#include "OS.h"
+#include "os.hpp"
+#include "systems/graphics.hpp"
 
 namespace trillek {
     class TrillekGame {
@@ -25,6 +26,13 @@ namespace trillek {
          *
          */
         static OS& GetOS() { return glfw_os; };
+
+        /** \brief Return the graphic system instance
+         *
+         * \return graphics::System& the instance
+         *
+         */
+        static graphics::System& GetGraphicSystem() { return gl_sys; };
 
         /** \brief Get the FakeSystem
          *
@@ -63,6 +71,7 @@ namespace trillek {
         static TrillekScheduler scheduler;
         static FakeSystem fake_system;
         static OS glfw_os;
+        static graphics::System gl_sys;
         static std::condition_variable close_window;
    };
 }

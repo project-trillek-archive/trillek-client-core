@@ -16,7 +16,7 @@ namespace trillek {
     }
 
 
-    void TrillekScheduler::Initialize(unsigned int nr_thread, std::queue<System*>&& systems, std::mutex& m) {
+    void TrillekScheduler::Initialize(unsigned int nr_thread, std::queue<SystemBase*>&& systems, std::mutex& m) {
         // lock the mutex
         std::lock_guard<std::mutex> locker(m);
         std::list<std::thread> thread_list;
@@ -29,7 +29,7 @@ namespace trillek {
                                         });
         // prepare threads
         for (auto i = 0; i < nr_thread; ++i) {
-            System* sys = nullptr;
+            SystemBase* sys = nullptr;
             if (! systems.empty()) {
                 sys = systems.front();
                 systems.pop();
@@ -43,16 +43,16 @@ namespace trillek {
         }
     }
 
-    void TrillekScheduler::DayWork(const frame_tp& now, System* system) {
+    void TrillekScheduler::DayWork(const frame_tp& now, SystemBase* system) {
         frame_tp next_frame_tp = now + one_frame;
 
         std::function<void(const frame_tp&)> handleEvents_functor;
         std::function<void(void)> runBatch_functor;
         std::function<void(void)> terminate_functor;
         if (system) {
-            handleEvents_functor = std::bind(&System::HandleEvents, std::ref(*system), std::placeholders::_1);
-            runBatch_functor = std::bind(&System::RunBatch, std::cref(*system));
-            terminate_functor = std::bind(&System::Terminate, std::ref(*system));
+            handleEvents_functor = std::bind(&SystemBase::HandleEvents, std::ref(*system), std::placeholders::_1);
+            runBatch_functor = std::bind(&SystemBase::RunBatch, std::cref(*system));
+            terminate_functor = std::bind(&SystemBase::Terminate, std::ref(*system));
         } else {
             handleEvents_functor = [](const frame_tp& timepoint) {};
             runBatch_functor = [] () {};

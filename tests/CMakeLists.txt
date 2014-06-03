@@ -50,8 +50,11 @@ IF (NOT (DEFINED TCC_BUILD_TESTS))
   MESSAGE("The include directory ${CMAKE_SOURCE_DIR}/../include may not be correct.")
   SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} ${CMAKE_SOURCE_DIR}/../include)
   INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/../include")
+  SET(TCCSRC "${CMAKE_SOURCE_DIR}/../src")
 ELSE (NOT (DEFINED TCC_BUILD_TESTS))
   MESSAGE("Called from root.")
+  SET(TCCSRC "${CMAKE_SOURCE_DIR}/src")
+  MESSAGE(STATUS "Source path is ${TCCSRC}")
 ENDIF (NOT (DEFINED TCC_BUILD_TESTS))
 
 # If we are on windows add in the local search directories as well.
@@ -84,6 +87,27 @@ ENDIF (DEFINED ENV{GTEST_ROOT})
 
 file(GLOB_RECURSE TCCTests_SRC "tests/*.h" "main.cpp" "src/*.cpp")
 
+file(GLOB TCCExtra_SRC
+"${TCCSRC}/systems/resource-system.cpp"
+"${TCCSRC}/systems/resource-system-registration.cpp"
+"${TCCSRC}/systems/json-parser.cpp"
+"${TCCSRC}/systems/json-parser-registration.cpp"
+"${TCCSRC}/systems/transform-system.cpp"
+"${TCCSRC}/resources/transform.cpp"
+"${TCCSRC}/resources/md5mesh.cpp"
+"${TCCSRC}/resources/shader.cpp"
+)
+
+# For certain files we need the OpenGL symbols.
+FIND_PACKAGE(OpenGL REQUIRED)
+SET(X11_LIBRARIES "")
+IF (NOT APPLE) # X11 and GLEW are not needed on OSX.
+	FIND_PACKAGE(X11)
+	FIND_PACKAGE(GLEW REQUIRED) # We find GLEW here as OSX doesn't need it.
+ELSE (NOT APPLE)
+	SET(GLEW_LIBRARY "") # Set a dummy value for GLEW.
+ENDIF (NOT APPLE)
+
 foreach(flag_var
         CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE
         CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
@@ -92,8 +116,13 @@ foreach(flag_var
    endif(${flag_var} MATCHES "/MD")
 endforeach(flag_var)
 
-ADD_EXECUTABLE(TCCTests ${TCCTests_SRC})
+ADD_EXECUTABLE(TCCTests ${TCCTests_SRC} ${TCCExtra_SRC})
 
-TARGET_LINK_LIBRARIES (TCCTests ${GTEST_LIBRARIES})
+TARGET_LINK_LIBRARIES (
+	TCCTests ${GTEST_LIBRARIES}
+	${OPENGL_LIBRARIES}
+	${X11_LIBRARIES}
+	${GLEW_LIBRARIES}
+)
 
 MESSAGE("Tests' Cmake configured.")
