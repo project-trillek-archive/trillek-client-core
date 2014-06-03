@@ -16,9 +16,7 @@ namespace trillek {
     }
 
 
-    void TrillekScheduler::Initialize(unsigned int nr_thread, std::queue<SystemBase*>&& systems, std::mutex& m) {
-        // lock the mutex
-        std::lock_guard<std::mutex> locker(m);
+    void TrillekScheduler::Initialize(unsigned int nr_thread, std::queue<SystemBase*>&& systems) {
         std::list<std::thread> thread_list;
         // initialize
         frame_tp now = frame_tp(TrillekGame::GetOS().GetTime());
@@ -53,6 +51,7 @@ namespace trillek {
             handleEvents_functor = std::bind(&SystemBase::HandleEvents, std::ref(*system), std::placeholders::_1);
             runBatch_functor = std::bind(&SystemBase::RunBatch, std::cref(*system));
             terminate_functor = std::bind(&SystemBase::Terminate, std::ref(*system));
+            system->ThreadInit();
         } else {
             handleEvents_functor = [](const frame_tp& timepoint) {};
             runBatch_functor = [] () {};

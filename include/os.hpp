@@ -29,6 +29,16 @@ public:
     bool InitializeWindow(const int width, const int height, const std::string title,
         const unsigned int glMajor = 3, const unsigned int glMinor = 2);
 
+    /** \brief Make the context of the window current for the calling thread
+     *
+     */
+    void MakeCurrent();
+
+    /** \brief Detach the context of the window from the calling thread
+     *
+     */
+    void DetachContext();
+
     /**
     * \brief Calls GLFWTerminate to close the window.
     *

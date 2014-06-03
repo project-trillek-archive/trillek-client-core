@@ -172,10 +172,9 @@ namespace trillek {
          *
          * \param nr_thread unsigned int number of threads to launch
          * \param systems std::queue<System*>&& list of systems to attach
-         * \param m std::mutex& a mutex held while there is still a running thread
          *
          */
-        void Initialize(unsigned int nr_thread, std::queue<SystemBase*>&& systems, std::mutex& m);
+        void Initialize(unsigned int nr_thread, std::queue<SystemBase*>&& systems);
 
         /** \brief Execute a task using the current thread
          *

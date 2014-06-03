@@ -48,23 +48,16 @@ namespace trillek {
          * \return bool true if we are about to terminate the program
          *
          */
-        static bool GetTerminateFlag() { return GetOS().Closing(); };
+        static bool GetTerminateFlag() { return close_window; };
 
-        /** \brief Return the condition_variable associated with the window close operation
-         *
-         * \return std::condition_variable& the condition variable
-         *
-         */
-        static std::condition_variable& GetCloseWindowCV() { return close_window; };
-
-        /** \brief Notify the thread waiting the window to be closed
+        /** \brief Tells that the user tries to close the window
          *
          * This function is called by a callback set in GLFW
          *
          * \return void
          *
          */
-        static void NotifyCloseWindow() { close_window.notify_all(); };
+        static void NotifyCloseWindow() { close_window = true; };
 
     private:
 
@@ -72,7 +65,7 @@ namespace trillek {
         static FakeSystem fake_system;
         static OS glfw_os;
         static graphics::System gl_sys;
-        static std::condition_variable close_window;
+        static bool close_window;
    };
 }
 

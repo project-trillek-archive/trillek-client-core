@@ -10,6 +10,13 @@ namespace trillek {
         SystemBase() {};
         virtual ~SystemBase() {};
 
+        /** \brief This function is executed when a thread is attached to the system
+         *
+         * \return virtual void
+         *
+         */
+        virtual void ThreadInit() {};
+
         /** \brief Handle incoming events to update data
          *
          * This function is called once every frame. It is the only

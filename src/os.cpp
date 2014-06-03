@@ -60,7 +60,7 @@ bool OS::InitializeWindow(const int width, const int height, const std::string t
     ((void (*)(id, SEL, bool)) objc_msgSend)(cocoaGLView, sel_getUid("setWantsBestResolutionOpenGLSurface:"), false);
 #endif
 
-    // Make the window's context current.
+    // attach the context
     glfwMakeContextCurrent(this->window);
 
 #ifndef __APPLE__
@@ -89,6 +89,14 @@ bool OS::InitializeWindow(const int width, const int height, const std::string t
     glfwGetCursorPos(this->window, &this->old_mouse_x, &this->old_mouse_y);
 
     return true;
+}
+
+void OS::MakeCurrent() {
+    glfwMakeContextCurrent(this->window);
+}
+
+void OS::DetachContext() {
+    glfwMakeContextCurrent(NULL);
 }
 
 void OS::Terminate() {

@@ -31,6 +31,10 @@ const int* System::Start(const unsigned int width, const unsigned int height) {
     return this->gl_version;
 }
 
+void System::ThreadInit() {
+    TrillekGame::GetOS().MakeCurrent();
+}
+
 void System::RunBatch() const {
     // Clear the backbuffer and primary depth/stencil buffer
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -61,6 +65,10 @@ void System::RunBatch() const {
         }
     }
     TrillekGame::GetOS().SwapBuffers();
+    // If the user closes the window, we notify all the systems
+    if (TrillekGame::GetOS().Closing()) {
+        TrillekGame::NotifyCloseWindow();
+    }
 }
 
 void System::SetViewportSize(const unsigned int width, const unsigned int height) {
@@ -177,6 +185,10 @@ void System::RemoveRenderable(const unsigned int entity_id) {
             return;
         }
     }
+}
+
+void System::Terminate() {
+    TrillekGame::GetOS().DetachContext();
 }
 
 } // End of graphics

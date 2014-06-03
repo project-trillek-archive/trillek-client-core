@@ -45,6 +45,11 @@ public:
     */
     const int* Start(const unsigned int width, const unsigned int height);
 
+    /** \brief Makes the context of the window current to the thread
+     *
+     */
+    void ThreadInit() override;
+
     /**
     * \brief Causes an update in the system based on the change in time.
     *
@@ -99,9 +104,7 @@ public:
      * This function is called when the program is closing
      *
      */
-    void Terminate() override {
-       // TODO
-    };
+    void Terminate() override;
 
 private:
     int gl_version[2];
