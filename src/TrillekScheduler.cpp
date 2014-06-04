@@ -4,6 +4,7 @@
 #include <ctime>
 #include <iostream>
 #include <functional>
+#include <algorithm>
 
 #include "System.h"
 #include "TrillekGame.h"
@@ -16,7 +17,7 @@ namespace trillek {
     }
 
 
-    void TrillekScheduler::Initialize(unsigned int nr_thread, std::queue<SystemBase*>&& systems) {
+    void TrillekScheduler::Initialize(unsigned int nr_thread, std::queue<SystemBase*>& systems) {
         std::list<std::thread> thread_list;
         // initialize
         frame_tp now = frame_tp(TrillekGame::GetOS().GetTime());
@@ -26,7 +27,7 @@ namespace trillek {
                                             Queue(std::move(c));
                                         });
         // prepare threads
-        for (auto i = 0; i < nr_thread; ++i) {
+        for (unsigned int i = 0; i < nr_thread; ++i) {
             SystemBase* sys = nullptr;
             if (! systems.empty()) {
                 sys = systems.front();
@@ -67,7 +68,7 @@ namespace trillek {
                 while (taskqueue.empty()
                        || ! taskqueue.top()->IsNow()
                        || frame_tp(TrillekGame::GetOS().GetTime()) >= next_frame_tp) {
-                    auto max_timepoint = taskqueue.empty() ? next_frame_tp :
+                    const auto max_timepoint = taskqueue.empty() ? next_frame_tp :
                                                                 std::min(next_frame_tp, taskqueue.top()->Timepoint());
                     if (queuecheck.wait_until(locker, max_timepoint) == std::cv_status::timeout) {
                         // we reach timeout

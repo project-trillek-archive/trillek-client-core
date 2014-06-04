@@ -174,7 +174,7 @@ namespace trillek {
          * \param systems std::queue<System*>&& list of systems to attach
          *
          */
-        void Initialize(unsigned int nr_thread, std::queue<SystemBase*>&& systems);
+        void Initialize(unsigned int nr_thread, std::queue<SystemBase*>& systems);
 
         /** \brief Execute a task using the current thread
          *

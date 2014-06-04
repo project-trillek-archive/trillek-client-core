@@ -52,7 +52,7 @@ int main(int argCount, char **argValues) {
                    &trillek::TrillekScheduler::Initialize,
                    &trillek::TrillekGame::GetScheduler(),
                    5,
-                   std::move(systems));
+                   std::ref(systems));
     tp.join();
 
     // Terminating program
