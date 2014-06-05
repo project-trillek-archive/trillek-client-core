@@ -8,7 +8,7 @@ namespace json {
 
 void System::RegisterTypes() {
     RegisterSerializer(resource::System::GetInstance());
-    RegisterSerializer(transform::System::GetInstance());
+    RegisterSerializer(transform::TransformMap::GetInstance());
 }
 
 } // End of json

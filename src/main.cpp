@@ -21,7 +21,7 @@ int main(int argCount, char **argValues) {
 #endif
 
     // Call each system's GetInstance to create the initial instance.
-    trillek::transform::System::GetInstance();
+    trillek::transform::TransformMap::GetInstance();
     trillek::resource::System::GetInstance();
 
     trillek::json::System jparser;

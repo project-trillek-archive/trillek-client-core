@@ -162,7 +162,7 @@ void RenderSystem::AddRenderable(const unsigned int entity_id, std::shared_ptr<R
     event::Dispatcher<transform::Transform>::GetInstance()->Subscribe(entity_id, this);
 
     // We will use the notify method to force the initial model matrix creation.
-    Notify(entity_id, transform::System::GetTransform(entity_id).get());
+    Notify(entity_id, transform::TransformMap::GetTransform(entity_id).get());
 }
 
 void RenderSystem::RemoveRenderable(const unsigned int entity_id) {

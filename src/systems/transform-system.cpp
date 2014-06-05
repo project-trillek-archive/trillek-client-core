@@ -4,10 +4,10 @@
 namespace trillek {
 namespace transform {
 
-std::once_flag System::only_one;
-std::shared_ptr<System> System::instance = nullptr;
+std::once_flag TransformMap::only_one;
+std::shared_ptr<TransformMap> TransformMap::instance = nullptr;
 
-std::shared_ptr<Transform> System::GetTransform(const unsigned int entity_id) {
+std::shared_ptr<Transform> TransformMap::GetTransform(const unsigned int entity_id) {
     if (instance->transforms.find(entity_id) != instance->transforms.end()) {
         return instance->transforms[entity_id];
     }
@@ -15,7 +15,7 @@ std::shared_ptr<Transform> System::GetTransform(const unsigned int entity_id) {
     return nullptr;
 }
 
-std::shared_ptr<Transform> System::AddTransform(const unsigned int entity_id) {
+std::shared_ptr<Transform> TransformMap::AddTransform(const unsigned int entity_id) {
     if (instance->transforms.find(entity_id) == instance->transforms.end()) {
         std::shared_ptr<Transform> transform = std::make_shared<Transform>(entity_id);
 
@@ -25,11 +25,11 @@ std::shared_ptr<Transform> System::AddTransform(const unsigned int entity_id) {
     return instance->transforms[entity_id];
 }
 
-void System::RemoveTransform(const unsigned int entity_id) {
+void TransformMap::RemoveTransform(const unsigned int entity_id) {
     instance->transforms.erase(entity_id);
 }
 
-bool System::Serialize(rapidjson::Document& document) {
+bool TransformMap::Serialize(rapidjson::Document& document) {
     rapidjson::Value transform_node(rapidjson::kObjectType);
 
     for (auto entity_transform : this->transforms) {
@@ -86,7 +86,7 @@ bool System::Serialize(rapidjson::Document& document) {
 //          }
 //      }
 //  }
-bool System::DeSerialize(rapidjson::Value& node) {
+bool TransformMap::DeSerialize(rapidjson::Value& node) {
     if (node.IsObject()) {
         // Iterate over the entity ids.
         for (auto entity_itr = node.MemberBegin(); entity_itr != node.MemberEnd(); ++entity_itr) {

@@ -12,13 +12,15 @@ namespace transform {
 
 class Transform;
 
-class System : public json::SerializerBase {
+// Stores a mapping of entity ID to transform that can
+// be accessed via static methods anywhere.
+class TransformMap : public json::SerializerBase {
 private:
-    System() : SerializerBase("transforms") { }
-    System(const System& right) : SerializerBase("transforms") {
+    TransformMap() : SerializerBase("transforms") { }
+    TransformMap(const TransformMap& right) : SerializerBase("transforms") {
         instance = right.instance;
     }
-    System& operator=(const System& right) {
+    TransformMap& operator=(const TransformMap& right) {
         if (this != &right) {
             instance = right.instance;
         }
@@ -26,18 +28,18 @@ private:
         return *this;
     }
     static std::once_flag only_one;
-    static std::shared_ptr<System> instance;
+    static std::shared_ptr<TransformMap> instance;
 public:
-    static std::shared_ptr<System> GetInstance() {
-        std::call_once(System::only_one,
+    static std::shared_ptr<TransformMap> GetInstance() {
+        std::call_once(TransformMap::only_one,
             [ ] () {
-            System::instance.reset(new System());
+            TransformMap::instance.reset(new TransformMap());
         }
         );
 
-        return System::instance;
+        return TransformMap::instance;
     }
-    ~System() { }
+    ~TransformMap() { }
 
     /**
     * \brief Gets an entity's transform.
