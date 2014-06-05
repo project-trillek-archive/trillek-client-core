@@ -5,7 +5,7 @@
 namespace trillek {
 namespace resource {
 
-void System::RegisterTypes() {
+void ResourceMap::RegisterTypes() {
     RegisterResourceType<trillek::resource::TextFile>();
     RegisterResourceType<trillek::resource::MD5Mesh>();
     RegisterResourceType<trillek::resource::Shader>();

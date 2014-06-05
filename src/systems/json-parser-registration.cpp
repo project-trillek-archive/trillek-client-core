@@ -7,7 +7,7 @@ namespace trillek {
 namespace json {
 
 void System::RegisterTypes() {
-    RegisterSerializer(resource::System::GetInstance());
+    RegisterSerializer(resource::ResourceMap::GetInstance());
     RegisterSerializer(transform::TransformMap::GetInstance());
 }
 

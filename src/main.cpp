@@ -22,7 +22,7 @@ int main(int argCount, char **argValues) {
 
     // Call each system's GetInstance to create the initial instance.
     trillek::transform::TransformMap::GetInstance();
-    trillek::resource::System::GetInstance();
+    trillek::resource::ResourceMap::GetInstance();
 
     trillek::json::System jparser;
     jparser.Parse("assets/tests/sample.json");

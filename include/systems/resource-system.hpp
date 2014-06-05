@@ -28,13 +28,13 @@ public:
 };
 
 // Singleton approach derived from http://silviuardelean.ro/2012/06/05/few-singleton-approaches/ .
-class System : public json::SerializerBase {
+class ResourceMap : public json::SerializerBase {
 private:
-    System() : SerializerBase("resources") { }
-    System(const System& right) : SerializerBase("resources") {
+    ResourceMap() : SerializerBase("resources") { }
+    ResourceMap(const ResourceMap& right) : SerializerBase("resources") {
         instance = right.instance;
     }
-    System& operator=(const System& right) {
+    ResourceMap& operator=(const ResourceMap& right) {
         if (this != &right) {
             instance = right.instance;
         }
@@ -42,27 +42,27 @@ private:
         return *this;
     }
     static std::once_flag only_one;
-    static std::shared_ptr<System> instance;
+    static std::shared_ptr<ResourceMap> instance;
 public:
-    static std::shared_ptr<System> GetInstance() {
-        std::call_once(System::only_one,
+    static std::shared_ptr<ResourceMap> GetInstance() {
+        std::call_once(ResourceMap::only_one,
             [ ] () {
-                System::instance.reset(new System());
+            ResourceMap::instance.reset(new ResourceMap());
 
                 // Set up the default factory for an unknown type to return false.
                 auto lambda = [ ] (const std::string& name, const std::vector<Property> &properties) {
                     return nullptr;
                 };
 
-                System::instance->factories[0] = lambda;
+                ResourceMap::instance->factories[0] = lambda;
 
-                System::instance->RegisterTypes();
+                ResourceMap::instance->RegisterTypes();
             }
         );
 
-        return System::instance;
+        return ResourceMap::instance;
     }
-    ~System() { }
+    ~ResourceMap() { }
 
     /**
     * \brief Register a type to be available for factory calls.
@@ -70,16 +70,16 @@ public:
     * \return void
     */
     template<class T>
-    void RegisterResourceType() {
+    static void RegisterResourceType() {
         // Store the type ID associated with the type name.
-        this->resource_type_id[reflection::GetTypeName<T>()] = reflection::GetTypeID<T>();
+        resource_type_id[reflection::GetTypeName<T>()] = reflection::GetTypeID<T>();
 
         // Create a lambda function that calls Create with the correct template type.
-        auto lambda = [this] (const std::string& name, const std::vector<Property> &properties) {
-            return this->Create<T>(name, properties);
+        auto lambda = [] (const std::string& name, const std::vector<Property> &properties) {
+            return instance->Create<T>(name, properties);
         };
 
-        this->factories[reflection::GetTypeID<T>()] = lambda;
+        instance->factories[reflection::GetTypeID<T>()] = lambda;
     }
 
     /**
@@ -88,11 +88,11 @@ public:
     * \param[in] const std::string & type_Name The name to look for a type ID.
     * \return unsigned int Returns 0 if the name doesn't exist.
     */
-    unsigned int GetTypeIDFromName(const std::string& type_Name) {
-        if (this->resource_type_id.find(type_Name) == this->resource_type_id.end()) {
+    static unsigned int GetTypeIDFromName(const std::string& type_Name) {
+        if (resource_type_id.find(type_Name) == resource_type_id.end()) {
             return 0;
         }
-        return this->resource_type_id.find(type_Name)->second;
+        return resource_type_id.find(type_Name)->second;
     }
 
     /**
@@ -102,12 +102,12 @@ public:
     * \return std::shared_ptr<T> Returns nullptr if the resource hasn't been created yet, otherwise the requested resource..
     */
     template<class T>
-    std::shared_ptr<T> Get(const std::string& name) {
+    static std::shared_ptr<T> Get(const std::string& name) {
         unsigned int type_id = reflection::GetTypeID<T>();
-        if (this->resources[type_id].find(name) == this->resources[type_id].end()) {
+        if (instance->resources[type_id].find(name) == instance->resources[type_id].end()) {
             return nullptr;
         }
-        return std::static_pointer_cast<T>(this->resources[type_id][name]);
+        return std::static_pointer_cast<T>(instance->resources[type_id][name]);
     }
 
     /**
@@ -121,9 +121,9 @@ public:
     * \param[in] const std::vector<Property> & properties The creation properties for the resource.
     * \return bool True if the resource loaded successfully. Get must be used, later, where the type information is known to retrieve the resource if it was loaded correctly.
     */
-    bool Create(const unsigned int type_id, const std::string& name, const std::vector<Property> &properties) {
-        if (this->factories.find(type_id) != this->factories.end()) {
-            return this->factories[type_id](name, properties) != nullptr;
+    static bool Create(const unsigned int type_id, const std::string& name, const std::vector<Property> &properties) {
+        if (instance->factories.find(type_id) != instance->factories.end()) {
+            return instance->factories[type_id](name, properties) != nullptr;
         }
         return false;
     }
@@ -136,16 +136,16 @@ public:
     * \return std::shared_ptr<T> Returns nullptr if it failed to be created, otherwise the created resource.
     */
     template<class T>
-    std::shared_ptr<T> Create(const std::string& name, const std::vector<Property> &properties) {
+    static std::shared_ptr<T> Create(const std::string& name, const std::vector<Property> &properties) {
         unsigned int type_id = reflection::GetTypeID<T>();
-        if (this->resources[type_id].find(name) == this->resources[type_id].end()) {
-            this->resources[type_id][name] = std::make_shared<T>();
-            if (!this->resources[type_id][name]->Initialize(properties)) {
-                this->resources[type_id].erase(name);
+        if (instance->resources[type_id].find(name) == instance->resources[type_id].end()) {
+            instance->resources[type_id][name] = std::make_shared<T>();
+            if (!instance->resources[type_id][name]->Initialize(properties)) {
+                instance->resources[type_id].erase(name);
                 return nullptr;
             }
         }
-        return std::static_pointer_cast<T>(this->resources[type_id][name]);
+        return std::static_pointer_cast<T>(instance->resources[type_id][name]);
     }
 
     /**
@@ -156,9 +156,9 @@ public:
     * \return void
     */
     template<class T>
-    void Add(const std::string& name, std::shared_ptr<T> r) {
+    static void Add(const std::string& name, std::shared_ptr<T> r) {
         unsigned int type_id = reflection::GetTypeID<T>();
-        resources[type_id][name] = r;
+        instance->resources[type_id][name] = r;
     }
 
     /**
@@ -170,10 +170,10 @@ public:
     * \param[in] const std::string & name Name of the resource to remove.
     * \return void
     */
-    void Remove(const std::string& name) {
-        for (const auto& list : this->resources) {
+    static void Remove(const std::string& name) {
+        for (const auto& list : instance->resources) {
             if (list.second.find(name) != list.second.end()) {
-                this->resources[list.first].erase(name);
+                instance->resources[list.first].erase(name);
                 return;
             }
         }
@@ -185,8 +185,8 @@ public:
     * \param[in] const std::string& name Name of the resource to check if it exists.
     * \return bool True if the resource exists.
     */
-    bool Exists(const std::string& name) {
-        for (const auto& list : this->resources) {
+    static bool Exists(const std::string& name) {
+        for (const auto& list : instance->resources) {
             if (list.second.find(name) != list.second.end()) {
                 return true;
             }
@@ -203,7 +203,7 @@ public:
     * Interally it just calls the tempalte method Register().
     * \return void
     */
-    void RegisterTypes();
+    static void RegisterTypes();
 
     // Inherited from SerializeBase
     virtual bool Serialize(rapidjson::Document& document);
@@ -211,10 +211,9 @@ public:
     // Inherited from SerializeBase
     virtual bool DeSerialize(rapidjson::Value& node);
 private:
-    std::map<unsigned int, std::map<std::string, std::shared_ptr<resource::ResourceBase>>> resources; // Mapping of resource TypeID to loaded resources
-    std::map<std::string, unsigned int> resource_type_id; // Stores a mapping of TypeName to TypeID
-
-    std::map<unsigned int, std::function<std::shared_ptr<resource::ResourceBase>(const std::string& name, const std::vector<Property> &properties)>> factories; // Mapping of type ID to factory function.
+    static std::map<unsigned int, std::map<std::string, std::shared_ptr<ResourceBase>>> resources; // Mapping of resource TypeID to loaded resources
+    static std::map<std::string, unsigned int> resource_type_id; // Stores a mapping of TypeName to TypeID
+    static std::map<unsigned int, std::function<std::shared_ptr<ResourceBase>(const std::string& name, const std::vector<Property> &properties)>> factories; // Mapping of type ID to factory function.
 };
 
 } // End of system

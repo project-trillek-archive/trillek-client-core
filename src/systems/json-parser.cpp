@@ -19,7 +19,7 @@ bool System::Parse(const std::string& fname) {
     std::vector<Property> props;
     Property p("filename", std::string("assets/tests/sample.json"));
     props.push_back(p);
-    this->file = resource::System::GetInstance()->Create<trillek::resource::TextFile>("JSON_test", props);
+    this->file = resource::ResourceMap::Create<trillek::resource::TextFile>("JSON_test", props);
 
     this->document.Parse<0>(this->file->GetText().c_str());
     if (this->document.HasParseError()) {
