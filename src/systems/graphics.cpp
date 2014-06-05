@@ -62,7 +62,10 @@ void RenderSystem::RunBatch() const {
                 glBindVertexArray(bufgrp->vao);
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufgrp->ibo);
 
-                glDrawElements(GL_TRIANGLES, bufgrp->ibo_count, GL_UNSIGNED_INT, 0);
+                for (unsigned int entity_id : rengrp.instances) {
+                    glUniformMatrix4fv((*shader)("model"), 1, GL_FALSE, &this->model_matrices.at(entity_id)[0][0]);
+                    glDrawElements(GL_TRIANGLES, bufgrp->ibo_count, GL_UNSIGNED_INT, 0);
+                }
             }
         }
     }
@@ -137,6 +140,7 @@ void RenderSystem::AddRenderable(const unsigned int entity_id, std::shared_ptr<R
         shader->Use();
         shader->AddUniform("view");
         shader->AddUniform("projection");
+        shader->AddUniform("model");
         shader->UnUse();
     }
 
