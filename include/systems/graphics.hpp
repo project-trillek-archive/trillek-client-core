@@ -10,8 +10,8 @@
 #include <list>
 #include <memory>
 #include <vector>
-#include "TrillekScheduler.h"
-#include "System.h"
+#include "trillek-scheduler.hpp"
+#include "systems/system-base.hpp"
 
 namespace trillek {
 namespace graphics {

@@ -1,4 +1,4 @@
-#include "TrillekGame.h"
+#include "trillek-game.hpp"
 #include <queue>
 #include <thread>
 #include <chrono>

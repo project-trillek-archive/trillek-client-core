@@ -1,7 +1,7 @@
 #include "os.hpp"
 
 #include <iostream>
-#include "TrillekGame.h"
+#include "trillek-game.hpp"
 
 #ifdef __APPLE__
 // Needed so we can disable retina support for our window.

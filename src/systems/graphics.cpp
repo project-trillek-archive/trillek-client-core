@@ -1,4 +1,4 @@
-#include "TrillekGame.h"
+#include "trillek-game.hpp"
 #include "systems/graphics.hpp"
 #include "systems/resource-system.hpp"
 

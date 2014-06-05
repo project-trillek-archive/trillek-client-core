@@ -1,7 +1,7 @@
 #ifndef ATOMICQUEUETEST_H_INCLUDED
 #define ATOMICQUEUETEST_H_INCLUDED
 
-#include "AtomicQueue.hpp"
+#include "atomic-queue.hpp"
 
 #include "gtest/gtest.h"
 
