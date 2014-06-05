@@ -18,7 +18,7 @@ public:
     ~MD5Mesh() { }
 
     /*****************************/
-    /* MD$Mesh helper structures */
+    /* MD5Mesh helper structures */
     /*****************************/
     struct Joint {
         Joint() : name(""), parent(-1), position(0.0f, 0.0f, 0.0f) { }

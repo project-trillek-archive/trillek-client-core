@@ -17,7 +17,7 @@ std::shared_ptr<Transform> System::GetTransform(const unsigned int entity_id) {
 
 std::shared_ptr<Transform> System::AddTransform(const unsigned int entity_id) {
     if (instance->transforms.find(entity_id) == instance->transforms.end()) {
-        std::shared_ptr<Transform> transform = std::make_shared<Transform>();
+        std::shared_ptr<Transform> transform = std::make_shared<Transform>(entity_id);
 
         instance->transforms[entity_id] = transform;
     }

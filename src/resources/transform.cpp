@@ -3,6 +3,10 @@
 namespace trillek {
 namespace transform {
 
+Transform::Transform(unsigned int entity_id) :
+    orientation(glm::quat(1, 0, 0, 0)), scale(1.0f), entity_id(entity_id) {
+}
+
 void Transform::Translate(const glm::vec3 amount) {
     this->translation += amount;
 }

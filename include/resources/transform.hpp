@@ -14,6 +14,7 @@ static glm::vec3 RIGHT_VECTOR(1.0f, 0.0f, 0.0f);
 
 class Transform {
 public:
+    Transform(unsigned int entity_id);
     /**
     * \brief Translates by the provided amount relative to the current translation.
     *
@@ -98,7 +99,7 @@ private:
     glm::vec3 rotation;
     glm::vec3 scale;
     glm::quat orientation;
-
+    unsigned int entity_id;
 };
 
 } // End of resource
