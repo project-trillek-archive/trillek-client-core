@@ -32,7 +32,7 @@ public:
      * \return graphics::System& the instance
      *
      */
-    static graphics::System& GetGraphicSystem() { return gl_sys; };
+    static graphics::RenderSystem& GetGraphicSystem() { return gl_sys; };
 
     /** \brief Get the FakeSystem
      *
@@ -64,7 +64,7 @@ private:
     static TrillekScheduler scheduler;
     static FakeSystem fake_system;
     static OS glfw_os;
-    static graphics::System gl_sys;
+    static graphics::RenderSystem gl_sys;
     static bool close_window;
 };
 }
