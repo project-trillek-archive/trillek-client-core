@@ -85,10 +85,10 @@ public:
     /**
      * \brief Returns the time since the start of the program.
      *
-     * \return std::chrono::duration<double,std::ratio<1>> The number of seconds
-     * (or fractions of a second) that has passed.
+     * \return std::chrono::nanoseconds The number of nanoseconds
+     * that have passed.
      */
-    std::chrono::duration<double,std::ratio<1>> GetTime();
+    std::chrono::nanoseconds GetTime();
 
     /**
     * \brief Callback for when the window is resized.

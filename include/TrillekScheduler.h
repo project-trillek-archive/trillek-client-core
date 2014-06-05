@@ -28,9 +28,16 @@ namespace trillek {
     typedef std::function<int(void)> block_t;
     typedef std::list<block_t> chain_t;
 
-    typedef duration<double, std::ratio<1,60>> frame_unit;
+    typedef std::chrono::nanoseconds frame_unit;
+#if defined(_MSC_VER)
+    // Visual Studio implements steady_clock as system_clock
+    // TODO : wait for the fix from Microsoft
     typedef time_point<system_clock, frame_unit> frame_tp;
-    typedef time_point<system_clock, duration<double, std::ratio<1>>> glfw_tp;
+    typedef time_point<system_clock, frame_unit> glfw_tp;
+#else
+    typedef time_point<steady_clock, frame_unit> frame_tp;
+    typedef time_point<steady_clock, frame_unit> glfw_tp;
+#endif
 
     class TaskRequestBase {
     public:
@@ -133,12 +140,14 @@ namespace trillek {
                 switch(s) {
                 case REQUEUE:
                     // "*this" is now undefined
-                    queue_task(std::make_shared<TaskRequest<chain_t>>(std::move(*this)), frame_unit(0.1));
+                    // we delay the execution of 1/10 frame
+                    queue_task(std::make_shared<TaskRequest<chain_t>>(std::move(*this)), frame_unit(1666666));
                 case STOP:
                     return;
                 case SPLIT:
                     // Queue a thread to execute this block again, and continue the chain
-                    queue_task(std::make_shared<TaskRequest<chain_t>>(*this), frame_unit(0.1));
+                    // we delay the execution of 1/10 frame
+                    queue_task(std::make_shared<TaskRequest<chain_t>>(*this), frame_unit(1666666));
                     break;
                 case REPEAT:
                     --b;
@@ -165,7 +174,8 @@ namespace trillek {
      */
     class TrillekScheduler {
     public:
-        TrillekScheduler() : counter(0), one_frame(1) {};
+        // one frame has a duration of 16666666 nanoseconds
+        TrillekScheduler() : counter(0), one_frame(16666666) {};
         virtual ~TrillekScheduler() {};
 
         /** \brief Launch the threads and attach them to system

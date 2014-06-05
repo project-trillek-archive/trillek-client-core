@@ -124,8 +124,8 @@ int OS::GetWindowHeight() {
     return this->client_height;
 }
 
-std::chrono::duration<double,std::ratio<1>> OS::GetTime() {
-    return std::chrono::duration<double,std::ratio<1>>(glfwGetTime());
+std::chrono::nanoseconds OS::GetTime() {
+    return std::chrono::nanoseconds(static_cast<int64_t>(glfwGetTime() * 1.0E9));
 }
 
 void OS::windowResized(GLFWwindow* window, int width, int height) {
