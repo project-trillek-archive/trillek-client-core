@@ -12,12 +12,35 @@ namespace trillek {
             Sound();
             ~Sound();
 
+            /** \brief Start playing the Sound
+             *
+             * \return void
+             *
+             */
             void Play();
+
+            /** \brief Pause Sound
+             *
+             * \return void
+             *
+             */
             void Pause();
+
+            /** \brief Resumes a paused Sound
+             *
+             * \return void
+             *
+             */
             void Resume();
+
+            /** \brief Stops Sound
+             *
+             * \return void
+             *
+             */
             void Stop();
 
-            ALuint src, buff;
+            ALuint src, buff; /// OpenAL source and buffer object
         };
 
         class System {

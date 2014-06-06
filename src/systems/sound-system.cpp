@@ -3,9 +3,6 @@
 
 namespace trillek {
     namespace sound {
-        ///////////////////
-        //// SOUND /////
-        //////////////////
 
         Sound::Sound() : src( 0 ), buff( 0 ) {
 
@@ -48,10 +45,6 @@ namespace trillek {
                 std::cout << "Failed to stop source." << std::endl;
             }
         }
-
-        ///////////////////
-        //// SYSTEM ////
-        //////////////////
 
         std::shared_ptr<System> System::instance = nullptr;
 
