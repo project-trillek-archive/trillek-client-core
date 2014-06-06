@@ -64,9 +64,8 @@ public:
     /**
      * \brief Processes events in the OS message event loop.
      *
-     * \return int return code for the scheduler
      */
-    int OSMessageLoop();
+    void OSMessageLoop();
 
     /**
     * \brief Gets the cached window width.

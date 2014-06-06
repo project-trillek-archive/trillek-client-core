@@ -111,9 +111,8 @@ void OS::SwapBuffers() {
     glfwSwapBuffers(this->window);
 }
 
-int OS::OSMessageLoop() {
-    glfwPollEvents();
-    return REQUEUE;
+void OS::OSMessageLoop() {
+    glfwWaitEvents();
 }
 
 int OS::GetWindowWidth() {

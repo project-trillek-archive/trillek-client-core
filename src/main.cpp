@@ -42,17 +42,15 @@ int main(int argCount, char **argValues) {
     // Detach the window from the current thread
     os.DetachContext();
 
-    // schedule the OS loop task
-    auto olf = new trillek::chain_t{std::bind(&trillek::OS::OSMessageLoop, std::ref(os))};
-    auto os_loop_functor = std::make_shared<trillek::TaskRequest<trillek::chain_t>>(std::shared_ptr<trillek::chain_t>(olf));
-    trillek::TrillekGame::GetScheduler().Queue(std::move(os_loop_functor));
-
     // start the scheduler in another thread
     std::thread tp(
                    &trillek::TrillekScheduler::Initialize,
                    &trillek::TrillekGame::GetScheduler(),
                    5,
                    std::ref(systems));
+    while (! os.Closing()) {
+        os.OSMessageLoop();
+    }
     tp.join();
 
     // Terminating program
