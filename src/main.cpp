@@ -25,7 +25,7 @@ int main(int argCount, char **argValues) {
 
     std::shared_ptr<trillek::sound::System> soundsystem = trillek::sound::System::GetInstance();
 
-    std::shared_ptr<trillek::sound::Sound> s1 = soundsystem->createSoundFromFile("tnt.ogg");
+    std::shared_ptr<trillek::sound::Sound> s1 = soundsystem->CreateSoundFromFile("tnt.ogg");
     s1->Play();
 
     trillek::graphics::System gl;

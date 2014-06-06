@@ -73,7 +73,7 @@ namespace trillek {
             return System::instance;
         }
 
-        std::shared_ptr<Sound> System::createSoundFromFile( const std::string& file_name ) {
+        std::shared_ptr<Sound> System::CreateSoundFromFile( const std::string& file_name ) {
             std::shared_ptr<Sound> sound( new Sound );
 
             alGenSources( 1, &sound->src );
