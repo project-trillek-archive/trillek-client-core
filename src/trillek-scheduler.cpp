@@ -64,30 +64,50 @@ void TrillekScheduler::DayWork(const frame_tp& now, SystemBase* system) {
 
         {
             // Wait for a task to do
-            std::unique_lock<std::mutex> locker(m_queue);
+            // a lock to watch the blocking point
+            std::unique_lock<std::mutex> locker(m_timer);
+            // lock the queue while checking it
+            m_queue.lock();
             while (taskqueue.empty()
                    || ! taskqueue.top()->IsNow()
                    || frame_tp(TrillekGame::GetOS().GetTime()) >= next_frame_tp) {
                 const auto max_timepoint = taskqueue.empty() ? next_frame_tp :
                                                             std::min(next_frame_tp, taskqueue.top()->Timepoint());
+                // unlock the queue when checking is done
+                m_queue.unlock();
+                // threads wait here (blocking point)
                 if (queuecheck.wait_until(locker, max_timepoint) == std::cv_status::timeout) {
-                    // we reach timeout
+                    // we are here because we reached a timeout
+                    // release the lock of the blocking point
+                    m_timer.unlock();
                     if (TrillekGame::GetTerminateFlag()) {
+                        // unblock all other threads waiting above
+                        queuecheck.notify_all();
                         // save the state of the system
                         terminate_functor();
+                        // lock the mutex before exiting the block
+                        m_timer.lock();
                         return;
                     }
                     if (frame_tp(TrillekGame::GetOS().GetTime()) >= next_frame_tp) {
+                        // a new frame has begun : let's run the system
                         handleEvents_functor(next_frame_tp);
                         runBatch_functor();
                         next_frame_tp += one_frame;
                     }
+                    // reacquire the lock of the blocking point
+                    m_timer.lock();
                 }
+                // we arrive directly here if a new task has been queued
+                // relock the queue before checking it
+                m_queue.lock();
             }
-            // Get the task to do
-            task = taskqueue.top();
-            taskqueue.pop();
         }
+        // Get the task to do
+        task = taskqueue.top();
+        taskqueue.pop();
+        m_queue.unlock();
+
         {
             std::unique_lock<std::mutex> locker(m_count);
             while(counter >= MAX_CONCURRENT_THREAD) {
@@ -102,7 +122,7 @@ void TrillekScheduler::DayWork(const frame_tp& now, SystemBase* system) {
 
         // decrement counter
         counter.fetch_sub(1, std::memory_order::memory_order_relaxed);
-        queuecheck.notify_all();
+        countercheck.notify_all();
     }
 }
 }

@@ -203,8 +203,9 @@ public:
      */
     template<class T>
     void Queue(T&& task) {
-        std::unique_lock<std::mutex> locker(m_queue);
+        m_queue.lock();
         taskqueue.push(std::forward<T>(task));
+        m_queue.unlock();
         queuecheck.notify_one();
     }
 
@@ -223,6 +224,7 @@ private:
     std::atomic<int> counter;
     std::mutex m_count;
     std::mutex m_queue;
+    std::mutex m_timer;
     std::condition_variable queuecheck;
     const frame_unit one_frame;
 };
