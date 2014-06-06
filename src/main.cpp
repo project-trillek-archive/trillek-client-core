@@ -3,6 +3,7 @@
 #include "systems/transform-system.hpp"
 #include "systems/resource-system.hpp"
 #include "systems/graphics.hpp"
+#include "systems/sound-system.hpp"
 #include <cstddef>
 
 size_t gAllocatedSize = 0;
@@ -22,12 +23,17 @@ int main(int argCount, char **argValues) {
     trillek::json::System jparser;
     jparser.Parse("assets/tests/sample.json");
 
+    std::shared_ptr<trillek::sound::System> soundsystem = trillek::sound::System::GetInstance();
+
+    std::shared_ptr<trillek::sound::Sound> s1 = soundsystem->createSoundFromFile("tnt.ogg");
+    s1->Play();
 
     trillek::graphics::System gl;
     gl.Start(os.GetWindowWidth(), os.GetWindowHeight());
 
     while (!os.Closing()) {
         os.OSMessageLoop();
+        soundsystem->Update();
         gl.Update(0);
         os.SwapBuffers();
     }

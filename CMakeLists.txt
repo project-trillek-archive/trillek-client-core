@@ -72,6 +72,8 @@ ADD_DEFINITIONS(-DGLM_FORCE_RADIANS)
 FIND_PACKAGE(OpenGL REQUIRED)
 FIND_PACKAGE(GLFW3 REQUIRED)
 FIND_PACKAGE(RapidJSON REQUIRED)
+FIND_PACKAGE(ALURE REQUIRED)
+FIND_PACKAGE(OpenAL REQUIRED)
 
 # Give these some dummy values and if the platform is LINUX or OSX they will be set accordingly.
 SET(X11_LIBRARIES "")
@@ -123,6 +125,8 @@ set(TCC_ALL_LIBS
 	${X11_LIBRARIES}
 	${OSX_LIBRARIES}
 	${GLEW_LIBRARIES}
+	${ALURE_LIBRARIES}
+	${OpenAL_LIBRARIES}
   )
 
 # if just building an exe use all the source and libraries
