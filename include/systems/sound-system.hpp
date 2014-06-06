@@ -5,12 +5,9 @@
 #include <memory>
 #include <string>
 
-namespace trillek
-{
-    namespace sound
-    {
-        class Sound
-        {
+namespace trillek {
+    namespace sound {
+        class Sound {
         public:
             Sound();
             ~Sound();
@@ -23,8 +20,7 @@ namespace trillek
             ALuint src, buff;
         };
 
-        class System
-        {
+        class System {
         public:
             System();
             ~System();
@@ -35,7 +31,7 @@ namespace trillek
              * \return std::shared_ptr<Sound>
              *
              */
-            std::shared_ptr<Sound> createSoundFromFile( const std::string& file_name );
+            std::shared_ptr<Sound> CreateSoundFromFile( const std::string& file_name );
 
             void Update();
 
