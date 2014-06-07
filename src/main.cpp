@@ -10,11 +10,6 @@
 #include <cstddef>
 
 size_t gAllocatedSize = 0;
-#include "components/renderable.hpp"
-#include "resources/shader.hpp"
-#include "resources/material.hpp"
-#include "resources/md5mesh.hpp"
-#include "resources/transform.hpp"
 
 int main(int argCount, char **argValues) {
     // create the window
@@ -32,16 +27,8 @@ int main(int argCount, char **argValues) {
     trillek::json::System jparser;
     jparser.Parse("assets/tests/sample.json");
 
-    std::shared_ptr<trillek::graphics::Renderable> ren1(new trillek::graphics::Renderable());
-    auto mesh = trillek::resource::System::GetInstance()->Get<trillek::resource::MD5Mesh>("bob");
-    ren1->SetMesh(mesh);
-    ren1->GetMaterial()->SetShader(trillek::resource::System::GetInstance()->Get<trillek::resource::Shader>("basic_shader"));
-    ren1->UpdateBufferGroups();
-
     // start the graphic system
     trillek::TrillekGame::GetGraphicSystem().Start(os.GetWindowWidth(), os.GetWindowHeight());
-    trillek::transform::System::AddTransform(0);
-    trillek::TrillekGame::GetGraphicSystem().AddRenderable(0, ren1);
 
     // we register the systems in this queue
     std::queue<trillek::SystemBase*> systems;
