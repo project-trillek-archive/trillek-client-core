@@ -1,6 +1,7 @@
 #include "os.hpp"
 
 #include <iostream>
+#include "trillek-game.hpp"
 
 #ifdef __APPLE__
 // Needed so we can disable retina support for our window.
@@ -59,7 +60,7 @@ bool OS::InitializeWindow(const int width, const int height, const std::string t
     ((void (*)(id, SEL, bool)) objc_msgSend)(cocoaGLView, sel_getUid("setWantsBestResolutionOpenGLSurface:"), false);
 #endif
 
-    // Make the window's context current.
+    // attach the context
     glfwMakeContextCurrent(this->window);
 
 #ifndef __APPLE__
@@ -90,6 +91,14 @@ bool OS::InitializeWindow(const int width, const int height, const std::string t
     return true;
 }
 
+void OS::MakeCurrent() {
+    glfwMakeContextCurrent(this->window);
+}
+
+void OS::DetachContext() {
+    glfwMakeContextCurrent(NULL);
+}
+
 void OS::Terminate() {
     glfwTerminate();
 }
@@ -103,7 +112,7 @@ void OS::SwapBuffers() {
 }
 
 void OS::OSMessageLoop() {
-    glfwPollEvents();
+    glfwWaitEvents();
 }
 
 int OS::GetWindowWidth() {
@@ -114,11 +123,8 @@ int OS::GetWindowHeight() {
     return this->client_height;
 }
 
-double OS::GetDeltaTime() {
-    double time = glfwGetTime();
-    double delta = time - this->last_time;
-    this->last_time = time;
-    return delta;
+std::chrono::nanoseconds OS::GetTime() {
+    return std::chrono::nanoseconds(static_cast<int64_t>(glfwGetTime() * 1.0E9));
 }
 
 void OS::windowResized(GLFWwindow* window, int width, int height) {

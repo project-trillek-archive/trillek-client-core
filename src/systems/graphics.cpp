@@ -1,3 +1,4 @@
+#include "trillek-game.hpp"
 #include "systems/graphics.hpp"
 #include "systems/resource-system.hpp"
 
@@ -30,7 +31,11 @@ const int* System::Start(const unsigned int width, const unsigned int height) {
     return this->gl_version;
 }
 
-void System::Update(const double delta) const {
+void System::ThreadInit() {
+    TrillekGame::GetOS().MakeCurrent();
+}
+
+void System::RunBatch() const {
     // Clear the backbuffer and primary depth/stencil buffer
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glViewport(0, 0, this->window_width, this->window_height); // Set the viewport size to fill the window
@@ -48,7 +53,7 @@ void System::Update(const double delta) const {
             for (size_t tex_index = 0; tex_index < texgrp.texture_indexes.size(); ++tex_index) {
                 matgrp.material->ActivateTexture(texgrp.texture_indexes[tex_index], tex_index);
             }
-            
+
             // Loop through each renderable group.
             for (const auto& rengrp : texgrp.renderable_groups) {
                 const auto& bufgrp = rengrp.renderable->GetBufferGroup(rengrp.buffer_group_index);
@@ -58,6 +63,11 @@ void System::Update(const double delta) const {
                 glDrawElements(GL_TRIANGLES, bufgrp->ibo_count, GL_UNSIGNED_INT, 0);
             }
         }
+    }
+    TrillekGame::GetOS().SwapBuffers();
+    // If the user closes the window, we notify all the systems
+    if (TrillekGame::GetOS().Closing()) {
+        TrillekGame::NotifyCloseWindow();
     }
 }
 
@@ -88,7 +98,7 @@ void System::AddRenderable(const unsigned int entity_id, std::shared_ptr<Rendera
             return;
         }
     }
-            
+
     // No entry exists for the given entity ID, so add it.
     this->renderables.push_back(std::make_pair(entity_id, ren));
 
@@ -175,6 +185,10 @@ void System::RemoveRenderable(const unsigned int entity_id) {
             return;
         }
     }
+}
+
+void System::Terminate() {
+    TrillekGame::GetOS().DetachContext();
 }
 
 } // End of graphics

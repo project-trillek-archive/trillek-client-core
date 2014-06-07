@@ -10,6 +10,8 @@
 #include <list>
 #include <memory>
 #include <vector>
+#include "trillek-scheduler.hpp"
+#include "systems/system-base.hpp"
 
 namespace trillek {
 namespace graphics {
@@ -30,7 +32,7 @@ struct MaterialGroup {
     std::list<TextureGroup> texture_groups;
 };
 
-class System {
+class System : public SystemBase {
 public:
 
     /**
@@ -43,15 +45,19 @@ public:
     */
     const int* Start(const unsigned int width, const unsigned int height);
 
+    /** \brief Makes the context of the window current to the thread
+     *
+     */
+    void ThreadInit() override;
+
     /**
     * \brief Causes an update in the system based on the change in time.
     *
     * Updates the state of the system based off how much time has elapsed since the last update.
-    * \param const double delta The time (in seconds) since the last update
     * \return void
     */
     // TODO: This is a niave update render method. Please replace me.
-    void Update(const double delta) const;
+    void RunBatch() const override;
 
     /**
     * \brief Sets the viewport width and height.
@@ -78,6 +84,28 @@ public:
     * \return void
     */
     void RemoveRenderable(const unsigned int entity_id);
+
+    /** \brief Handle incoming events to update data
+     *
+     * This function is called once every frame. It is the only
+     * function that can write data. This function is in the critical
+     * path, job done here must be simple.
+     *
+     * If event handling need some batch processing, a task list must be
+     * prepared and stored temporarily to be retrieved by RunBatch().
+     *
+     */
+    void HandleEvents(const frame_tp& timepoint) override {
+        // TODO
+    };
+
+    /** \brief Save the data and terminate the system
+     *
+     * This function is called when the program is closing
+     *
+     */
+    void Terminate() override;
+
 private:
     int gl_version[2];
     glm::mat4 projection_matrix;
