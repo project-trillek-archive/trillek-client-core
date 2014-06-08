@@ -540,18 +540,10 @@ public:
 
 class InterlaceTypeAdam7 : public InterlaceType {
 public:
-    const uint32_t pass_coloffset[7] = {
-        0, 4, 0, 2, 0, 1, 0
-    };
-    const uint32_t pass_colstep[7] = {
-        8, 8, 4, 4, 2, 2, 1
-    };
-    const uint32_t pass_rowoffset[7] = {
-        0, 0, 4, 0, 2, 0, 1
-    };
-    const uint32_t pass_rowstep[7] = {
-        8, 8, 8, 4, 4, 2, 2
-    };
+    static const uint32_t pass_coloffset[7];
+    static const uint32_t pass_colstep[7];
+    static const uint32_t pass_rowoffset[7];
+    static const uint32_t pass_rowstep[7];
 
     InterlaceTypeAdam7(FilterMethodTable & ftable, const PNGHeader & head)
         : InterlaceType(ftable, head) {}
@@ -766,6 +758,19 @@ public:
         pix.UnlockWrite();
         return 0;
     }
+};
+
+const uint32_t InterlaceTypeAdam7::pass_coloffset[7] = {
+    0, 4, 0, 2, 0, 1, 0
+};
+const uint32_t InterlaceTypeAdam7::pass_colstep[7] = {
+    8, 8, 4, 4, 2, 2, 1
+};
+const uint32_t InterlaceTypeAdam7::pass_rowoffset[7] = {
+    0, 0, 4, 0, 2, 0, 1
+};
+const uint32_t InterlaceTypeAdam7::pass_rowstep[7] = {
+    8, 8, 8, 4, 4, 2, 2
 };
 
 util::void_er Load(util::InputStream & f, resource::PixelBuffer & pix) {
