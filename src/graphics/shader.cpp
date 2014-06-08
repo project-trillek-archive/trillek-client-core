@@ -2,12 +2,12 @@
 //Author: Movania Muhammad Mobeen
 //Last Modified: February 2, 2011
 
-#include "resources/shader.hpp"
+#include "graphics/shader.hpp"
 #include <iostream>
 #include <fstream>
 
 namespace trillek {
-namespace resource {
+namespace graphics {
 
 Shader::Shader(void) {
     _totalShaders = 0;

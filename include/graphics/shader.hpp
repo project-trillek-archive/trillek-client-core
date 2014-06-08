@@ -1,25 +1,20 @@
 //A simple class for handling GLSL shader compilation
 //Auhtor: Movania Muhammad Mobeen
-//Last Modified: February 2, 2011
+// Original: February 2, 2011
 
 #ifndef SHADER_HPP_INCLUDED
 #define SHADER_HPP_INCLUDED
 
-
-#ifdef __APPLE__
-#include <OpenGL/gl3.h>
-#else
-#include <GL/glew.h>
-#endif
+#include "opengl.hpp"
 
 #include <map>
 #include <string>
 #include "systems/resource-system.hpp"
 
 namespace trillek {
-namespace resource {
+namespace graphics {
 
-class Shader : public ResourceBase {
+class Shader : public resource::ResourceBase {
 public:
     Shader(void);
     ~Shader(void);
@@ -46,7 +41,7 @@ public:
     enum ShaderType { VERTEX_SHADER = GL_VERTEX_SHADER, FRAGMENT_SHADER = GL_FRAGMENT_SHADER, GEOMETRY_SHADER };
 private:
     enum ShaderIndex { VERTEX_SHADER_INDEX, FRAGMENT_SHADER_INDEX, GEOMETRY_SHADER_INDEX };
-    GLuint	_program;
+    GLuint _program;
     int _totalShaders;
     GLuint _shaders[3];//0->vertexshader, 1->fragmentshader, 2->geometryshader
     std::map<std::string, GLuint> _attributeList;
@@ -57,8 +52,8 @@ private:
 
 namespace reflection {
 
-template <> inline const char* GetTypeName<resource::Shader>() { return "Shader"; }
-template <> inline const unsigned int GetTypeID<resource::Shader>() { return 1002; }
+template <> inline const char* GetTypeName<graphics::Shader>() { return "Shader"; }
+template <> inline const unsigned int GetTypeID<graphics::Shader>() { return 1002; }
 
 } // End of reflection
 } // End of trillek

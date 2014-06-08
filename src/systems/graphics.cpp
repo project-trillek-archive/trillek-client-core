@@ -3,8 +3,8 @@
 #include "systems/resource-system.hpp"
 
 #include "resources/md5mesh.hpp"
-#include "resources/shader.hpp"
-#include "resources/material.hpp"
+#include "graphics/shader.hpp"
+#include "graphics/material.hpp"
 #include "components/renderable.hpp"
 
 namespace trillek {

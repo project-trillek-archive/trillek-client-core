@@ -11,5 +11,5 @@ std::weak_ptr<MeshGroup> Mesh::GetMeshGroup(const unsigned int& meshIndex) {
     return std::weak_ptr<MeshGroup>();
 }
 
-} // End of reousrce
+} // End of resource
 } // End of trillek

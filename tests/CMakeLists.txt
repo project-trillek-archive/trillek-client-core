@@ -90,12 +90,18 @@ file(GLOB_RECURSE TCCTests_SRC "tests/*.h" "main.cpp" "src/*.cpp")
 file(GLOB TCCExtra_SRC
 "${TCCSRC}/systems/resource-system.cpp"
 "${TCCSRC}/systems/resource-system-registration.cpp"
+"${TCCSRC}/util/util.cpp"
+"${TCCSRC}/util/checksum.cpp"
+"${TCCSRC}/util/compression.cpp"
+"${TCCSRC}/loaders/png.cpp"
 "${TCCSRC}/systems/json-parser.cpp"
 "${TCCSRC}/systems/json-parser-registration.cpp"
 "${TCCSRC}/systems/transform-system.cpp"
+"${TCCSRC}/resources/pixel-buffer.cpp"
 "${TCCSRC}/resources/transform.cpp"
 "${TCCSRC}/resources/md5mesh.cpp"
-"${TCCSRC}/resources/shader.cpp"
+"${TCCSRC}/graphics/shader.cpp"
+
 )
 
 # For certain files we need the OpenGL symbols.
@@ -111,18 +117,18 @@ ENDIF (NOT APPLE)
 foreach(flag_var
         CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE
         CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
-   if(${flag_var} MATCHES "/MD")
-      string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
-   endif(${flag_var} MATCHES "/MD")
+    if(${flag_var} MATCHES "/MD")
+        string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
+    endif(${flag_var} MATCHES "/MD")
 endforeach(flag_var)
 
 ADD_EXECUTABLE(TCCTests ${TCCTests_SRC} ${TCCExtra_SRC})
 
 TARGET_LINK_LIBRARIES (
-	TCCTests ${GTEST_LIBRARIES}
-	${OPENGL_LIBRARIES}
-	${X11_LIBRARIES}
-	${GLEW_LIBRARIES}
+    TCCTests ${GTEST_LIBRARIES}
+    ${OPENGL_LIBRARIES}
+    ${X11_LIBRARIES}
+    ${GLEW_LIBRARIES}
 )
 
 MESSAGE("Tests' Cmake configured.")
