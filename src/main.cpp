@@ -8,7 +8,7 @@
 
 size_t gAllocatedSize = 0;
 
-int main(int argCount, char **argValues) {
+int main(int argCount, char** argValues) {
     trillek::OS os;
 #if __APPLE__
     os.InitializeWindow(800, 600, "Trillek Client Core", 3, 2);
@@ -24,16 +24,33 @@ int main(int argCount, char **argValues) {
     jparser.Parse("assets/tests/sample.json");
 
     std::shared_ptr<trillek::sound::System> soundsystem = trillek::sound::System::GetInstance();
+    soundsystem->SetListenerPosition(glm::vec3(0, 0, 0));
+    soundsystem->SetListenerOrientation(glm::vec3(0, 0, -1), glm::vec3(0, 1, 0));
 
-    std::shared_ptr<trillek::sound::Sound> s1 = soundsystem->CreateSoundFromFile("tnt.ogg");
+    // needs to be a mono sound for 3d effects to work
+    std::shared_ptr<trillek::sound::Sound> s1 = soundsystem->CreateSoundFromFile("tnt_mono.ogg");
     s1->Play();
 
     trillek::graphics::System gl;
     gl.Start(os.GetWindowWidth(), os.GetWindowHeight());
 
-    while (!os.Closing()) {
+    double x, y = 0.0;
+    double time = 0.0;
+
+    while(!os.Closing()) {
         os.OSMessageLoop();
-        soundsystem->Update();
+
+        // sound
+        {
+            soundsystem->Update();
+            // sound position
+            const double dt = os.GetDeltaTime();
+            time += dt;
+            x = cos(time) * 2.0;
+            y = sin(time) * 2.0;
+            s1->SetPosition(glm::vec3(x, 0, y));
+        }
+
         gl.Update(0);
         os.SwapBuffers();
     }
