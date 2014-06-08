@@ -95,6 +95,15 @@ public:
 
         return nullptr;
     }
+
+    /**
+    * \brief Initializes the component with the provided properties
+    *
+    * Valid properties include mesh (the mesh resource name) and shader (the shader resource name).
+    * \param[in] const std::vector<Property>& properties The creation properties for the component.
+    * \return bool True if initialization finished with no errors.
+    */
+    bool Initialize(const std::vector<Property> &properties);
 private:
     std::vector<std::shared_ptr<BufferGroup>> buffer_groups; // Render buffer ID group
 
@@ -104,6 +113,13 @@ private:
 };
 
 } // End of graphics
+
+namespace reflection {
+
+template <> inline const char* GetTypeName<graphics::Renderable>() { return "renderable"; }
+template <> inline const unsigned int GetTypeID<graphics::Renderable>() { return 2000; }
+
+} // End of reflection
 } // End of trillek
 
 #endif

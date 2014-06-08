@@ -86,13 +86,16 @@ public:
     void SetViewportSize(const unsigned int width, const unsigned int height);
 
     /**
-    * \brief Adds a Renderable component to the system..
+    * \brief Adds a renderable component to the system.
     *
+    * A static_pointer_case is applied to the component shared_ptr to cast it to
+    * a Renderable component. If the cast results in a nullptr the method returns
+    * without adding the renderable component.
     * \param const unsigned int entityID The entity ID the compoennt belongs to.
-    * \param std::shared_ptr<Renderable> ren The Renderable to add.
+    * \param std::shared_ptr<ComponentBase> component The component to add.
     * \return void
     */
-    void AddRenderable(const unsigned int entity_id, std::shared_ptr<Renderable> ren);
+    void AddComponent(const unsigned int entity_id, std::shared_ptr<ComponentBase> component);
 
     /**
     * \brief Removes a Renderable component from the system..

@@ -102,7 +102,13 @@ void RenderSystem::SetViewportSize(const unsigned int width, const unsigned int 
         );
 }
 
-void RenderSystem::AddRenderable(const unsigned int entity_id, std::shared_ptr<Renderable> ren) {
+void RenderSystem::AddComponent(const unsigned int entity_id, std::shared_ptr<ComponentBase> component) {
+    // Do a static_pointer_cast to make sure we do have a Renderable component.
+    auto ren = std::static_pointer_cast<Renderable>(component);
+    if (!ren) {
+        return;
+    }
+
     // Loop through all the renderables and see if one exists for the given entityID.
     for (auto& r : this->renderables) {
         if (r.first == entity_id) {

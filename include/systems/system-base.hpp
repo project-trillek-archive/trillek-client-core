@@ -2,7 +2,11 @@
 #define SYSTEM_H_INCLUDED
 
 #include "trillek-scheduler.hpp"
+#include <memory>
+
 namespace trillek {
+
+class ComponentBase;
 
 class SystemBase {
 
@@ -52,6 +56,15 @@ public:
      *
      */
     virtual void Terminate() = 0;
+
+    /**
+    * \brief Adds a component to the system.
+    *
+    * \param const unsigned int entityID The entity ID the compoennt belongs to.
+    * \param std::shared_ptr<ComponentBase> component The component to add.
+    * \return void
+    */
+    virtual void AddComponent(const unsigned int entity_id, std::shared_ptr<ComponentBase> component) { }
 };
 }
 

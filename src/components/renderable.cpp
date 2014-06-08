@@ -2,6 +2,7 @@
 #include "resources/material.hpp"
 #include "resources/shader.hpp"
 #include "resources/mesh.hpp"
+#include "systems/resource-system.hpp"
 
 namespace trillek {
 namespace graphics {
@@ -91,6 +92,41 @@ void Renderable::SetMaterial(std::shared_ptr<Material> m) {
 
 std::shared_ptr<Material> Renderable::GetMaterial() const {
     return this->material;
+}
+
+bool Renderable::Initialize(const std::vector<Property> &properties) {
+    std::string mesh_name;
+    std::string shader_name;
+    for (const Property& p : properties) {
+        std::string name = p.GetName();
+        if (name == "mesh") {
+            mesh_name = p.Get<std::string>();
+        }
+        else if (name == "shader") {
+            shader_name = p.Get<std::string>();
+        }
+    }
+
+    auto mesh = resource::ResourceMap::Get<resource::Mesh>(mesh_name);
+    auto shader = resource::ResourceMap::Get<resource::Shader>(shader_name);
+
+    if (mesh) {
+        SetMesh(mesh);
+    }
+    else {
+        return false;
+    }
+
+    if (shader) {
+        this->material->SetShader(shader);
+    }
+    else {
+        return false;
+    }
+
+    UpdateBufferGroups();
+
+    return true;
 }
 
 } // End of graphics
