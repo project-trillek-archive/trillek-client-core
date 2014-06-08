@@ -7,6 +7,9 @@
 #include <fstream>
 #include <iostream>
 
+// helpful for debugging images
+//#define IMAGELOADER_WRITE_PPM
+
 namespace trillek {
 namespace resource {
 
@@ -28,9 +31,11 @@ TEST(ImageLoaderTest, PortableNetworkGraphic1) {
         util::StdInputStream insf(file);
         stat = png::Load(insf, image);
         EXPECT_FALSE(stat) << stat.Text() << " - " << stat.line << '\n';
+#ifdef IMAGELOADER_WRITE_PPM
         if(!stat) {
             image.PPMDebug("T1.ppm");
         }
+#endif
     }
     file.close();
 }
@@ -44,9 +49,11 @@ TEST(ImageLoaderTest, PortableNetworkGraphic2) {
         util::StdInputStream insf(file);
         stat = png::Load(insf, image);
         EXPECT_FALSE(stat) << stat.Text() << " - " << stat.line << '\n';
+#ifdef IMAGELOADER_WRITE_PPM
         if(!stat) {
             image.PPMDebug("T2.ppm");
         }
+#endif
     }
     file.close();
 }
@@ -60,9 +67,11 @@ TEST(ImageLoaderTest, PortableNetworkGraphic3) {
         util::StdInputStream insf(file);
         stat = png::Load(insf, image);
         EXPECT_FALSE(stat) << stat.Text() << " - " << stat.line << '\n';
+#ifdef IMAGELOADER_WRITE_PPM
         if(!stat) {
             image.PPMDebug("T3.ppm");
         }
+#endif
     }
     file.close();
 }
@@ -76,9 +85,11 @@ TEST(ImageLoaderTest, PortableNetworkGraphic4) {
         util::StdInputStream insf(file);
         stat = png::Load(insf, image);
         EXPECT_FALSE(stat) << stat.Text() << " - " << stat.line << '\n';
+#ifdef IMAGELOADER_WRITE_PPM
         if(!stat) {
             image.PPMDebug("T4.ppm");
         }
+#endif
     }
     file.close();
 }
@@ -92,9 +103,11 @@ TEST(ImageLoaderTest, PortableNetworkGraphic5) {
         util::StdInputStream insf(file);
         stat = png::Load(insf, image);
         EXPECT_FALSE(stat) << stat.Text() << " - " << stat.line << '\n';
+#ifdef IMAGELOADER_WRITE_PPM
         if(!stat) {
             image.PPMDebug("T5.ppm");
         }
+#endif
     }
     file.close();
 }
@@ -108,9 +121,11 @@ TEST(ImageLoaderTest, PortableNetworkGraphic6) {
         util::StdInputStream insf(file);
         stat = png::Load(insf, image);
         EXPECT_FALSE(stat) << stat.Text() << " - " << stat.line << '\n';
+#ifdef IMAGELOADER_WRITE_PPM
         if(!stat) {
             image.PPMDebug("T6.ppm");
         }
+#endif
     }
     file.close();
 }
