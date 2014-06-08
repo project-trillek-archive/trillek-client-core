@@ -33,6 +33,7 @@ public:
         GLuint vbo;
         GLuint ibo;
         unsigned int ibo_count;
+        std::vector<unsigned int> texture_indicies;
     };
 
     /**

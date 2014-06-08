@@ -323,7 +323,7 @@ void MD5Mesh::UpdateIndexList() {
         }
     }
 
-    // Copy the triangle indexes.
+    // Copy the triangle indicies.
     for (size_t i = 0; i < this->meshes.size(); ++i) {
         if (this->mesh_groups[i]->indicies.size() < this->meshes[i]->tris.size()) {
             this->mesh_groups[i]->indicies.resize(this->meshes[i]->tris.size() * 3);

@@ -52,8 +52,8 @@ void RenderSystem::RunBatch() const {
 
         for (const auto& texgrp : matgrp.texture_groups) {
             // Activate all textures for this texture group.
-            for (size_t tex_index = 0; tex_index < texgrp.texture_indexes.size(); ++tex_index) {
-                matgrp.material->ActivateTexture(texgrp.texture_indexes[tex_index], tex_index);
+            for (size_t tex_index = 0; tex_index < texgrp.texture_indicies.size(); ++tex_index) {
+                matgrp.material->ActivateTexture(texgrp.texture_indicies[tex_index], tex_index);
             }
 
             // Loop through each renderable group.
@@ -128,8 +128,12 @@ void RenderSystem::AddComponent(const unsigned int entity_id, std::shared_ptr<Co
     }
 
     MaterialGroup* matgrp = nullptr;
+    // Check if the material for exists based on shader.
+    // If it does make sure each one is using the same material.
+    // TODO: Make material a resource-like element.
     for (auto& mg : this->material_groups) {
-        if (mg.material == mat) {
+        if (mg.material->GetShader() == mat->GetShader()) {
+            ren->SetMaterial(mg.material);
             matgrp = &mg;
         }
     }
@@ -152,16 +156,50 @@ void RenderSystem::AddComponent(const unsigned int entity_id, std::shared_ptr<Co
 
     // Map the renderable into the render graph material groups.
     for (size_t i = 0; i < ren->GetBufferGroupCount(); ++i) {
-        MaterialGroup::TextureGroup texgrp;
-        texgrp.texture_indexes.push_back(0);
+        MaterialGroup::TextureGroup* texgrp = nullptr;
+        for (MaterialGroup::TextureGroup& tex_grp_itr : matgrp->texture_groups) {
+            if (texgrp != nullptr) {
+                break;
+            }
+            // Loop through and see if all the texture indicies line up.
+            for (size_t i = 0; i < tex_grp_itr.texture_indicies.size(),
+                i < ren->GetBufferGroup(i)->texture_indicies.size(); ++i) {
+                texgrp = &tex_grp_itr;
+                if (texgrp->texture_indicies[i] != ren->GetBufferGroup(i)->texture_indicies[i]) {
+                    break;
+                }
+            }
+        }
 
-        MaterialGroup::TextureGroup::RenderableGroup rengrp;
-        rengrp.renderable = ren;
-        rengrp.buffer_group_index = i;
-        rengrp.instances.push_back(entity_id);
+        if (texgrp == nullptr) {
+            MaterialGroup::TextureGroup temp;
+            matgrp->texture_groups.push_back(std::move(temp));
+            texgrp = &matgrp->texture_groups.back();
 
-        texgrp.renderable_groups.push_back(std::move(rengrp));
-        matgrp->texture_groups.push_back(std::move(texgrp));
+            // Loop through and add all the texture indicies.
+            for (size_t i = 0; i < ren->GetBufferGroup(i)->texture_indicies.size(); ++i) {
+                texgrp->texture_indicies.push_back(ren->GetBufferGroup(i)->texture_indicies[i]);
+            }
+            texgrp->texture_indicies.push_back(0);
+        }
+
+        MaterialGroup::TextureGroup::RenderableGroup* rengrp = nullptr;
+        // If we made it then add entity instances based on the meshes being the same.
+        for (MaterialGroup::TextureGroup::RenderableGroup& ren_grp_itr : texgrp->renderable_groups) {
+            if ((ren_grp_itr.renderable->GetMesh() == ren->GetMesh()) && (ren_grp_itr.buffer_group_index == i)) {
+                rengrp = &ren_grp_itr;
+                rengrp->instances.push_back(entity_id);
+                break;
+            }
+        }
+        if (rengrp == nullptr) {
+            MaterialGroup::TextureGroup::RenderableGroup temp;
+            temp.renderable = ren;
+            temp.buffer_group_index = i;
+            temp.instances.push_back(entity_id);
+
+            texgrp->renderable_groups.push_back(std::move(temp));
+        }
     }
 
     // Subscribe to transform change events for this entity ID.

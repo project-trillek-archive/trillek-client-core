@@ -34,11 +34,15 @@ void Renderable::UpdateBufferGroups() {
 
         auto temp_meshgroup = mesh_group.lock();
 
+        // TODO: Loop through all the texture names in the mesh group and add the textures to the material.
+        buffer_group->texture_indicies.push_back(0);
+
         if (temp_meshgroup) {
             if (temp_meshgroup->verts.size() > 0) {
 
                 glBindBuffer(GL_ARRAY_BUFFER, buffer_group->vbo); // Bind the vertex buffer.
-                glBufferData(GL_ARRAY_BUFFER, sizeof(resource::VertexData) * temp_meshgroup->verts.size(), &temp_meshgroup->verts[0], GL_STATIC_DRAW); // Stores the verts in the vertex buffer.
+                glBufferData(GL_ARRAY_BUFFER, sizeof(resource::VertexData) * temp_meshgroup->verts.size(),
+                    &temp_meshgroup->verts[0], GL_STATIC_DRAW); // Stores the verts in the vertex buffer.
 
                 GLuint shader_program = 0;
                 if (this->material) {
@@ -68,7 +72,8 @@ void Renderable::UpdateBufferGroups() {
 
             if (temp_meshgroup->indicies.size() > 0) {
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer_group->ibo); // Bind the element buffer.
-                glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int)* temp_meshgroup->indicies.size(), &temp_meshgroup->indicies[0], GL_STATIC_DRAW); // Store the faces in the element buffer.
+                glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int)* temp_meshgroup->indicies.size(),
+                    &temp_meshgroup->indicies[0], GL_STATIC_DRAW); // Store the faces in the element buffer.
                 buffer_group->ibo_count = temp_meshgroup->indicies.size();
             }
         }

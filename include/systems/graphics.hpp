@@ -30,7 +30,7 @@ class Renderable;
 struct MaterialGroup {
     std::shared_ptr<Material> material;
     struct TextureGroup {
-        std::vector<size_t> texture_indexes;
+        std::vector<size_t> texture_indicies;
         struct RenderableGroup {
             std::shared_ptr<Renderable> renderable;
             std::list<unsigned int> instances;
