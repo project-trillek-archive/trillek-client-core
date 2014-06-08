@@ -89,23 +89,31 @@ file(GLOB_RECURSE TCCTests_SRC "tests/*.h" "main.cpp" "src/*.cpp")
 
 file(GLOB TCCExtra_SRC
 "${TCCSRC}/systems/resource-system.cpp"
+"${TCCSRC}/systems/graphics.cpp"
 "${TCCSRC}/systems/resource-system-registration.cpp"
+"${TCCSRC}/systems/entity-system.cpp"
+"${TCCSRC}/systems/entity-system-registration.cpp"
+"${TCCSRC}/systems/json-parser.cpp"
+"${TCCSRC}/systems/json-parser-registration.cpp"
+"${TCCSRC}/systems/transform-system.cpp"
 "${TCCSRC}/util/util.cpp"
 "${TCCSRC}/util/checksum.cpp"
 "${TCCSRC}/util/compression.cpp"
 "${TCCSRC}/loaders/png.cpp"
-"${TCCSRC}/systems/json-parser.cpp"
-"${TCCSRC}/systems/json-parser-registration.cpp"
-"${TCCSRC}/systems/transform-system.cpp"
 "${TCCSRC}/resources/pixel-buffer.cpp"
 "${TCCSRC}/resources/transform.cpp"
 "${TCCSRC}/resources/md5mesh.cpp"
+"${TCCSRC}/resources/mesh.cpp"
+"${TCCSRC}/components/renderable.cpp"
 "${TCCSRC}/graphics/shader.cpp"
-
+"${TCCSRC}/graphics/material.cpp"
+"${TCCSRC}/trillek-game.cpp"
+"${TCCSRC}/os.cpp"
 )
 
 # For certain files we need the OpenGL symbols.
 FIND_PACKAGE(OpenGL REQUIRED)
+FIND_PACKAGE(GLFW3 REQUIRED)
 SET(X11_LIBRARIES "")
 IF (NOT APPLE) # X11 and GLEW are not needed on OSX.
 	FIND_PACKAGE(X11)
@@ -127,6 +135,7 @@ ADD_EXECUTABLE(TCCTests ${TCCTests_SRC} ${TCCExtra_SRC})
 TARGET_LINK_LIBRARIES (
     TCCTests ${GTEST_LIBRARIES}
     ${OPENGL_LIBRARIES}
+    ${GLFW3_LIBRARIES}
     ${X11_LIBRARIES}
     ${GLEW_LIBRARIES}
 )
