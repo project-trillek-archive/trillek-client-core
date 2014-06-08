@@ -1,6 +1,6 @@
 #include "components/renderable.hpp"
-#include "resources/material.hpp"
-#include "resources/shader.hpp"
+#include "graphics/material.hpp"
+#include "graphics/shader.hpp"
 #include "resources/mesh.hpp"
 #include "systems/resource-system.hpp"
 
@@ -108,7 +108,7 @@ bool Renderable::Initialize(const std::vector<Property> &properties) {
     }
 
     auto mesh = resource::ResourceMap::Get<resource::Mesh>(mesh_name);
-    auto shader = resource::ResourceMap::Get<resource::Shader>(shader_name);
+    auto shader = resource::ResourceMap::Get<graphics::Shader>(shader_name);
 
     if (mesh) {
         SetMesh(mesh);

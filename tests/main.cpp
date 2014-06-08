@@ -4,6 +4,9 @@
 #include "tests/AtomicQueueTest.h"
 #include "tests/AtomicMapTest.h"
 #include "tests/ResourceSystemTest.h"
+#include "tests/UtilityTest.h"
+#include "tests/DecompressorTest.h"
+#include "tests/ImageLoaderTest.h"
 #include "tests/transform-system-test.h"
 
 size_t gAllocatedSize = 0;

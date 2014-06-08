@@ -160,7 +160,11 @@ namespace {
         transform.Rotate(glm::vec3(1.0f, 1.0f, 1.0f));
         orientation = transform.GetOrientation();
 
-        EXPECT_TRUE(final_orientation == orientation);
+        //EXPECT_TRUE(final_orientation == orientation);
+        EXPECT_FLOAT_EQ(final_orientation.x, orientation.x);
+        EXPECT_FLOAT_EQ(final_orientation.y, orientation.y);
+        EXPECT_FLOAT_EQ(final_orientation.z, orientation.z);
+        EXPECT_FLOAT_EQ(final_orientation.w, orientation.w);
     }
     TEST(TransformTest, SetOrientation) {
         trillek::transform::Transform transform(0);
