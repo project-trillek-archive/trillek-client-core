@@ -9,6 +9,7 @@
 
 #include <memory>
 #include <vector>
+#include "systems/entity-system.hpp"
 
 namespace trillek {
 namespace resource {
@@ -21,7 +22,7 @@ namespace graphics {
 
 class Material;
 
-class Renderable {
+class Renderable : public ComponentBase {
 public:
     Renderable();
     ~Renderable();
