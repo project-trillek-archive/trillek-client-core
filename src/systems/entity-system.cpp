@@ -40,7 +40,7 @@ bool EntityMap::DeSerialize(rapidjson::Value& node) {
                     entity_property_itr != entity_itr->value.MemberEnd(); ++entity_property_itr) {
                     std::string entity_property_name(entity_property_itr->name.GetString(), entity_property_itr->name.GetStringLength());
                     if (entity_property_name == "id") {
-                        entity_id = atoi(entity_itr->name.GetString());
+                        entity_id = entity_property_itr->value.GetInt();
                     }
                     else {
                         std::vector<Property> props;
