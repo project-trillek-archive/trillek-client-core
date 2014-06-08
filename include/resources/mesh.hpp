@@ -49,6 +49,13 @@ protected:
 };
 
 } // End of resource
+
+namespace reflection {
+
+    template <> inline const char* GetTypeName<resource::Mesh>() { return "Mesh"; }
+    template <> inline const unsigned int GetTypeID<resource::Mesh>() { return 1000; }
+
+} // End of reflection
 } // End of trillek
 
 #endif
