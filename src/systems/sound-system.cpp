@@ -1,5 +1,4 @@
 #include "systems/sound-system.hpp"
-#include <iostream>
 
 namespace trillek {
 namespace sound {
@@ -62,24 +61,11 @@ void Sound::SetOuterConeAngle(float angle) {
     alSourcef(src, AL_CONE_OUTER_ANGLE, angle);
 }
 
+std::once_flag System::only_one;
 std::shared_ptr<System> System::instance = nullptr;
-
-System::System() {
-    if(alureInitDevice(NULL, NULL) == false) {
-        std::cout << "Failed to open OpenAL device: " << alureGetErrorString() << std::endl;
-    }
-}
 
 System::~System() {
     alureShutdownDevice();
-}
-
-std::shared_ptr<System> System::GetInstance() {
-    if(System::instance == nullptr) {
-        System::instance.reset(new System);
-    }
-
-    return System::instance;
 }
 
 std::shared_ptr<Sound> System::CreateSoundFromFile(const std::string& file_name) {

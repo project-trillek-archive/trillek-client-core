@@ -1,10 +1,12 @@
 #ifndef SOUND_SYSTEM_HPP_INCLUDED
 #define SOUND_SYSTEM_HPP_INCLUDED
 
-#include "AL/alure.h"
 #include <memory>
 #include <string>
+#include <mutex>
+#include "AL/alure.h"
 #include "glm/glm.hpp"
+#include <iostream>
 
 namespace trillek {
 namespace sound {
@@ -78,8 +80,35 @@ public:
 }; // end of class Sound
 
 class System {
+private:
+    System() { }
+    System(const System& right) {
+        instance = right.instance;
+    }
+    System& operator=(const System& right) {
+        if(this != &right) {
+            instance = right.instance;
+        }
+
+        return *this;
+    }
+    static std::once_flag only_one;
+    static std::shared_ptr<System> instance;
 public:
-    System();
+    static std::shared_ptr<System> GetInstance() {
+        std::call_once(System::only_one,
+        [ ]() {
+            System::instance.reset(new System());
+
+            if(alureInitDevice(NULL, NULL) == false) {
+                std::cout << "Failed to open OpenAL device: " << alureGetErrorString() << std::endl;
+            }
+
+        });
+
+        return System::instance;
+    }
+
     ~System();
 
     /** \brief Creates a sound object from a file
@@ -91,8 +120,6 @@ public:
     std::shared_ptr<Sound> CreateSoundFromFile(const std::string& file_name);
 
     void Update();
-
-    static std::shared_ptr<System> GetInstance();
 
     /** \brief Sets the position of sound listener
      *
@@ -118,13 +145,10 @@ public:
      *
      */
     void SetListenerOrientation(glm::vec3 at, glm::vec3 up);
-
-private:
-    static std::shared_ptr<System> instance;
-
 }; // end of class System
 
 } // end of namespace sound
 } // end of namespace trillek
 
 #endif // SOUND_SYSTEM_HPP_INCLUDED
+
