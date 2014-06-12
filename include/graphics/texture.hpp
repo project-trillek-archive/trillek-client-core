@@ -7,7 +7,7 @@
 namespace trillek {
 namespace graphics {
 
-class Texture {
+class Texture : public resource::ResourceBase {
 public:
     Texture() : texture_id(0) {}
     ~Texture();
@@ -50,12 +50,20 @@ public:
     bool operator==(const Texture & other) {
         return texture_id == other.texture_id;
     }
+    bool Initialize(const std::vector<Property> &properties) { return true; }
 protected:
     GLuint texture_id;
 
 };
 
 } // graphics
+
+namespace reflection {
+
+template <> inline const char* GetTypeName<graphics::Texture>() { return "texture"; }
+template <> inline const unsigned int GetTypeID<graphics::Texture>() { return 2001; }
+
+} // End of reflection
 } // trillek
 
 #endif

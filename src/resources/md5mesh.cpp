@@ -239,6 +239,7 @@ void MD5Mesh::CalculateVertexPositions() {
         if (this->mesh_groups[i]->verts.size() < this->meshes[i]->verts.size()) {
             this->mesh_groups[i]->verts.resize(this->meshes[i]->verts.size());
         }
+        this->mesh_groups[i]->textures.push_back(this->meshes[i]->shader);
         for (size_t j = 0; j < this->meshes[i]->verts.size(); ++j) {
             VertexData vdata;
 

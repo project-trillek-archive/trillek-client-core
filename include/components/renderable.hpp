@@ -20,7 +20,8 @@ class Mesh;
 
 namespace graphics {
 
-class Material;
+class Shader;
+class Texture;
 
 class Renderable : public ComponentBase {
 public:
@@ -33,7 +34,7 @@ public:
         GLuint vbo;
         GLuint ibo;
         unsigned int ibo_count;
-        std::vector<unsigned int> texture_indicies;
+        std::vector<std::shared_ptr<Texture>> textures;
     };
 
     /**
@@ -63,17 +64,17 @@ public:
     /**
     * \brief Sets the shader resource associated with this component.
     *
-    * \param std::shared_ptr<Material> m The material for this component.
+    * \param std::shared_ptr<Material> m The shader for this component.
     * \return void
     */
-    void SetMaterial(std::shared_ptr<Material> s);
+    void SetShader(std::shared_ptr<Shader> s);
 
     /**
-    * \brief Gets the material for this renderable
+    * \brief Gets the shader for this renderable
     *
-    * \return std::shared_ptr<Material> This material for this component.
+    * \return std::shared_ptr<Material> This shader for this component.
     */
-    std::shared_ptr<Material> GetMaterial() const;
+    std::shared_ptr<Shader> GetShader() const;
 
     /**
     * \brief Gets the number of buffer groups.
@@ -111,7 +112,7 @@ private:
 
     std::shared_ptr<resource::Mesh> mesh;
 
-    std::shared_ptr<Material> material;
+    std::shared_ptr<Shader> shader;
 };
 
 } // End of graphics

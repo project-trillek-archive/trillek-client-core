@@ -12,6 +12,7 @@
 #include <vector>
 #include "trillek-scheduler.hpp"
 #include "systems/system-base.hpp"
+#include "graphics/material.hpp"
 #include <map>
 
 #include "dispatcher.hpp"
@@ -24,11 +25,10 @@ class Transform;
 
 namespace graphics {
 
-class Material;
 class Renderable;
 
 struct MaterialGroup {
-    std::shared_ptr<Material> material;
+    Material material;
     struct TextureGroup {
         std::vector<size_t> texture_indicies;
         struct RenderableGroup {

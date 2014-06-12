@@ -1,13 +1,13 @@
 #include "components/renderable.hpp"
-#include "graphics/material.hpp"
 #include "graphics/shader.hpp"
 #include "resources/mesh.hpp"
+#include "graphics/texture.hpp"
 #include "systems/resource-system.hpp"
 
 namespace trillek {
 namespace graphics {
 
-Renderable::Renderable() : material(std::make_shared<Material>()) { }
+Renderable::Renderable() { }
 Renderable::~Renderable() { }
 
 void Renderable::UpdateBufferGroups() {
@@ -35,7 +35,22 @@ void Renderable::UpdateBufferGroups() {
         auto temp_meshgroup = mesh_group.lock();
 
         // TODO: Loop through all the texture names in the mesh group and add the textures to the material.
-        buffer_group->texture_indicies.push_back(0);
+        for (std::string texture_name : temp_meshgroup->textures) {
+            std::shared_ptr<Texture> texture = resource::ResourceMap::Get<Texture>(texture_name);
+            if (!texture) {
+                std::vector<Property> props;
+                props.push_back(Property("filename", texture_name));
+                auto pixel_data = resource::ResourceMap::Create<resource::PixelBuffer>(texture_name, props);
+                if (pixel_data) {
+                    texture = std::make_shared<Texture>(*pixel_data.get());
+                    resource::ResourceMap::Add<Texture>(texture_name, texture);
+                }
+            }
+
+            if (texture) {
+                buffer_group->textures.push_back(texture);
+            }
+        }
 
         if (temp_meshgroup) {
             if (temp_meshgroup->verts.size() > 0) {
@@ -45,8 +60,8 @@ void Renderable::UpdateBufferGroups() {
                     &temp_meshgroup->verts[0], GL_STATIC_DRAW); // Stores the verts in the vertex buffer.
 
                 GLuint shader_program = 0;
-                if (this->material) {
-                    shader_program = this->material->GetShader()->GetProgram();
+                if (this->shader) {
+                    shader_program = this->shader->GetProgram();
                 }
 
                 GLuint posLocation = glGetAttribLocation(shader_program, "pos");
@@ -91,12 +106,12 @@ std::shared_ptr<resource::Mesh> Renderable::GetMesh() const {
     return this->mesh;
 }
 
-void Renderable::SetMaterial(std::shared_ptr<Material> m) {
-    this->material = m;
+void Renderable::SetShader(std::shared_ptr<Shader> m) {
+    this->shader = m;
 }
 
-std::shared_ptr<Material> Renderable::GetMaterial() const {
-    return this->material;
+std::shared_ptr<Shader> Renderable::GetShader() const {
+    return this->shader;
 }
 
 bool Renderable::Initialize(const std::vector<Property> &properties) {
@@ -112,20 +127,13 @@ bool Renderable::Initialize(const std::vector<Property> &properties) {
         }
     }
 
-    auto mesh = resource::ResourceMap::Get<resource::Mesh>(mesh_name);
-    auto shader = resource::ResourceMap::Get<graphics::Shader>(shader_name);
-
-    if (mesh) {
-        SetMesh(mesh);
-    }
-    else {
+    this->mesh = resource::ResourceMap::Get<resource::Mesh>(mesh_name);
+    if (!mesh) {
         return false;
     }
 
-    if (shader) {
-        this->material->SetShader(shader);
-    }
-    else {
+    this->shader = resource::ResourceMap::Get<graphics::Shader>(shader_name);
+    if (!shader) {
         return false;
     }
 
