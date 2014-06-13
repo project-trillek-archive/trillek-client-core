@@ -33,6 +33,27 @@ const int* RenderSystem::Start(const unsigned int width, const unsigned int heig
     return this->gl_version;
 }
 
+bool RenderSystem::Serialize(rapidjson::Document& document) {
+    rapidjson::Value resource_node(rapidjson::kObjectType);
+
+    document.AddMember("graphics", resource_node, document.GetAllocator());
+    return true;
+}
+
+bool RenderSystem::DeSerialize(rapidjson::Value& node) {
+    if(node.IsObject()) {
+        // Iterate over types.
+        for(auto type_itr = node.MemberBegin(); type_itr != node.MemberEnd(); ++type_itr) {
+            std::string resource_type(type_itr->name.GetString(), type_itr->name.GetStringLength());
+
+            if(type_itr->value.IsObject()) {
+            }
+        }
+        return true;
+    }
+    return false;
+}
+
 void RenderSystem::ThreadInit() {
     TrillekGame::GetOS().MakeCurrent();
 }

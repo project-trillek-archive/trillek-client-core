@@ -12,6 +12,7 @@
 #include <vector>
 #include "trillek-scheduler.hpp"
 #include "systems/system-base.hpp"
+#include "systems/json-parser.hpp"
 #include "graphics/material.hpp"
 #include <map>
 
@@ -41,16 +42,27 @@ struct MaterialGroup {
     std::list<TextureGroup> texture_groups;
 };
 
-class RenderSystem : public event::Subscriber<transform::Transform>, public SystemBase {
+class RenderSystem : public event::Subscriber<transform::Transform>, public SystemBase
+        , public json::SerializerBase {
 public:
+
+    RenderSystem() : SerializerBase("graphics") {
+    }
+
+    // Inherited from SerializeBase
+    virtual bool Serialize(rapidjson::Document& document);
+
+    // Inherited from SerializeBase
+    virtual bool DeSerialize(rapidjson::Value& node);
+
     /**
-    * \brief Starts the OpenGL rendering system.
-    *
-    * Prepares the OpengGL rendering context enabling and disabling certain flags.
-    * \param const unsigned int width Initial viewport width.
-    * \param const unsigned int height Initial viewport height.
-    * \return const int*[2] -1 in the 0 index on failure, else the major and minor version in index 0 and 1 respectively.
-    */
+     * \brief Starts the OpenGL rendering system.
+     *
+     * Prepares the OpengGL rendering context enabling and disabling certain flags.
+     * \param const unsigned int width Initial viewport width.
+     * \param const unsigned int height Initial viewport height.
+     * \return const int*[2] -1 in the 0 index on failure, else the major and minor version in index 0 and 1 respectively.
+     */
     const int* Start(const unsigned int width, const unsigned int height);
 
     /** \brief Makes the context of the window current to the thread
@@ -59,50 +71,50 @@ public:
     void ThreadInit() override;
 
     /**
-    * \brief Causes an update in the system based on the change in time.
-    *
-    * Updates the state of the system based off how much time has elapsed since the last update.
-    * \return void
-    */
+     * \brief Causes an update in the system based on the change in time.
+     *
+     * Updates the state of the system based off how much time has elapsed since the last update.
+     * \return void
+     */
     // TODO: This is a niave update render method. Please replace me.
     void RunBatch() const override;
 
     /**
-    * \brief Notification that a transform has changed.
-    *
-    * \param const unsigned int entity_id ID of the entity to update.
-    * \param const Transform transform The entity's transform.
-    * \return void
-    */
+     * \brief Notification that a transform has changed.
+     *
+     * \param const unsigned int entity_id ID of the entity to update.
+     * \param const Transform transform The entity's transform.
+     * \return void
+     */
     void Notify(const unsigned int entity_id, const transform::Transform* transform);
 
     /**
-    * \brief Sets the viewport width and height.
-    *
-    * \param const unsigned int width New viewport width
-    * \param const unsigned int height New viewport height
-    * \return void
-    */
+     * \brief Sets the viewport width and height.
+     *
+     * \param const unsigned int width New viewport width
+     * \param const unsigned int height New viewport height
+     * \return void
+     */
     void SetViewportSize(const unsigned int width, const unsigned int height);
 
     /**
-    * \brief Adds a renderable component to the system.
-    *
-    * A static_pointer_case is applied to the component shared_ptr to cast it to
-    * a Renderable component. If the cast results in a nullptr the method returns
-    * without adding the renderable component.
-    * \param const unsigned int entityID The entity ID the compoennt belongs to.
-    * \param std::shared_ptr<ComponentBase> component The component to add.
-    * \return void
-    */
+     * \brief Adds a renderable component to the system.
+     *
+     * A static_pointer_case is applied to the component shared_ptr to cast it to
+     * a Renderable component. If the cast results in a nullptr the method returns
+     * without adding the renderable component.
+     * \param const unsigned int entityID The entity ID the compoennt belongs to.
+     * \param std::shared_ptr<ComponentBase> component The component to add.
+     * \return void
+     */
     void AddComponent(const unsigned int entity_id, std::shared_ptr<ComponentBase> component);
 
     /**
-    * \brief Removes a Renderable component from the system..
-    *
-    * \param const unsigned int entityID The entity ID of the compoennt to remove.
-    * \return void
-    */
+     * \brief Removes a Renderable component from the system..
+     *
+     * \param const unsigned int entityID The entity ID of the compoennt to remove.
+     * \return void
+     */
     void RemoveRenderable(const unsigned int entity_id);
 
     /** \brief Handle incoming events to update data
