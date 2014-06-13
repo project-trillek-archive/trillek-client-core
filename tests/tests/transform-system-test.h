@@ -42,93 +42,123 @@ namespace {
         trillek::transform::Transform transform(0);
         glm::vec3 translation = transform.GetTranslation();
 
-        EXPECT_TRUE(glm::vec3(0.0f, 0.0f, 0.0f) == translation);
+        EXPECT_FLOAT_EQ(translation.x, 0.0f);
+        EXPECT_FLOAT_EQ(translation.y, 0.0f);
+        EXPECT_FLOAT_EQ(translation.z, 0.0f);
     }
     TEST(TransformTest, Translate) {
         trillek::transform::Transform transform(0);
         transform.Translate(glm::vec3(1.0f, 1.0f, 1.0f));
         glm::vec3 translation = transform.GetTranslation();
 
-        EXPECT_TRUE(glm::vec3(1.0f, 1.0f, 1.0f) == translation);
+        EXPECT_FLOAT_EQ(translation.x, 1.0f);
+        EXPECT_FLOAT_EQ(translation.y, 1.0f);
+        EXPECT_FLOAT_EQ(translation.z, 1.0f);
 
         transform.Translate(glm::vec3(1.0f, 1.0f, 1.0f));
         translation = transform.GetTranslation();
 
-        EXPECT_TRUE(glm::vec3(2.0f, 2.0f, 2.0f) == translation);
+        EXPECT_FLOAT_EQ(translation.x, 2.0f);
+        EXPECT_FLOAT_EQ(translation.y, 2.0f);
+        EXPECT_FLOAT_EQ(translation.z, 2.0f);
     }
     TEST(TransformTest, SetTranslation) {
         trillek::transform::Transform transform(0);
         transform.Translate(glm::vec3(1.0f, 1.0f, 1.0f));
         glm::vec3 translation = transform.GetTranslation();
 
-        EXPECT_TRUE(glm::vec3(1.0f, 1.0f, 1.0f) == translation);
+        EXPECT_FLOAT_EQ(translation.x, 1.0f);
+        EXPECT_FLOAT_EQ(translation.y, 1.0f);
+        EXPECT_FLOAT_EQ(translation.z, 1.0f);
 
         transform.SetTranslation(glm::vec3(5.0f, 5.0f, 5.0f));
         translation = transform.GetTranslation();
 
-        EXPECT_TRUE(glm::vec3(5.0f, 5.0f, 5.0f) == translation);
+        EXPECT_FLOAT_EQ(translation.x, 5.0f);
+        EXPECT_FLOAT_EQ(translation.y, 5.0f);
+        EXPECT_FLOAT_EQ(translation.z, 5.0f);
     }
 
     TEST(TransformTest, GetRotation) {
         trillek::transform::Transform transform(0);
         glm::vec3 rotation = transform.GetRotation();
 
-        EXPECT_TRUE(glm::vec3(0.0f, 0.0f, 0.0f) == rotation);
+        EXPECT_FLOAT_EQ(rotation.x, 0.0f);
+        EXPECT_FLOAT_EQ(rotation.y, 0.0f);
+        EXPECT_FLOAT_EQ(rotation.z, 0.0f);
     }
     TEST(TransformTest, Rotate) {
         trillek::transform::Transform transform(0);
         transform.Rotate(glm::vec3(1.0f, 1.0f, 1.0f));
         glm::vec3 rotation = transform.GetRotation();
 
-        EXPECT_TRUE(glm::vec3(1.0f, 1.0f, 1.0f) == rotation);
+        EXPECT_FLOAT_EQ(rotation.x, 1.0f);
+        EXPECT_FLOAT_EQ(rotation.y, 1.0f);
+        EXPECT_FLOAT_EQ(rotation.z, 1.0f);
 
         transform.Rotate(glm::vec3(1.0f, 1.0f, 1.0f));
         rotation = transform.GetRotation();
 
-        EXPECT_TRUE(glm::vec3(2.0f, 2.0f, 2.0f) == rotation);
+        EXPECT_FLOAT_EQ(rotation.x, 2.0f);
+        EXPECT_FLOAT_EQ(rotation.y, 2.0f);
+        EXPECT_FLOAT_EQ(rotation.z, 2.0f);
     }
     TEST(TransformTest, SetRotation) {
         trillek::transform::Transform transform(0);
         transform.Rotate(glm::vec3(1.0f, 1.0f, 1.0f));
         glm::vec3 rotation = transform.GetRotation();
 
-        EXPECT_TRUE(glm::vec3(1.0f, 1.0f, 1.0f) == rotation);
+        EXPECT_FLOAT_EQ(rotation.x, 1.0f);
+        EXPECT_FLOAT_EQ(rotation.y, 1.0f);
+        EXPECT_FLOAT_EQ(rotation.z, 1.0f);
 
         transform.SetRotation(glm::vec3(5.0f, 5.0f, 5.0f));
         rotation = transform.GetRotation();
 
-        EXPECT_TRUE(glm::vec3(5.0f, 5.0f, 5.0f) == rotation);
+        EXPECT_FLOAT_EQ(rotation.x, 5.0f);
+        EXPECT_FLOAT_EQ(rotation.y, 5.0f);
+        EXPECT_FLOAT_EQ(rotation.z, 5.0f);
     }
 
     TEST(TransformTest, GetScale) {
         trillek::transform::Transform transform(0);
         glm::vec3 scale = transform.GetScale();
 
-        EXPECT_TRUE(glm::vec3(0.0f, 0.0f, 0.0f) == scale);
+        EXPECT_FLOAT_EQ(scale.x, 1.0f);
+        EXPECT_FLOAT_EQ(scale.y, 1.0f);
+        EXPECT_FLOAT_EQ(scale.z, 1.0f);
     }
     TEST(TransformTest, Scale) {
         trillek::transform::Transform transform(0);
         transform.Scale(glm::vec3(1.0f, 1.0f, 1.0f));
         glm::vec3 scale = transform.GetScale();
 
-        EXPECT_TRUE(glm::vec3(1.0f, 1.0f, 1.0f) == scale);
+        EXPECT_FLOAT_EQ(scale.x, 1.0f);
+        EXPECT_FLOAT_EQ(scale.y, 1.0f);
+        EXPECT_FLOAT_EQ(scale.z, 1.0f);
 
-        transform.Scale(glm::vec3(1.0f, 1.0f, 1.0f));
+        transform.Scale(glm::vec3(2.0f, 2.0f, 2.0f));
         scale = transform.GetScale();
 
-        EXPECT_TRUE(glm::vec3(2.0f, 2.0f, 2.0f) == scale);
+        EXPECT_FLOAT_EQ(scale.x, 2.0f);
+        EXPECT_FLOAT_EQ(scale.y, 2.0f);
+        EXPECT_FLOAT_EQ(scale.z, 2.0f);
     }
     TEST(TransformTest, SetScale) {
         trillek::transform::Transform transform(0);
         transform.Scale(glm::vec3(1.0f, 1.0f, 1.0f));
         glm::vec3 scale = transform.GetScale();
-
-        EXPECT_TRUE(glm::vec3(1.0f, 1.0f, 1.0f) == scale);
+        
+        EXPECT_FLOAT_EQ(scale.x, 1.0f);
+        EXPECT_FLOAT_EQ(scale.y, 1.0f);
+        EXPECT_FLOAT_EQ(scale.z, 1.0f);
 
         transform.SetScale(glm::vec3(5.0f, 5.0f, 5.0f));
         scale = transform.GetScale();
 
-        EXPECT_TRUE(glm::vec3(5.0f, 5.0f, 5.0f) == scale);
+        EXPECT_FLOAT_EQ(scale.x, 5.0f);
+        EXPECT_FLOAT_EQ(scale.y, 5.0f);
+        EXPECT_FLOAT_EQ(scale.z, 5.0f);
     }
 
     TEST(TransformTest, GetOrientation) {
@@ -141,7 +171,10 @@ namespace {
         glm::quat final_orientation = qX * qY * qZ;
         final_orientation = glm::normalize(final_orientation);
 
-        EXPECT_TRUE(final_orientation == orientation);
+        EXPECT_FLOAT_EQ(final_orientation.x, orientation.x);
+        EXPECT_FLOAT_EQ(final_orientation.y, orientation.y);
+        EXPECT_FLOAT_EQ(final_orientation.z, orientation.z);
+        EXPECT_FLOAT_EQ(final_orientation.w, orientation.w);
     }
     TEST(TransformTest, Orient) {
         trillek::transform::Transform transform(0);
@@ -154,13 +187,20 @@ namespace {
         glm::quat final_orientation = qX * qY * qZ;
         final_orientation = glm::normalize(final_orientation);
 
-        EXPECT_TRUE(final_orientation == orientation);
-        final_orientation = glm::normalize(final_orientation *  final_orientation);
+        EXPECT_FLOAT_EQ(final_orientation.x, orientation.x);
+        EXPECT_FLOAT_EQ(final_orientation.y, orientation.y);
+        EXPECT_FLOAT_EQ(final_orientation.z, orientation.z);
+        EXPECT_FLOAT_EQ(final_orientation.w, orientation.w);
+
+        qX = glm::angleAxis(1.0f, transform::RIGHT_VECTOR);
+        qY = glm::angleAxis(1.0f, transform::UP_VECTOR);
+        qZ = glm::angleAxis(1.0f, transform::FORWARD_VECTOR);
+        final_orientation *= qX * qY * qZ;
+        final_orientation = glm::normalize(final_orientation);
 
         transform.Rotate(glm::vec3(1.0f, 1.0f, 1.0f));
         orientation = transform.GetOrientation();
 
-        //EXPECT_TRUE(final_orientation == orientation);
         EXPECT_FLOAT_EQ(final_orientation.x, orientation.x);
         EXPECT_FLOAT_EQ(final_orientation.y, orientation.y);
         EXPECT_FLOAT_EQ(final_orientation.z, orientation.z);
@@ -177,7 +217,10 @@ namespace {
         glm::quat final_orientation = qX * qY * qZ;
         final_orientation = glm::normalize(final_orientation);
 
-        EXPECT_TRUE(final_orientation == orientation);
+        EXPECT_FLOAT_EQ(final_orientation.x, orientation.x);
+        EXPECT_FLOAT_EQ(final_orientation.y, orientation.y);
+        EXPECT_FLOAT_EQ(final_orientation.z, orientation.z);
+        EXPECT_FLOAT_EQ(final_orientation.w, orientation.w);
 
         transform.SetRotation(glm::vec3(5.0f, 5.0f, 5.0f));
         orientation = transform.GetOrientation();
@@ -188,7 +231,10 @@ namespace {
         final_orientation = qX * qY * qZ;
         final_orientation = glm::normalize(final_orientation);
 
-        EXPECT_TRUE(final_orientation == orientation);
+        EXPECT_FLOAT_EQ(final_orientation.x, orientation.x);
+        EXPECT_FLOAT_EQ(final_orientation.y, orientation.y);
+        EXPECT_FLOAT_EQ(final_orientation.z, orientation.z);
+        EXPECT_FLOAT_EQ(final_orientation.w, orientation.w);
     }
 }  // namespace
 

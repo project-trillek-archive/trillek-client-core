@@ -107,6 +107,7 @@ file(GLOB TCCExtra_SRC
 "${TCCSRC}/components/renderable.cpp"
 "${TCCSRC}/graphics/shader.cpp"
 "${TCCSRC}/graphics/material.cpp"
+"${TCCSRC}/graphics/texture.cpp"
 "${TCCSRC}/trillek-game.cpp"
 "${TCCSRC}/os.cpp"
 )

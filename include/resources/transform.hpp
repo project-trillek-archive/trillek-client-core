@@ -36,6 +36,7 @@ public:
     /**
     * \brief Scales by the provided amount relative to the current scale.
     *
+    * The current scale is multiplied by the given amount.
     * \param[in] const glm::vec3 amount The amount to scale by.
     * \return
     */

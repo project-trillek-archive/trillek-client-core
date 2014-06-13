@@ -26,7 +26,7 @@ void Transform::Rotate(const glm::vec3 amount) {
 }
 
 void Transform::Scale(const glm::vec3 amount) {
-    this->scale += amount;
+    this->scale *= amount;
     event::Dispatcher<Transform>::GetInstance()->NotifySubscribers(this->entity_id, this);
 }
 
