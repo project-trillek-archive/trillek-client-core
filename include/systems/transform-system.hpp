@@ -5,7 +5,7 @@
 #include <map>
 #include <mutex>
 
-#include "systems/json-parser.hpp"
+#include "util/json-parser.hpp"
 
 namespace trillek {
 namespace transform {
@@ -14,10 +14,10 @@ class Transform;
 
 // Stores a mapping of entity ID to transform that can
 // be accessed via static methods anywhere.
-class TransformMap : public json::SerializerBase {
+class TransformMap : public util::Parser {
 private:
-    TransformMap() : SerializerBase("transforms") { }
-    TransformMap(const TransformMap& right) : SerializerBase("transforms") {
+    TransformMap() : Parser("transforms") { }
+    TransformMap(const TransformMap& right) : Parser("transforms") {
         instance = right.instance;
     }
     TransformMap& operator=(const TransformMap& right) {
@@ -65,11 +65,11 @@ public:
     */
     static void RemoveTransform(const unsigned int entity_id);
 
-    // Inherited from SerializeBase
+    // Inherited from Parse
     virtual bool Serialize(rapidjson::Document& document);
 
-    // Inherited from SerializeBase
-    virtual bool DeSerialize(rapidjson::Value& node);
+    // Inherited from Parse
+    virtual bool Parse(rapidjson::Value& node);
 private:
     std::map<unsigned int, std::shared_ptr<Transform>> transforms;
 };

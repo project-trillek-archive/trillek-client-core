@@ -9,7 +9,7 @@
 
 #include <memory>
 #include <vector>
-#include "systems/entity-system.hpp"
+#include "systems/component-factory.hpp"
 
 namespace trillek {
 namespace resource {

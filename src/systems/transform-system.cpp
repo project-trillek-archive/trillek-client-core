@@ -86,7 +86,7 @@ bool TransformMap::Serialize(rapidjson::Document& document) {
 //          }
 //      }
 //  }
-bool TransformMap::DeSerialize(rapidjson::Value& node) {
+bool TransformMap::Parse(rapidjson::Value& node) {
     if (node.IsObject()) {
         // Iterate over the entity ids.
         for (auto entity_itr = node.MemberBegin(); entity_itr != node.MemberEnd(); ++entity_itr) {

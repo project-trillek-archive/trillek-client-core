@@ -8,7 +8,7 @@
 #include <vector>
 #include "property.hpp"
 #include "trillek.hpp"
-#include "systems/json-parser.hpp"
+#include "util/json-parser.hpp"
 
 namespace trillek {
 namespace resource {
@@ -28,10 +28,10 @@ public:
 };
 
 // Singleton approach derived from http://silviuardelean.ro/2012/06/05/few-singleton-approaches/ .
-class ResourceMap : public json::SerializerBase {
+class ResourceMap : public util::Parser {
 private:
-    ResourceMap() : SerializerBase("resources") { }
-    ResourceMap(const ResourceMap& right) : SerializerBase("resources") {
+    ResourceMap() : Parser("resources") { }
+    ResourceMap(const ResourceMap& right) : Parser("resources") {
         instance = right.instance;
     }
     ResourceMap& operator=(const ResourceMap& right) {
@@ -205,11 +205,11 @@ public:
     */
     static void RegisterTypes();
 
-    // Inherited from SerializeBase
+    // Inherited from Parse
     virtual bool Serialize(rapidjson::Document& document);
 
-    // Inherited from SerializeBase
-    virtual bool DeSerialize(rapidjson::Value& node);
+    // Inherited from Parse
+    virtual bool Parse(rapidjson::Value& node);
 private:
     static std::map<unsigned int, std::map<std::string, std::shared_ptr<ResourceBase>>> resources; // Mapping of resource TypeID to loaded resources
     static std::map<std::string, unsigned int> resource_type_id; // Stores a mapping of TypeName to TypeID
