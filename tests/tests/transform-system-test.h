@@ -195,8 +195,7 @@ namespace {
         qX = glm::angleAxis(1.0f, transform::RIGHT_VECTOR);
         qY = glm::angleAxis(1.0f, transform::UP_VECTOR);
         qZ = glm::angleAxis(1.0f, transform::FORWARD_VECTOR);
-        final_orientation *= qX * qY * qZ;
-        final_orientation = glm::normalize(final_orientation);
+        final_orientation = glm::normalize(final_orientation * (qX * qY * qZ));
 
         transform.Rotate(glm::vec3(1.0f, 1.0f, 1.0f));
         orientation = transform.GetOrientation();

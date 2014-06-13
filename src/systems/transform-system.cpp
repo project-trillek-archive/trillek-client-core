@@ -108,7 +108,7 @@ bool TransformMap::DeSerialize(rapidjson::Value& node) {
                         z = element["z"].GetDouble();
                     }
 
-                    entity_transform->Translate(glm::vec3(x, y, z));
+                    entity_transform->SetTranslation(glm::vec3(x, y, z));
                 }
                 if (entity_itr->value.HasMember("rotation")) {
                     auto& element = entity_itr->value["rotation"];
@@ -124,7 +124,7 @@ bool TransformMap::DeSerialize(rapidjson::Value& node) {
                         z = element["z"].GetDouble();
                     }
 
-                    entity_transform->Rotate(glm::vec3(x, y, z));
+                    entity_transform->SetRotation(glm::vec3(x, y, z));
                 }
                 if (entity_itr->value.HasMember("scale")) {
                     auto& element = entity_itr->value["scale"];
@@ -140,7 +140,7 @@ bool TransformMap::DeSerialize(rapidjson::Value& node) {
                         z = element["z"].GetDouble();
                     }
 
-                    entity_transform->Scale(glm::vec3(x, y, z));
+                    entity_transform->SetScale(glm::vec3(x, y, z));
                 }
             }
         }
