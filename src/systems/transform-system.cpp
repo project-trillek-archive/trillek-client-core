@@ -1,8 +1,7 @@
 #include "systems/transform-system.hpp"
-#include "resources/transform.hpp"
+#include "transform.hpp"
 
 namespace trillek {
-namespace transform {
 
 std::once_flag TransformMap::only_one;
 std::shared_ptr<TransformMap> TransformMap::instance = nullptr;
@@ -151,5 +150,4 @@ bool TransformMap::Parse(rapidjson::Value& node) {
     return false;
 }
 
-} // End of transform
 } // End of trillek

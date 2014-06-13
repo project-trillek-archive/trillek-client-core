@@ -17,11 +17,8 @@
 
 #include "dispatcher.hpp"
 namespace trillek {
-namespace transform {
 
 class Transform;
-
-} // End of transform.
 
 namespace graphics {
 
@@ -41,7 +38,7 @@ struct MaterialGroup {
     std::list<TextureGroup> texture_groups;
 };
 
-class RenderSystem : public event::Subscriber<transform::Transform>, public SystemBase {
+class RenderSystem : public event::Subscriber<Transform>, public SystemBase {
 public:
     /**
     * \brief Starts the OpenGL rendering system.
@@ -74,7 +71,7 @@ public:
     * \param const Transform transform The entity's transform.
     * \return void
     */
-    void Notify(const unsigned int entity_id, const transform::Transform* transform);
+    void Notify(const unsigned int entity_id, const Transform* transform);
 
     /**
     * \brief Sets the viewport width and height.

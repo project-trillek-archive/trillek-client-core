@@ -1,7 +1,7 @@
-#include "components/renderable.hpp"
+#include "graphics/renderable.hpp"
 #include "graphics/shader.hpp"
-#include "resources/mesh.hpp"
 #include "graphics/texture.hpp"
+#include "resources/mesh.hpp"
 #include "systems/resource-system.hpp"
 
 namespace trillek {

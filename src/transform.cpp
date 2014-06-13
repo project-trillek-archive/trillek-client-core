@@ -1,8 +1,7 @@
-#include "resources/transform.hpp"
+#include "transform.hpp"
 #include "systems/dispatcher.hpp"
 
 namespace trillek {
-namespace transform {
 
 Transform::Transform(unsigned int entity_id) :
     orientation(glm::quat(1, 0, 0, 0)), scale(1.0f), entity_id(entity_id) {
@@ -68,5 +67,4 @@ glm::vec3 Transform::GetScale() const {
     return this->scale;
 }
 
-} // End of transform
 } // End of trillek

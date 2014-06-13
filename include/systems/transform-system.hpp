@@ -8,7 +8,6 @@
 #include "util/json-parser.hpp"
 
 namespace trillek {
-namespace transform {
 
 class Transform;
 
@@ -74,7 +73,6 @@ private:
     std::map<unsigned int, std::shared_ptr<Transform>> transforms;
 };
 
-} // End of transform
 } // End of trillek
 
 #endif

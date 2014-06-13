@@ -1,5 +1,5 @@
 #include "trillek-game.hpp"
-#include "components/renderable.hpp"
+#include "graphics/renderable.hpp"
 #include "graphics/shader.hpp"
 #include "resources/md5mesh.hpp"
 #include "resources/pixel-buffer.hpp"
@@ -19,7 +19,7 @@ void ComponentFactory::RegisterTypes() {
 
 void util::JSONPasrser::RegisterTypes() {
     RegisterParser(resource::ResourceMap::GetInstance());
-    RegisterParser(transform::TransformMap::GetInstance());
+    RegisterParser(TransformMap::GetInstance());
     RegisterParser(ComponentFactory::GetInstance());
 }
 

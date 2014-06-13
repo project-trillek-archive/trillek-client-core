@@ -6,7 +6,6 @@
 #include <glm/gtc/quaternion.hpp>
 
 namespace trillek {
-namespace transform {
 
 static glm::vec3 FORWARD_VECTOR(0.0f, 0.0f, -1.0f);
 static glm::vec3 UP_VECTOR(0.0f, 1.0f, 0.0f);
@@ -103,7 +102,6 @@ private:
     unsigned int entity_id;
 };
 
-} // End of resource
 } // End of trillek
 
 #endif

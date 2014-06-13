@@ -1,13 +1,13 @@
 #include "trillek-game.hpp"
+#include "transform.hpp"
 #include "systems/graphics.hpp"
 #include "systems/resource-system.hpp"
 #include "systems/transform-system.hpp"
 
-#include "resources/md5mesh.hpp"
-#include "resources/transform.hpp"
+#include "resources/mesh.hpp"
 #include "graphics/shader.hpp"
 #include "graphics/material.hpp"
-#include "components/renderable.hpp"
+#include "graphics/renderable.hpp"
 
 namespace trillek {
 namespace graphics {
@@ -76,7 +76,7 @@ void RenderSystem::RunBatch() const {
     }
 }
 
-void RenderSystem::Notify(const unsigned int entity_id, const transform::Transform* transform) {
+void RenderSystem::Notify(const unsigned int entity_id, const Transform* transform) {
     glm::mat4 model_matrix = glm::translate(transform->GetTranslation()) *
         glm::mat4_cast(transform->GetOrientation()) *
         glm::scale(transform->GetScale());
@@ -198,10 +198,10 @@ void RenderSystem::AddComponent(const unsigned int entity_id, std::shared_ptr<Co
     }
 
     // Subscribe to transform change events for this entity ID.
-    event::Dispatcher<transform::Transform>::GetInstance()->Subscribe(entity_id, this);
+    event::Dispatcher<Transform>::GetInstance()->Subscribe(entity_id, this);
 
     // We will use the notify method to force the initial model matrix creation.
-    Notify(entity_id, transform::TransformMap::GetTransform(entity_id).get());
+    Notify(entity_id, TransformMap::GetTransform(entity_id).get());
 }
 
 void RenderSystem::RemoveRenderable(const unsigned int entity_id) {
