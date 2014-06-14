@@ -37,22 +37,22 @@ bool TransformMap::Serialize(rapidjson::Document& document) {
         rapidjson::Value translation_element(rapidjson::kObjectType);
         glm::vec3 translation = entity_transform.second->GetTranslation();
         translation_element.AddMember("x", translation.x, document.GetAllocator());
-        translation_element.AddMember("y", translation.x, document.GetAllocator());
-        translation_element.AddMember("z", translation.x, document.GetAllocator());
+        translation_element.AddMember("y", translation.y, document.GetAllocator());
+        translation_element.AddMember("z", translation.z, document.GetAllocator());
         transform_object.AddMember("position", translation_element, document.GetAllocator());
 
         rapidjson::Value rotation_element(rapidjson::kObjectType);
         glm::vec3 rotation = entity_transform.second->GetRotation();
         rotation_element.AddMember("x", rotation.x, document.GetAllocator());
-        rotation_element.AddMember("y", rotation.x, document.GetAllocator());
-        rotation_element.AddMember("z", rotation.x, document.GetAllocator());
+        rotation_element.AddMember("y", rotation.y, document.GetAllocator());
+        rotation_element.AddMember("z", rotation.z, document.GetAllocator());
         transform_object.AddMember("rotation", rotation_element, document.GetAllocator());
 
         rapidjson::Value scale_element(rapidjson::kObjectType);
         glm::vec3 scale = entity_transform.second->GetScale();
         scale_element.AddMember("x", scale.x, document.GetAllocator());
-        scale_element.AddMember("y", scale.x, document.GetAllocator());
-        scale_element.AddMember("z", scale.x, document.GetAllocator());
+        scale_element.AddMember("y", scale.y, document.GetAllocator());
+        scale_element.AddMember("z", scale.z, document.GetAllocator());
         transform_object.AddMember("scale", scale_element, document.GetAllocator()); 
 
         std::string id = std::to_string(entity_transform.first);
