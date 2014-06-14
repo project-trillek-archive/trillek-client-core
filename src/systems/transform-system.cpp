@@ -43,6 +43,7 @@ bool TransformMap::Serialize(rapidjson::Document& document) {
 
         rapidjson::Value rotation_element(rapidjson::kObjectType);
         glm::vec3 rotation = entity_transform.second->GetRotation();
+        rotation_element.AddMember("radians", true, document.GetAllocator());
         rotation_element.AddMember("x", rotation.x, document.GetAllocator());
         rotation_element.AddMember("y", rotation.y, document.GetAllocator());
         rotation_element.AddMember("z", rotation.z, document.GetAllocator());
@@ -61,7 +62,7 @@ bool TransformMap::Serialize(rapidjson::Document& document) {
         transform_node.AddMember(entity_id, transform_object, document.GetAllocator());
     }
 
-    document.AddMember("transform", transform_node, document.GetAllocator());
+    document.AddMember("transforms", transform_node, document.GetAllocator());
 
     return true;
 }
@@ -112,15 +113,30 @@ bool TransformMap::Parse(rapidjson::Value& node) {
                 if (entity_itr->value.HasMember("rotation")) {
                     auto& element = entity_itr->value["rotation"];
 
+                    bool in_radians = false;
+
+                    if (element.HasMember("radians") && element["radians"].IsBool()) {
+                        in_radians = element["radians"].GetBool();
+                    }
+
                     double x = 0.0f, y = 0.0f, z = 0.0f;
                     if (element.HasMember("x") && element["x"].IsNumber()) {
                         x = element["x"].GetDouble();
+                        if (!in_radians) {
+                            x = glm::radians(x);
+                        }
                     }
                     if (element.HasMember("y") && element["y"].IsNumber()) {
                         y = element["y"].GetDouble();
+                        if (!in_radians) {
+                            y = glm::radians(y);
+                        }
                     }
                     if (element.HasMember("z") && element["z"].IsNumber()) {
                         z = element["z"].GetDouble();
+                        if (!in_radians) {
+                            z = glm::radians(z);
+                        }
                     }
 
                     entity_transform->SetRotation(glm::vec3(x, y, z));
