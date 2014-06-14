@@ -44,7 +44,7 @@ bool RenderSystem::DeSerialize(rapidjson::Value& node) {
     if(node.IsObject()) {
         // Iterate over types.
         for(auto type_itr = node.MemberBegin(); type_itr != node.MemberEnd(); ++type_itr) {
-            std::string resource_type(type_itr->name.GetString(), type_itr->name.GetStringLength());
+            std::string object_type(type_itr->name.GetString(), type_itr->name.GetStringLength());
 
             if(type_itr->value.IsObject()) {
             }

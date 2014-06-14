@@ -32,7 +32,14 @@ public:
      * \return graphics::System& the instance
      *
      */
-    static graphics::RenderSystem& GetGraphicSystem() { return gl_sys; };
+    static graphics::RenderSystem& GetGraphicSystem();
+
+    /** \brief Return the graphic system instance pointer
+     *
+     * \return std::shared_ptr<graphics::RenderSystem> the instance
+     *
+     */
+    static std::shared_ptr<graphics::RenderSystem> GetGraphicsInstance();
 
     /** \brief Get the FakeSystem
      *
@@ -64,7 +71,8 @@ private:
     static TrillekScheduler scheduler;
     static FakeSystem fake_system;
     static OS glfw_os;
-    static graphics::RenderSystem gl_sys;
+    static std::once_flag once_graphics;
+    static std::shared_ptr<graphics::RenderSystem> gl_sys_ptr;
     static bool close_window;
 };
 }
