@@ -128,6 +128,8 @@ private:
     glm::mat4 projection_matrix;
     glm::mat4 view_matrix;
 
+    std::shared_ptr<Transform> camera_transform;
+
     unsigned int window_width; // Store the width of our window
     unsigned int window_height; // Store the height of our window
 
