@@ -97,13 +97,13 @@ bool TransformMap::Parse(rapidjson::Value& node) {
                     auto& element = entity_itr->value["position"];
 
                     double x = 0.0f, y = 0.0f, z = 0.0f;
-                    if (element.HasMember("x") && element["x"].IsDouble()) {
+                    if (element.HasMember("x") && element["x"].IsNumber()) {
                         x = element["x"].GetDouble();
                     }
-                    if (element.HasMember("y") && element["y"].IsDouble()) {
+                    if (element.HasMember("y") && element["y"].IsNumber()) {
                         y = element["y"].GetDouble();
                     }
-                    if (element.HasMember("z") && element["z"].IsDouble()) {
+                    if (element.HasMember("z") && element["z"].IsNumber()) {
                         z = element["z"].GetDouble();
                     }
 
@@ -113,13 +113,13 @@ bool TransformMap::Parse(rapidjson::Value& node) {
                     auto& element = entity_itr->value["rotation"];
 
                     double x = 0.0f, y = 0.0f, z = 0.0f;
-                    if (element.HasMember("x") && element["x"].IsDouble()) {
+                    if (element.HasMember("x") && element["x"].IsNumber()) {
                         x = element["x"].GetDouble();
                     }
-                    if (element.HasMember("y") && element["y"].IsDouble()) {
+                    if (element.HasMember("y") && element["y"].IsNumber()) {
                         y = element["y"].GetDouble();
                     }
-                    if (element.HasMember("z") && element["z"].IsDouble()) {
+                    if (element.HasMember("z") && element["z"].IsNumber()) {
                         z = element["z"].GetDouble();
                     }
 
@@ -129,13 +129,13 @@ bool TransformMap::Parse(rapidjson::Value& node) {
                     auto& element = entity_itr->value["scale"];
 
                     double x = 0.0f, y = 0.0f, z = 0.0f;
-                    if (element.HasMember("x") && element["x"].IsDouble()) {
+                    if (element.HasMember("x") && element["x"].IsNumber()) {
                         x = element["x"].GetDouble();
                     }
-                    if (element.HasMember("y") && element["y"].IsDouble()) {
+                    if (element.HasMember("y") && element["y"].IsNumber()) {
                         y = element["y"].GetDouble();
                     }
-                    if (element.HasMember("z") && element["z"].IsDouble()) {
+                    if (element.HasMember("z") && element["z"].IsNumber()) {
                         z = element["z"].GetDouble();
                     }
 
