@@ -31,18 +31,18 @@ public:
     ~Mesh() { }
 
     /**
-    * \brief Returns a sub-mesh group.
-    *
-    * \param[in] const unsigned int& meshGroup The index of the mesh group to retrieve.
-    * \return std::weak_ptr<MeshGroup> The mesh group requested
-    */
+     * \brief Returns a sub-mesh group.
+     *
+     * \param[in] const unsigned int& meshGroup The index of the mesh group to retrieve.
+     * \return std::weak_ptr<MeshGroup> The mesh group requested
+     */
     std::weak_ptr<MeshGroup> GetMeshGroup(const unsigned int& meshGroup);
 
     /**
-    * \brief Returns the number of sub-mesh groups.
-    *
-    * \return size_t The number of sub-mesh groups.
-    */
+     * \brief Returns the number of sub-mesh groups.
+     *
+     * \return size_t The number of sub-mesh groups.
+     */
     size_t GetMeshGroupCount() const {
         return this->mesh_groups.size();
     }
@@ -55,7 +55,7 @@ protected:
 namespace reflection {
 
     template <> inline const char* GetTypeName<resource::Mesh>() { return "Mesh"; }
-    template <> inline const unsigned int GetTypeID<resource::Mesh>() { return 1000; }
+    template <> inline const unsigned int GetTypeID<resource::Mesh>() { return 1001; }
 
 } // End of reflection
 } // End of trillek

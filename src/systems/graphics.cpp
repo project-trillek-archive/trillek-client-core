@@ -44,9 +44,64 @@ bool RenderSystem::DeSerialize(rapidjson::Value& node) {
     if(node.IsObject()) {
         // Iterate over types.
         for(auto type_itr = node.MemberBegin(); type_itr != node.MemberEnd(); ++type_itr) {
-            std::string object_type(type_itr->name.GetString(), type_itr->name.GetStringLength());
+            std::string section_type(type_itr->name.GetString(), type_itr->name.GetStringLength());
 
             if(type_itr->value.IsObject()) {
+                if(section_type == "shaders") {
+                    for(auto shade_itr = type_itr->value.MemberBegin();
+                            shade_itr != type_itr->value.MemberEnd(); shade_itr++) {
+                        std::string shader_name(shade_itr->name.GetString(), shade_itr->name.GetStringLength());
+                        if(shade_itr->value.IsObject()) {
+                            for(auto shade_param_itr = shade_itr->value.MemberBegin();
+                                    shade_param_itr != shade_itr->value.MemberEnd(); shade_param_itr++) {
+                                std::string param_name(shade_param_itr->name.GetString(), shade_param_itr->name.GetStringLength());
+                                if(shade_param_itr->value.IsString()) {
+                                    std::string param_val(shade_param_itr->value.GetString(), shade_param_itr->value.GetStringLength());
+                                    if(param_name == "vertex") {
+                                        // get source text
+                                    }
+                                    else if(param_name == "fragment") {
+                                        // get source text
+                                    }
+                                    else if(param_name == "geometry") {
+                                        // get source text
+                                    }
+                                    else if(param_name == "compute") {
+                                        // TODO later
+                                    }
+                                }
+                                else if(shade_param_itr->value.IsObject()) {
+                                    if(param_name == "define") {
+                                        for(auto sdef_itr = shade_param_itr->value.MemberBegin();
+                                                sdef_itr != shade_param_itr->value.MemberEnd(); sdef_itr++) {
+                                            std::string define_name(sdef_itr->name.GetString(), sdef_itr->name.GetStringLength());
+                                            if(sdef_itr->value.IsString()) {
+                                                std::string define_val(sdef_itr->name.GetString(), sdef_itr->name.GetStringLength());
+                                                // add a valued define
+                                            }
+                                            else if(sdef_itr->value.IsNull()) {
+                                                // add a blank define
+                                            }
+                                            else {
+                                                // invalid
+                                                // TODO use a logger
+                                                std::cerr << "[WARNING] Invalid shader define\n";
+                                            }
+                                        }
+                                    }
+                                    else {
+                                        // TODO use a logger
+                                        std::cerr << "[WARNING] Unknown shader parameter\n";
+                                    }
+                                }
+                            }
+                        // TODO instance the new shader (if valid)
+                        }
+                        else {
+                            std::cerr << "[WARNING] Invalid shader entry\n";
+                        }
+                    }
+                }
             }
         }
         return true;
