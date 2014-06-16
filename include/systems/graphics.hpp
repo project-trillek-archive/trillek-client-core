@@ -68,7 +68,7 @@ public:
     * \brief Notification that a transform has changed.
     *
     * \param const unsigned int entity_id ID of the entity to update.
-    * \param const Transform transform The entity's transform.
+    * \param const Transform* transform The entity's transform.
     * \return void
     */
     void Notify(const unsigned int entity_id, const Transform* transform);

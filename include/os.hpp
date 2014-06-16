@@ -1,5 +1,5 @@
-#ifndef OS_H
-#define OS_H
+#ifndef OS_HPP
+#define OS_HPP
 
 #ifndef __APPLE__
 #include <GL/glew.h>

@@ -78,7 +78,8 @@ public:
     */
     void NotifySubscribers(const unsigned int entity_id, const T* data) {
         if (this->subcriberss.find(entity_id) != this->subcriberss.end()) {
-            for (Subscriber<T>* subscriber : this->subcriberss.at(entity_id)) {
+            auto subscriber_list = this->subcriberss.at(entity_id);
+            for (Subscriber<T>* subscriber : subscriber_list) {
                 subscriber->Notify(entity_id, data);
             }
         }
