@@ -1,7 +1,3 @@
-//A simple class for handling GLSL shader compilation
-//Auhtor: Movania Muhammad Mobeen
-// Original: February 2, 2011
-
 #ifndef SHADER_HPP_INCLUDED
 #define SHADER_HPP_INCLUDED
 
@@ -10,52 +6,64 @@
 #include <map>
 #include <string>
 #include "systems/resource-system.hpp"
+#include "graphics-base.hpp"
 
 namespace trillek {
 namespace graphics {
 
-class Shader : public resource::ResourceBase {
+enum ShaderType : GLenum {
+    VERTEX_SHADER = GL_VERTEX_SHADER,
+    FRAGMENT_SHADER = GL_FRAGMENT_SHADER,
+    GEOMETRY_SHADER = GL_GEOMETRY_SHADER,
+    TESS_CONTROL_SHADER = GL_TESS_CONTROL_SHADER,
+    TESS_EVAL_SHADER = GL_TESS_EVALUATION_SHADER,
+    COMPUTE_SHADER = GL_COMPUTE_SHADER
+};
+
+enum class ShaderOutputType {
+    DEFAULT_3TARGET
+};
+
+class Shader : public GraphicsBase {
 public:
-    Shader(void);
-    ~Shader(void);
+    Shader();
+    virtual ~Shader();
 
-    virtual bool Initialize(const std::vector<Property> &properties);
-
-    void LoadFromString(GLenum whichShader, const std::string source);
-    void LoadFromFile(GLenum whichShader, const std::string filename);
-    void CreateAndLinkProgram();
+    void LoadFromString(ShaderType whichShader, const std::string & source);
+    void LoadFromFile(ShaderType whichShader, const std::string & filename);
+    void SetOutputBinding(ShaderOutputType);
+    /**
+     * \brief Link the program from loaded shader source
+     * \return false on link errors, true for success
+     */
+    bool LinkProgram();
     void Use();
     void UnUse();
-    void AddAttribute(const std::string attribute);
-    void AddUniform(const std::string uniform);
-    GLuint GetProgram() const;
+    GLuint GetProgram();
 
     // ISSUE: This is a bit questionable as it violates the principle of least surprise
     //An indexer that returns the location of the attribute/uniform
-    GLuint operator[](const std::string attribute);
-    GLuint operator()(const std::string uniform);
+    GLuint operator[](const std::string & attribute);
+    GLuint operator()(const std::string & uniform);
 
     //Program deletion
-    void DeleteProgram() { glDeleteProgram(_program); _program = -1; }
-    bool isLoaded() { return _program != 0; }
-    enum ShaderType { VERTEX_SHADER = GL_VERTEX_SHADER, FRAGMENT_SHADER = GL_FRAGMENT_SHADER, GEOMETRY_SHADER };
+    void DeleteProgram();
+    bool isLoaded() { return program != 0; }
 private:
-    enum ShaderIndex { VERTEX_SHADER_INDEX, FRAGMENT_SHADER_INDEX, GEOMETRY_SHADER_INDEX };
-    GLuint _program;
-    int _totalShaders;
-    GLuint _shaders[3];//0->vertexshader, 1->fragmentshader, 2->geometryshader
-    std::map<std::string, GLuint> _attributeList;
-    std::map<std::string, GLuint> _uniformLocationList;
+    GLuint program;
+    std::vector<GLuint> shaders;
+    std::map<std::string, GLuint> attributes_list;
+    std::map<std::string, GLuint> uniforms_list;
 };
 
-} // End of resource
+} // End of graphics
 
 namespace reflection {
 
-template <> inline const char* GetTypeName<graphics::Shader>() { return "Shader"; }
-template <> inline const unsigned int GetTypeID<graphics::Shader>() { return 1002; }
+template <> inline const char* GetTypeName<graphics::Shader>() { return "shader"; }
+template <> inline const unsigned int GetTypeID<graphics::Shader>() { return 401; }
 
-} // End of reflection
+} // namespace reflection
 } // End of trillek
 
 #endif

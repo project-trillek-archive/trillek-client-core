@@ -2,7 +2,7 @@
 #include "systems/graphics.hpp"
 #include "systems/resource-system.hpp"
 #include "systems/transform-system.hpp"
-
+#include "resources/text-file.hpp"
 #include "resources/md5mesh.hpp"
 #include "resources/transform.hpp"
 #include "graphics/shader.hpp"
@@ -11,6 +11,9 @@
 
 namespace trillek {
 namespace graphics {
+
+RenderSystem::RenderSystem() : SerializerBase("graphics") {
+}
 
 const int* RenderSystem::Start(const unsigned int width, const unsigned int height) {
     // Use the GL3 way to get the version number
@@ -40,6 +43,78 @@ bool RenderSystem::Serialize(rapidjson::Document& document) {
     return true;
 }
 
+bool RenderSystem::ParseShader(const std::string &shader_name, rapidjson::Value& node) {
+    std::shared_ptr<Shader> shade_ptr(new Shader);
+
+    for(auto shade_param_itr = node.MemberBegin();
+            shade_param_itr != node.MemberEnd(); shade_param_itr++) {
+        std::string param_name(shade_param_itr->name.GetString(), shade_param_itr->name.GetStringLength());
+        if(shade_param_itr->value.IsString()) {
+            std::string param_val(shade_param_itr->value.GetString(), shade_param_itr->value.GetStringLength());
+            if(param_name == "vertex") {
+                // get source text
+                auto textdata = resource::ResourceMap::Get<resource::TextFile>(param_val);
+                if(textdata) {
+                    shade_ptr->LoadFromString(VERTEX_SHADER, textdata->GetText());
+                }
+            }
+            else if(param_name == "fragment") {
+                // get source text
+                auto textdata = resource::ResourceMap::Get<resource::TextFile>(param_val);
+                if(textdata) {
+                    shade_ptr->LoadFromString(FRAGMENT_SHADER, textdata->GetText());
+                }
+            }
+            else if(param_name == "geometry") {
+                // should check for GL 3.2+
+                // get source text
+                auto textdata = resource::ResourceMap::Get<resource::TextFile>(param_val);
+                if(textdata) {
+                    shade_ptr->LoadFromString(GEOMETRY_SHADER, textdata->GetText());
+                }
+            }
+            else if(param_name == "tess-cntl") {
+                // TODO check for GL 4.0+
+            }
+            else if(param_name == "tess-eval") {
+                // TODO check for GL 4.0+
+            }
+            else if(param_name == "compute") {
+                // TODO check for GL 4.4+
+            }
+        }
+        else if(shade_param_itr->value.IsObject()) {
+            if(param_name == "define") {
+                for(auto sdef_itr = shade_param_itr->value.MemberBegin();
+                        sdef_itr != shade_param_itr->value.MemberEnd(); sdef_itr++) {
+                    std::string define_name(sdef_itr->name.GetString(), sdef_itr->name.GetStringLength());
+                    if(sdef_itr->value.IsString()) {
+                        std::string define_val(sdef_itr->name.GetString(), sdef_itr->name.GetStringLength());
+                        // add a valued define
+                    }
+                    else if(sdef_itr->value.IsNull()) {
+                        // add a blank define
+                    }
+                    else {
+                        // invalid
+                        // TODO use a logger
+                        std::cerr << "[WARNING] Invalid shader define\n";
+                    }
+                }
+            }
+            else {
+                // TODO use a logger
+                std::cerr << "[WARNING] Unknown shader parameter\n";
+            }
+        }
+    }
+    if(shade_ptr->LinkProgram()) {
+        Add(shader_name, shade_ptr);
+        return true;
+    }
+    return false;
+}
+
 bool RenderSystem::DeSerialize(rapidjson::Value& node) {
     if(node.IsObject()) {
         // Iterate over types.
@@ -52,50 +127,7 @@ bool RenderSystem::DeSerialize(rapidjson::Value& node) {
                             shade_itr != type_itr->value.MemberEnd(); shade_itr++) {
                         std::string shader_name(shade_itr->name.GetString(), shade_itr->name.GetStringLength());
                         if(shade_itr->value.IsObject()) {
-                            for(auto shade_param_itr = shade_itr->value.MemberBegin();
-                                    shade_param_itr != shade_itr->value.MemberEnd(); shade_param_itr++) {
-                                std::string param_name(shade_param_itr->name.GetString(), shade_param_itr->name.GetStringLength());
-                                if(shade_param_itr->value.IsString()) {
-                                    std::string param_val(shade_param_itr->value.GetString(), shade_param_itr->value.GetStringLength());
-                                    if(param_name == "vertex") {
-                                        // get source text
-                                    }
-                                    else if(param_name == "fragment") {
-                                        // get source text
-                                    }
-                                    else if(param_name == "geometry") {
-                                        // get source text
-                                    }
-                                    else if(param_name == "compute") {
-                                        // TODO later
-                                    }
-                                }
-                                else if(shade_param_itr->value.IsObject()) {
-                                    if(param_name == "define") {
-                                        for(auto sdef_itr = shade_param_itr->value.MemberBegin();
-                                                sdef_itr != shade_param_itr->value.MemberEnd(); sdef_itr++) {
-                                            std::string define_name(sdef_itr->name.GetString(), sdef_itr->name.GetStringLength());
-                                            if(sdef_itr->value.IsString()) {
-                                                std::string define_val(sdef_itr->name.GetString(), sdef_itr->name.GetStringLength());
-                                                // add a valued define
-                                            }
-                                            else if(sdef_itr->value.IsNull()) {
-                                                // add a blank define
-                                            }
-                                            else {
-                                                // invalid
-                                                // TODO use a logger
-                                                std::cerr << "[WARNING] Invalid shader define\n";
-                                            }
-                                        }
-                                    }
-                                    else {
-                                        // TODO use a logger
-                                        std::cerr << "[WARNING] Unknown shader parameter\n";
-                                    }
-                                }
-                            }
-                        // TODO instance the new shader (if valid)
+                            ParseShader(shader_name, shade_itr->value);
                         }
                         else {
                             std::cerr << "[WARNING] Invalid shader entry\n";
@@ -214,12 +246,9 @@ void RenderSystem::AddComponent(const unsigned int entity_id, std::shared_ptr<Co
 
         matgrp->material.SetShader(ren->GetShader());
 
-        const auto& shader = matgrp->material.GetShader();
-        shader->Use();
-        shader->AddUniform("view");
-        shader->AddUniform("projection");
-        shader->AddUniform("model");
-        shader->UnUse();
+        //const auto& shader = matgrp->material.GetShader();
+        //shader->Use();
+        //shader->UnUse();
     }
 
     // Map the renderable into the render graph material groups.

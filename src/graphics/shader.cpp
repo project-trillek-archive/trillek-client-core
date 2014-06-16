@@ -1,7 +1,3 @@
-//A simple class for handling GLSL shader compilation
-//Author: Movania Muhammad Mobeen
-//Last Modified: February 2, 2011
-
 #include "graphics/shader.hpp"
 #include <iostream>
 #include <fstream>
@@ -9,138 +5,140 @@
 namespace trillek {
 namespace graphics {
 
-Shader::Shader(void) {
-    _totalShaders = 0;
-    _shaders[VERTEX_SHADER_INDEX] = 0;
-    _shaders[FRAGMENT_SHADER_INDEX] = 0;
-    _shaders[GEOMETRY_SHADER_INDEX] = 0;
-    _attributeList.clear();
-    _uniformLocationList.clear();
-    _program = 0;
+Shader::Shader() {
+    program = 0;
 }
 
-Shader::~Shader(void) {
-    _attributeList.clear();
-    _uniformLocationList.clear();
+Shader::~Shader() {
+    DeleteProgram();
 }
 
-bool Shader::Initialize(const std::vector<Property> &properties) {
-    std::string vertex_filename = "";
-    std::string fragment_filename = "";
+void Shader::DeleteProgram() {
+    if(program != 0) {
+        glDeleteProgram(program);
+    }
+    for(auto shaderid_itr : shaders) {
+        glDeleteShader(shaderid_itr);
+    }
+    shaders.clear();
+    program = 0;
+}
 
-    for (auto propitr = properties.begin(); propitr != properties.end(); ++propitr) {
-        const Property*  p = &(*propitr);
-        if (p->GetName() == "vertex") {
-            vertex_filename = p->Get<std::string>();
-        }
-        else if (p->GetName() == "fragment") {
-            fragment_filename = p->Get<std::string>();
-        }
+void Shader::SetOutputBinding(ShaderOutputType outtype) {
+    if(program == 0) {
+        program = glCreateProgram();
+    }
+    switch(outtype) {
+    case ShaderOutputType::DEFAULT_3TARGET:
+    default:
+        // Setup output for multiple render targets
+        glBindFragDataLocation(program, 0, "out_Color");
+        glBindFragDataLocation(program, 1, "out_Normal");
+        glBindFragDataLocation(program, 2, "out_Depth");
+        break;
+    }
+}
+
+bool Shader::LinkProgram() {
+    if(program == 0) {
+        program = glCreateProgram();
+        SetOutputBinding(ShaderOutputType::DEFAULT_3TARGET);
     }
 
-    LoadFromFile(GL_VERTEX_SHADER, vertex_filename);
-    LoadFromFile(GL_FRAGMENT_SHADER, fragment_filename);
-    CreateAndLinkProgram();
+    // attach all shaders
+    for(auto shaderid_itr : shaders) {
+        glAttachShader(program, shaderid_itr);
+    }
 
-    return isLoaded();
-}
-
-void Shader::LoadFromString(GLenum type, const std::string source) {
-    GLuint shader = glCreateShader(type);
-
-    const char * ptmp = source.c_str();
-    glShaderSource(shader, 1, &ptmp, NULL);
-
-    //check whether the shader loads fine
+    //link and check if the program links ok
+    bool linkok = true;
     GLint status;
-    glCompileShader(shader);
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
+    glLinkProgram(program);
+    glGetProgramiv(program, GL_LINK_STATUS, &status);
     if (status == GL_FALSE) {
         GLint infoLogLength;
-        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLogLength);
+        glGetProgramiv(program, GL_INFO_LOG_LENGTH, &infoLogLength);
         GLchar *infoLog = new GLchar[infoLogLength];
-        glGetShaderInfoLog(shader, infoLogLength, NULL, infoLog);
-        std::cerr << "Shader Compile: " << infoLog << '\n';
-        delete[] infoLog;
-    }
-    _shaders[_totalShaders++] = shader;
-}
-
-
-void Shader::CreateAndLinkProgram() {
-    _program = glCreateProgram();
-    if (_shaders[VERTEX_SHADER_INDEX] != 0) {
-        glAttachShader(_program, _shaders[VERTEX_SHADER_INDEX]);
-    }
-    if (_shaders[FRAGMENT_SHADER_INDEX] != 0) {
-        glAttachShader(_program, _shaders[FRAGMENT_SHADER_INDEX]);
-    }
-    if (_shaders[GEOMETRY_SHADER_INDEX] != 0) {
-        glAttachShader(_program, _shaders[GEOMETRY_SHADER_INDEX]);
-    }
-
-    //link and check whether the program links fine
-    GLint status;
-
-    // Setup output for multiple render targets
-    glBindFragDataLocation(_program, 0, "out_Color");
-    glBindFragDataLocation(_program, 1, "out_Normal");
-    glBindFragDataLocation(_program, 2, "out_Depth");
-
-    glLinkProgram(_program);
-    glGetProgramiv(_program, GL_LINK_STATUS, &status);
-    if (status == GL_FALSE) {
-        GLint infoLogLength;
-
-        glGetProgramiv(_program, GL_INFO_LOG_LENGTH, &infoLogLength);
-        GLchar *infoLog = new GLchar[infoLogLength];
-        glGetProgramInfoLog(_program, infoLogLength, NULL, infoLog);
+        glGetProgramInfoLog(program, infoLogLength, NULL, infoLog);
         std::cerr << "Shader Link: " << infoLog << '\n';
         delete[] infoLog;
+        linkok = false;
     }
 
-    glDeleteShader(_shaders[VERTEX_SHADER_INDEX]);
-    glDeleteShader(_shaders[FRAGMENT_SHADER_INDEX]);
-    glDeleteShader(_shaders[GEOMETRY_SHADER_INDEX]);
+    for(auto shaderid_itr : shaders) {
+        glDeleteShader(shaderid_itr);
+    }
+    shaders.clear();
+    return linkok;
 }
 
 void Shader::Use() {
-    glUseProgram(_program);
+    glUseProgram(program);
 }
 
 void Shader::UnUse() {
     glUseProgram(0);
 }
 
-void Shader::AddAttribute(const std::string attribute) {
-    _attributeList[attribute] = glGetAttribLocation(_program, attribute.c_str());
-}
-
 //An indexer that returns the location of the attribute
-GLuint Shader::operator [](const std::string attribute) {
-    return _attributeList[attribute];
+GLuint Shader::operator [](const std::string & attribute) {
+    auto attrib = attributes_list.find(attribute);
+    if(attrib == attributes_list.end()) {
+        GLuint attrib_id = glGetAttribLocation(program, attribute.c_str());
+        if(attrib_id) {
+            attributes_list[attribute] = attrib_id;
+        }
+        return attrib_id;
+    }
+    return attrib->second;
 }
 
-void Shader::AddUniform(const std::string uniform) {
-    _uniformLocationList[uniform] = glGetUniformLocation(_program, uniform.c_str());
+GLuint Shader::operator()(const std::string &uniform) {
+    auto uniform_itr = uniforms_list.find(uniform);
+    if(uniform_itr == uniforms_list.end()) {
+        GLuint uniform_id = glGetUniformLocation(program, uniform.c_str());
+        if(uniform_id) {
+            uniforms_list[uniform] = uniform_id;
+        }
+        return uniform_id;
+    }
+    return uniform_itr->second;
+}
+GLuint Shader::GetProgram() {
+    return program;
 }
 
-GLuint Shader::operator()(const std::string uniform) {
-    return _uniformLocationList[uniform];
-}
-GLuint Shader::GetProgram() const {
-    return _program;
+void Shader::LoadFromString(ShaderType type, const std::string &source) {
+    GLuint shader = glCreateShader(type);
+
+    GLint slen = source.length();
+    const GLchar *sstr = source.data();
+    glShaderSource(shader, 1, &sstr, &slen);
+
+    // check if the shader compiles
+    GLint status;
+    glCompileShader(shader);
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
+    if(status == GL_FALSE) {
+        GLint log_length;
+        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &log_length);
+        GLchar *info_log = new GLchar[log_length];
+        glGetShaderInfoLog(shader, log_length, NULL, info_log);
+        std::cerr << "Shader Compile: " << info_log << '\n';
+        delete[] info_log;
+    }
+    shaders.push_back(shader);
 }
 
-void Shader::LoadFromFile(GLenum whichShader, const std::string filename) {
+void Shader::LoadFromFile(ShaderType whichShader, const std::string & filename) {
     std::ifstream fp;
-    fp.open(filename.c_str(), std::ios_base::in);
-    if (fp) {
+    fp.open(filename, std::ios_base::in);
+    if(fp.is_open()) {
         std::string buffer(std::istreambuf_iterator<char>(fp), (std::istreambuf_iterator<char>()));
-        //copy to source
+        // compile source
         LoadFromString(whichShader, buffer);
     }
 }
 
-} // End of resource
+} // End of graphics
 } // End of trillek

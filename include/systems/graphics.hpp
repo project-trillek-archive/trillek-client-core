@@ -1,18 +1,19 @@
 #ifndef GRAPHICS_HPP_INCLUDED
 #define GRAPHICS_HPP_INCLUDED
 
-#ifndef __APPLE__
-#include <GL/glew.h>
-#endif
+#include "opengl.hpp"
+
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 
 #include <list>
 #include <memory>
 #include <vector>
+#include "trillek.hpp"
 #include "trillek-scheduler.hpp"
 #include "systems/system-base.hpp"
 #include "systems/json-parser.hpp"
+#include "graphics/graphics-base.hpp"
 #include "graphics/material.hpp"
 #include <map>
 
@@ -46,8 +47,7 @@ class RenderSystem : public event::Subscriber<transform::Transform>, public Syst
         , public json::SerializerBase {
 public:
 
-    RenderSystem() : SerializerBase("graphics") {
-    }
+    RenderSystem();
 
     // Inherited from SerializeBase
     virtual bool Serialize(rapidjson::Document& document);
@@ -138,7 +138,23 @@ public:
      */
     void Terminate() override;
 
+    template<class T>
+    std::shared_ptr<T> Get(const std::string & instancename) {
+        unsigned int type_id = reflection::GetTypeID<T>();
+        auto instance_ptr = this->graphics_instances[type_id].find(instancename);
+        if(instance_ptr == this->graphics_instances[type_id].end()) {
+            return std::shared_ptr<T>();
+        }
+        return std::static_pointer_cast<T>(instance_ptr->second);
+    }
+    template<typename T>
+    void Add(const std::string & instancename, std::shared_ptr<T> instanceptr) {
+        unsigned int type_id = reflection::GetTypeID<T>();
+        graphics_instances[type_id][instancename] = instanceptr;
+    }
 private:
+    bool ParseShader(const std::string &shader_name, rapidjson::Value& node);
+
     int gl_version[2];
     glm::mat4 projection_matrix;
     glm::mat4 view_matrix;
@@ -148,6 +164,7 @@ private:
 
     // A list of the renderables in the system. Stored as a pair (entity ID, Renderable).
     std::list<std::pair<unsigned int, std::shared_ptr<Renderable>>> renderables;
+    std::map<unsigned int, std::map<std::string, std::shared_ptr<GraphicsBase>>> graphics_instances;
     std::map<unsigned int, glm::mat4> model_matrices;
     std::list<MaterialGroup> material_groups;
 };

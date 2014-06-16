@@ -3,14 +3,15 @@
 
 #include "resources/pixel-buffer.hpp"
 #include "opengl.hpp"
+#include "graphics-base.hpp"
 
 namespace trillek {
 namespace graphics {
 
-class Texture : public resource::ResourceBase {
+class Texture : public GraphicsBase {
 public:
     Texture() : texture_id(0) {}
-    ~Texture();
+    virtual ~Texture();
 
     /**
      * \brief new texture instance from image
@@ -61,7 +62,7 @@ protected:
 namespace reflection {
 
 template <> inline const char* GetTypeName<graphics::Texture>() { return "texture"; }
-template <> inline const unsigned int GetTypeID<graphics::Texture>() { return 2001; }
+template <> inline const unsigned int GetTypeID<graphics::Texture>() { return 400; }
 
 } // End of reflection
 } // trillek
