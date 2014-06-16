@@ -23,7 +23,7 @@ public:
     void Activate(const unsigned int entity_id) {
         this->active = true;
         this->entity_id = entity_id;
-        event::Dispatcher<KeyboardEvent>::GetInstance()->Subscribe(entity_id, this);
+        event::Dispatcher<KeyboardEvent>::GetInstance()->Subscribe(0, this);
         this->camera_transform = TransformMap::GetTransform(entity_id);
     }
 
@@ -35,6 +35,14 @@ public:
         this->active = false;
         event::Dispatcher<KeyboardEvent>::GetInstance()->Unsubscribe(this->entity_id, this);
         this->camera_transform = nullptr;
+    }
+
+    /**
+    * \brief Returns if this camera is active.
+    *
+    */
+    bool IsActive() {
+        return this->active;
     }
 
     /**
