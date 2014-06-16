@@ -8,6 +8,7 @@
 #include "graphics/shader.hpp"
 #include "graphics/material.hpp"
 #include "graphics/renderable.hpp"
+#include "graphics/six-dof-camera.hpp"
 
 namespace trillek {
 namespace graphics {
@@ -23,11 +24,15 @@ const int* RenderSystem::Start(const unsigned int width, const unsigned int heig
     SetViewportSize(width, height);
 
     // Retrieve the default camera transform, and subscribe to changes to it.
-    this->camera_transform = TransformMap::AddTransform(0);
     event::Dispatcher<Transform>::GetInstance()->Subscribe(0, this);
 
-    // Compute the view matrix.
-    Notify(0, this->camera_transform.get());
+    // Activate the camera and get the initial view matrix.
+    // TODO: Make camera into a component that is added to an entity.
+    this->camera = std::make_shared<SixDOFCamera>();
+    if (this->camera) {
+        this->camera->Activate(0);
+        this->view_matrix = this->camera->GetViewMatrix();
+    }
 
     // App specific global gl settings
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -79,23 +84,16 @@ void RenderSystem::RunBatch() const {
 }
 
 void RenderSystem::Notify(const unsigned int entity_id, const Transform* transform) {
-    if (entity_id == 0) {
-        // TODO: Make this into a method that adjust the orientation based on camera type.
-        // Currently it is based on a 6-DOF you go where you are pointing camera.
-        glm::mat4 orientation = glm::mat4_cast(this->camera_transform->GetOrientation());
-        glm::mat4 translation;
-        auto camera_translation = this->camera_transform->GetTranslation();
-        translation[3][0] = camera_translation.x;
-        translation[3][1] = camera_translation.y;
-        translation[3][2] = camera_translation.z * -1; // Negated to allow moving forward with positive translations.
-        this->view_matrix = glm::inverse(orientation * translation);
+    if (this->camera) {
+        if (entity_id == this->camera->GetEntityID()) {
+            this->view_matrix = this->camera->GetViewMatrix();
+            return;
+        }
     }
-    else {
-        glm::mat4 model_matrix = glm::translate(transform->GetTranslation()) *
-            glm::mat4_cast(transform->GetOrientation()) *
-            glm::scale(transform->GetScale());
-        this->model_matrices[entity_id] = model_matrix;
-    }
+    glm::mat4 model_matrix = glm::translate(transform->GetTranslation()) *
+        glm::mat4_cast(transform->GetOrientation()) *
+        glm::scale(transform->GetScale());
+    this->model_matrices[entity_id] = model_matrix;
 }
 
 void RenderSystem::SetViewportSize(const unsigned int width, const unsigned int height) {

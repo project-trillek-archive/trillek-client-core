@@ -23,6 +23,7 @@ class Transform;
 namespace graphics {
 
 class Renderable;
+class CameraBase;
 
 struct MaterialGroup {
     Material material;
@@ -38,7 +39,8 @@ struct MaterialGroup {
     std::list<TextureGroup> texture_groups;
 };
 
-class RenderSystem : public event::Subscriber<Transform>, public SystemBase {
+class RenderSystem : public SystemBase, 
+    public event::Subscriber<Transform> {
 public:
     /**
     * \brief Starts the OpenGL rendering system.
@@ -128,7 +130,7 @@ private:
     glm::mat4 projection_matrix;
     glm::mat4 view_matrix;
 
-    std::shared_ptr<Transform> camera_transform;
+    std::shared_ptr<CameraBase> camera;
 
     unsigned int window_width; // Store the width of our window
     unsigned int window_height; // Store the height of our window
