@@ -14,6 +14,14 @@
 
 namespace trillek {
 
+struct KeyboardEvent {
+    enum KEY_ACTION { KEY_DOWN, KEY_UP, KEY_REPEAT, KEY_CHAR };
+    int key;
+    int scancode;
+    KEY_ACTION action;
+    int mods;
+};
+
 class OS {
 public:
     OS() : mouse_lock(false) { }

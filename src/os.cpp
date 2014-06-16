@@ -190,19 +190,23 @@ void OS::UpdateWindowSize(const int width, const int height) {
 }
 
 void OS::DispatchKeyboardEvent(const int key, const int scancode, const int action, const int mods) {
+    KeyboardEvent key_event;
     if (action == GLFW_PRESS) {
-        // TODO: Dispatch a key down event.
+        key_event = { key, scancode, KeyboardEvent::KEY_DOWN, mods };
     }
     else if (action == GLFW_REPEAT) {
-        // TODO: Dispatch a key repeat event.
+        key_event = { key, scancode, KeyboardEvent::KEY_REPEAT, mods };
     }
     else if (action == GLFW_RELEASE) {
-        // TODO: Dispatch a key up event.
+        key_event = { key, scancode, KeyboardEvent::KEY_UP, mods };
     }
+    
+    event::Dispatcher<KeyboardEvent>::GetInstance()->NotifySubscribers(0, &key_event);
 }
 
 void OS::DispatchCharacterEvent(const unsigned int uchar) {
-    // TODO: Dispatch a character event.
+    KeyboardEvent key_event { uchar, 0, KeyboardEvent::KEY_CHAR, 0 };
+    event::Dispatcher<KeyboardEvent>::GetInstance()->NotifySubscribers(0, &key_event);
 }
 
 void OS::DispatchMouseMoveEvent(const double x, const double y) {

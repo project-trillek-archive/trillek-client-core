@@ -137,8 +137,6 @@ void RenderSystem::AddComponent(const unsigned int entity_id, std::shared_ptr<Co
 
     MaterialGroup* matgrp = nullptr;
     // Check if the material for exists based on shader.
-    // If it does make sure each one is using the same material.
-    // TODO: Make material a resource-like element.
     for (auto& mg : this->material_groups) {
         if (mg.material.GetShader() == ren->GetShader()) {
             matgrp = &mg;
