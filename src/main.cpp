@@ -28,7 +28,10 @@ int main(int argCount, char** argValues) {
     soundsystem->SetListenerOrientation(glm::vec3(0, 0, -1), glm::vec3(0, 1, 0));
 
     std::shared_ptr<trillek::sound::Sound> s1 = soundsystem->GetSound("music_track_1");
-    s1->Play();
+    // needs to be a mono sound for 3d effects to work
+    if (s1) {
+        s1->Play();
+    }
 
     trillek::graphics::System gl;
     gl.Start(os.GetWindowWidth(), os.GetWindowHeight());
