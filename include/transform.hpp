@@ -33,6 +33,24 @@ public:
     void Rotate(const glm::vec3 amount);
 
     /**
+    * \brief Translates by the provided amount relative to the current translation and orientation.
+    *
+    * \param[in] const glm::vec3 amount The amount to translate by.
+    * \return
+    */
+    void OrientedTranslate(const glm::vec3 amount);
+
+    /**
+    * \brief Rotates by the provided amount relative to the current rotation and orientation.
+    *
+    * The arguments is in the form of (rotation about x, rotation about y, rotation about z).
+    * The orientation is also updated by computing the axis-angle.
+    * \param[in] const glm::vec3 amount The amount ot rotate by.
+    * \return
+    */
+    void OrientedRotate(const glm::vec3 amount);
+
+    /**
     * \brief Scales by the provided amount relative to the current scale.
     *
     * The current scale is multiplied by the given amount.

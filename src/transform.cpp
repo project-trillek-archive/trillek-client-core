@@ -15,12 +15,29 @@ void Transform::Translate(const glm::vec3 amount) {
 void Transform::Rotate(const glm::vec3 amount) {
     this->rotation += amount;
 
-    glm::quat qX = glm::angleAxis(rotation.x, RIGHT_VECTOR);
-    glm::quat qY = glm::angleAxis(rotation.y, UP_VECTOR);
-    glm::quat qZ = glm::angleAxis(rotation.z, FORWARD_VECTOR);
+    glm::quat qX = glm::angleAxis(amount.x, RIGHT_VECTOR);
+    glm::quat qY = glm::angleAxis(amount.y, UP_VECTOR);
+    glm::quat qZ = glm::angleAxis(amount.z, FORWARD_VECTOR);
     glm::quat change = qX * qY * qZ;
 
-    this->orientation = glm::normalize(change);
+    this->orientation = glm::normalize(change * this->orientation);
+    event::Dispatcher<Transform>::GetInstance()->NotifySubscribers(this->entity_id, this);
+}
+
+void Transform::OrientedTranslate(const glm::vec3 amount) {
+    this->translation += this->orientation * amount;
+    event::Dispatcher<Transform>::GetInstance()->NotifySubscribers(this->entity_id, this);
+}
+
+void Transform::OrientedRotate(const glm::vec3 amount) {
+    this->rotation += amount;
+
+    glm::quat qX = glm::angleAxis(amount.x, this->orientation * RIGHT_VECTOR);
+    glm::quat qY = glm::angleAxis(amount.y, this->orientation * UP_VECTOR);
+    glm::quat qZ = glm::angleAxis(amount.z, this->orientation * FORWARD_VECTOR);
+    glm::quat change = qX * qY * qZ;
+
+    this->orientation = glm::normalize(change * this->orientation);
     event::Dispatcher<Transform>::GetInstance()->NotifySubscribers(this->entity_id, this);
 }
 
