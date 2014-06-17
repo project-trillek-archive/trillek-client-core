@@ -29,9 +29,15 @@ public:
     Shader();
     virtual ~Shader();
 
+    /**
+     * \brief parse a shader from json
+     * \return false on errors, true for success
+     */
+    bool Parse(const std::string &shader_name, rapidjson::Value& node);
     void LoadFromString(ShaderType whichShader, const std::string & source);
     void LoadFromFile(ShaderType whichShader, const std::string & filename);
     void SetOutputBinding(ShaderOutputType);
+
     /**
      * \brief Link the program from loaded shader source
      * \return false on link errors, true for success

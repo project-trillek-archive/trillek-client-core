@@ -108,6 +108,89 @@ GLuint Shader::GetProgram() {
     return program;
 }
 
+bool Shader::Parse(const std::string &shader_name, rapidjson::Value& node) {
+
+    for(auto shade_param_itr = node.MemberBegin();
+            shade_param_itr != node.MemberEnd(); shade_param_itr++) {
+        std::string param_name(shade_param_itr->name.GetString(), shade_param_itr->name.GetStringLength());
+        if(shade_param_itr->value.IsString()) {
+            std::string param_val(shade_param_itr->value.GetString(), shade_param_itr->value.GetStringLength());
+            if(param_name == "vertex") {
+                // get source text
+                auto textdata = resource::ResourceMap::Get<resource::TextFile>(param_val);
+                if(textdata) {
+                    LoadFromString(VERTEX_SHADER, textdata->GetText());
+                }
+            }
+            else if(param_name == "fragment") {
+                // get source text
+                auto textdata = resource::ResourceMap::Get<resource::TextFile>(param_val);
+                if(textdata) {
+                    LoadFromString(FRAGMENT_SHADER, textdata->GetText());
+                }
+            }
+            else if(param_name == "geometry") {
+                // should check for GL 3.2+
+                // get source text
+                auto textdata = resource::ResourceMap::Get<resource::TextFile>(param_val);
+                if(textdata) {
+                    LoadFromString(GEOMETRY_SHADER, textdata->GetText());
+                }
+            }
+            else if(param_name == "tess-cntl") {
+                // TODO check for GL 4.0+
+                // get source text
+                auto textdata = resource::ResourceMap::Get<resource::TextFile>(param_val);
+                if(textdata) {
+                    LoadFromString(TESS_CONTROL_SHADER, textdata->GetText());
+                }
+            }
+            else if(param_name == "tess-eval") {
+                // TODO check for GL 4.0+
+                // get source text
+                auto textdata = resource::ResourceMap::Get<resource::TextFile>(param_val);
+                if(textdata) {
+                    LoadFromString(TESS_EVAL_SHADER, textdata->GetText());
+                }
+            }
+            else if(param_name == "compute") {
+                // TODO check for GL 4.4+
+                // get source text
+                auto textdata = resource::ResourceMap::Get<resource::TextFile>(param_val);
+                if(textdata) {
+                    LoadFromString(COMPUTE_SHADER, textdata->GetText());
+                }
+            }
+        }
+        else if(shade_param_itr->value.IsObject()) {
+            if(param_name == "define") {
+                for(auto sdef_itr = shade_param_itr->value.MemberBegin();
+                        sdef_itr != shade_param_itr->value.MemberEnd(); sdef_itr++) {
+                    std::string define_name(sdef_itr->name.GetString(), sdef_itr->name.GetStringLength());
+                    if(sdef_itr->value.IsString()) {
+                        std::string define_val(sdef_itr->name.GetString(), sdef_itr->name.GetStringLength());
+                        // add a valued define
+                    }
+                    else if(sdef_itr->value.IsNull()) {
+                        // add a blank define
+                    }
+                    else {
+                        // invalid
+                        // TODO use a logger
+                        std::cerr << "[ERROR] Invalid shader define\n";
+                        return false;
+                    }
+                }
+            }
+            else {
+                // TODO use a logger
+                std::cerr << "[WARNING] Unknown shader parameter\n";
+            }
+        }
+    }
+    return true;
+}
+
 void Shader::LoadFromString(ShaderType type, const std::string &source) {
     GLuint shader = glCreateShader(type);
 
