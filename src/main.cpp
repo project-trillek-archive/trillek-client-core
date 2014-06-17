@@ -3,7 +3,7 @@
 #include <thread>
 #include <chrono>
 #include "os.hpp"
-#include "systems/json-parser.hpp"
+#include "util/json-parser.hpp"
 #include "systems/transform-system.hpp"
 #include "systems/resource-system.hpp"
 #include "systems/graphics.hpp"
@@ -21,10 +21,10 @@ int main(int argCount, char **argValues) {
 #endif
 
     // Call each system's GetInstance to create the initial instance.
-    trillek::transform::TransformMap::GetInstance();
+    trillek::TransformMap::GetInstance();
     trillek::resource::ResourceMap::GetInstance();
 
-    trillek::json::System jparser;
+    trillek::util::JSONPasrser jparser;
     jparser.Parse("assets/tests/sample.json");
 
     // start the graphic system

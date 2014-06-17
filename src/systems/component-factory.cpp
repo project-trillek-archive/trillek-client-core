@@ -1,16 +1,16 @@
-#include "systems/entity-system.hpp"
+#include "systems/component-factory.hpp"
 
 namespace trillek {
 
-std::once_flag EntityMap::only_one;
-std::shared_ptr<EntityMap> EntityMap::instance = nullptr;
-std::map<std::string, unsigned int> EntityMap::component_type_id;
+std::once_flag ComponentFactory::only_one;
+std::shared_ptr<ComponentFactory> ComponentFactory::instance = nullptr;
+std::map<std::string, unsigned int> ComponentFactory::component_type_id;
 std::map<unsigned int, std::function<std::shared_ptr<ComponentBase>(const unsigned int,
-    const std::vector<Property> &properties)>> EntityMap::factories;
-std::map<unsigned int, std::map<unsigned int, std::shared_ptr<ComponentBase>>> EntityMap::components;
-std::map<unsigned int, SystemBase*> EntityMap::systems;
+    const std::vector<Property> &properties)>> ComponentFactory::factories;
+std::map<unsigned int, std::map<unsigned int, std::shared_ptr<ComponentBase>>> ComponentFactory::components;
+std::map<unsigned int, SystemBase*> ComponentFactory::systems;
 
-bool EntityMap::Serialize(rapidjson::Document& document) {
+bool ComponentFactory::Serialize(rapidjson::Document& document) {
     rapidjson::Value component_node(rapidjson::kObjectType);
 
     document.AddMember("entities", component_node, document.GetAllocator());
@@ -28,7 +28,7 @@ bool EntityMap::Serialize(rapidjson::Document& document) {
 //     }
 //   }
 // }
-bool EntityMap::DeSerialize(rapidjson::Value& node) {
+bool ComponentFactory::Parse(rapidjson::Value& node) {
     if (node.IsObject()) {
         // Iterate over the resrouce types.
         for (auto entity_itr = node.MemberBegin(); entity_itr != node.MemberEnd(); ++entity_itr) {
@@ -47,13 +47,13 @@ bool EntityMap::DeSerialize(rapidjson::Value& node) {
                         props.push_back(Property("entity_id", entity_id));
                         unsigned int component_type_id = GetTypeIDFromName(entity_property_name);
                         if (entity_property_itr->value.IsObject()) {
-                            for (auto component_property_itr = entity_property_itr->value.MemberBegin(); 
+                            for (auto component_property_itr = entity_property_itr->value.MemberBegin();
                                 component_property_itr != entity_property_itr->value.MemberEnd(); ++component_property_itr) {
                                 std::string component_property_name(component_property_itr->name.GetString(),
                                     component_property_itr->name.GetStringLength());
 
                                 if (component_property_itr->value.IsString()) {
-                                    std::string property_value(component_property_itr->value.GetString(), 
+                                    std::string property_value(component_property_itr->value.GetString(),
                                         component_property_itr->value.GetStringLength());
                                     Property p(component_property_name, property_value);
                                     props.push_back(p);

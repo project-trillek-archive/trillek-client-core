@@ -1,18 +1,21 @@
 #include "trillek-game.hpp"
+#include "transform.hpp"
 #include "systems/graphics.hpp"
 #include "systems/resource-system.hpp"
 #include "systems/transform-system.hpp"
 #include "resources/text-file.hpp"
 #include "resources/md5mesh.hpp"
-#include "resources/transform.hpp"
+#include "transform.hpp"
+#include "resources/mesh.hpp"
 #include "graphics/shader.hpp"
 #include "graphics/material.hpp"
-#include "components/renderable.hpp"
+#include "graphics/renderable.hpp"
+#include "graphics/six-dof-camera.hpp"
 
 namespace trillek {
 namespace graphics {
 
-RenderSystem::RenderSystem() : SerializerBase("graphics") {
+RenderSystem::RenderSystem() : Parser("graphics") {
 }
 
 const int* RenderSystem::Start(const unsigned int width, const unsigned int height) {
@@ -25,10 +28,16 @@ const int* RenderSystem::Start(const unsigned int width, const unsigned int heig
 
     SetViewportSize(width, height);
 
-    // Set a default view that is back and up from the center.
-    this->view_matrix = glm::lookAt(glm::vec3(0.0f, -10.0f, 4.0f),
-        glm::vec3(0.0f, 0.0f, 3.0f),
-        glm::vec3(0.0f, 0.0f, 1.0f));
+    // Retrieve the default camera transform, and subscribe to changes to it.
+    event::Dispatcher<Transform>::GetInstance()->Subscribe(0, this);
+
+    // Activate the camera and get the initial view matrix.
+    // TODO: Make camera into a component that is added to an entity.
+    this->camera = std::make_shared<SixDOFCamera>();
+    if (this->camera) {
+        this->camera->Activate(0);
+        this->view_matrix = this->camera->GetViewMatrix();
+    }
 
     // App specific global gl settings
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -43,7 +52,7 @@ bool RenderSystem::Serialize(rapidjson::Document& document) {
     return true;
 }
 
-bool RenderSystem::DeSerialize(rapidjson::Value& node) {
+bool RenderSystem::Parse(rapidjson::Value& node) {
     if(node.IsObject()) {
         // Iterate over types.
         for(auto type_itr = node.MemberBegin(); type_itr != node.MemberEnd(); ++type_itr) {
@@ -117,7 +126,13 @@ void RenderSystem::RunBatch() const {
     }
 }
 
-void RenderSystem::Notify(const unsigned int entity_id, const transform::Transform* transform) {
+void RenderSystem::Notify(const unsigned int entity_id, const Transform* transform) {
+    if (this->camera) {
+        if (entity_id == this->camera->GetEntityID()) {
+            this->view_matrix = this->camera->GetViewMatrix();
+            return;
+        }
+    }
     glm::mat4 model_matrix = glm::translate(transform->GetTranslation()) *
         glm::mat4_cast(transform->GetOrientation()) *
         glm::scale(transform->GetScale());
@@ -163,8 +178,6 @@ void RenderSystem::AddComponent(const unsigned int entity_id, std::shared_ptr<Co
 
     MaterialGroup* matgrp = nullptr;
     // Check if the material for exists based on shader.
-    // If it does make sure each one is using the same material.
-    // TODO: Make material a resource-like element.
     for (auto& mg : this->material_groups) {
         if (mg.material.GetShader() == ren->GetShader()) {
             matgrp = &mg;
@@ -236,10 +249,10 @@ void RenderSystem::AddComponent(const unsigned int entity_id, std::shared_ptr<Co
     }
 
     // Subscribe to transform change events for this entity ID.
-    event::Dispatcher<transform::Transform>::GetInstance()->Subscribe(entity_id, this);
+    event::Dispatcher<Transform>::GetInstance()->Subscribe(entity_id, this);
 
     // We will use the notify method to force the initial model matrix creation.
-    Notify(entity_id, transform::TransformMap::GetTransform(entity_id).get());
+    Notify(entity_id, TransformMap::GetTransform(entity_id).get());
 }
 
 void RenderSystem::RemoveRenderable(const unsigned int entity_id) {

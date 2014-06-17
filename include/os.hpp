@@ -1,5 +1,5 @@
-#ifndef OS_H
-#define OS_H
+#ifndef OS_HPP
+#define OS_HPP
 
 #ifndef __APPLE__
 #include <GL/glew.h>
@@ -13,6 +13,14 @@
 #include <chrono>
 
 namespace trillek {
+
+struct KeyboardEvent {
+    enum KEY_ACTION { KEY_DOWN, KEY_UP, KEY_REPEAT, KEY_CHAR };
+    int key;
+    int scancode;
+    KEY_ACTION action;
+    int mods;
+};
 
 class OS {
 public:

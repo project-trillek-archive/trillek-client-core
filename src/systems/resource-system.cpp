@@ -26,7 +26,7 @@ bool ResourceMap::Serialize(rapidjson::Document& document) {
 //     }
 //   }
 // }
-bool ResourceMap::DeSerialize(rapidjson::Value& node) {
+bool ResourceMap::Parse(rapidjson::Value& node) {
     if (node.IsObject()) {
         // Iterate over the resource types.
         for (auto type_itr = node.MemberBegin(); type_itr != node.MemberEnd(); ++type_itr) {

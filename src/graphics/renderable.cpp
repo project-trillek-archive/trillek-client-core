@@ -1,7 +1,7 @@
-#include "components/renderable.hpp"
 #include "systems/resource-system.hpp"
 #include "trillek-game.hpp"
 #include "resources/mesh.hpp"
+#include "graphics/renderable.hpp"
 #include "graphics/texture.hpp"
 #include "graphics/shader.hpp"
 

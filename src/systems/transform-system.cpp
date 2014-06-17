@@ -1,8 +1,7 @@
 #include "systems/transform-system.hpp"
-#include "resources/transform.hpp"
+#include "transform.hpp"
 
 namespace trillek {
-namespace transform {
 
 std::once_flag TransformMap::only_one;
 std::shared_ptr<TransformMap> TransformMap::instance = nullptr;
@@ -38,22 +37,23 @@ bool TransformMap::Serialize(rapidjson::Document& document) {
         rapidjson::Value translation_element(rapidjson::kObjectType);
         glm::vec3 translation = entity_transform.second->GetTranslation();
         translation_element.AddMember("x", translation.x, document.GetAllocator());
-        translation_element.AddMember("y", translation.x, document.GetAllocator());
-        translation_element.AddMember("z", translation.x, document.GetAllocator());
+        translation_element.AddMember("y", translation.y, document.GetAllocator());
+        translation_element.AddMember("z", translation.z, document.GetAllocator());
         transform_object.AddMember("position", translation_element, document.GetAllocator());
 
         rapidjson::Value rotation_element(rapidjson::kObjectType);
         glm::vec3 rotation = entity_transform.second->GetRotation();
+        rotation_element.AddMember("radians", true, document.GetAllocator());
         rotation_element.AddMember("x", rotation.x, document.GetAllocator());
-        rotation_element.AddMember("y", rotation.x, document.GetAllocator());
-        rotation_element.AddMember("z", rotation.x, document.GetAllocator());
+        rotation_element.AddMember("y", rotation.y, document.GetAllocator());
+        rotation_element.AddMember("z", rotation.z, document.GetAllocator());
         transform_object.AddMember("rotation", rotation_element, document.GetAllocator());
 
         rapidjson::Value scale_element(rapidjson::kObjectType);
         glm::vec3 scale = entity_transform.second->GetScale();
         scale_element.AddMember("x", scale.x, document.GetAllocator());
-        scale_element.AddMember("y", scale.x, document.GetAllocator());
-        scale_element.AddMember("z", scale.x, document.GetAllocator());
+        scale_element.AddMember("y", scale.y, document.GetAllocator());
+        scale_element.AddMember("z", scale.z, document.GetAllocator());
         transform_object.AddMember("scale", scale_element, document.GetAllocator()); 
 
         std::string id = std::to_string(entity_transform.first);
@@ -62,7 +62,7 @@ bool TransformMap::Serialize(rapidjson::Document& document) {
         transform_node.AddMember(entity_id, transform_object, document.GetAllocator());
     }
 
-    document.AddMember("transform", transform_node, document.GetAllocator());
+    document.AddMember("transforms", transform_node, document.GetAllocator());
 
     return true;
 }
@@ -86,7 +86,7 @@ bool TransformMap::Serialize(rapidjson::Document& document) {
 //          }
 //      }
 //  }
-bool TransformMap::DeSerialize(rapidjson::Value& node) {
+bool TransformMap::Parse(rapidjson::Value& node) {
     if (node.IsObject()) {
         // Iterate over the entity ids.
         for (auto entity_itr = node.MemberBegin(); entity_itr != node.MemberEnd(); ++entity_itr) {
@@ -98,13 +98,13 @@ bool TransformMap::DeSerialize(rapidjson::Value& node) {
                     auto& element = entity_itr->value["position"];
 
                     double x = 0.0f, y = 0.0f, z = 0.0f;
-                    if (element.HasMember("x") && element["x"].IsDouble()) {
+                    if (element.HasMember("x") && element["x"].IsNumber()) {
                         x = element["x"].GetDouble();
                     }
-                    if (element.HasMember("y") && element["y"].IsDouble()) {
+                    if (element.HasMember("y") && element["y"].IsNumber()) {
                         y = element["y"].GetDouble();
                     }
-                    if (element.HasMember("z") && element["z"].IsDouble()) {
+                    if (element.HasMember("z") && element["z"].IsNumber()) {
                         z = element["z"].GetDouble();
                     }
 
@@ -113,15 +113,30 @@ bool TransformMap::DeSerialize(rapidjson::Value& node) {
                 if (entity_itr->value.HasMember("rotation")) {
                     auto& element = entity_itr->value["rotation"];
 
+                    bool in_radians = false;
+
+                    if (element.HasMember("radians") && element["radians"].IsBool()) {
+                        in_radians = element["radians"].GetBool();
+                    }
+
                     double x = 0.0f, y = 0.0f, z = 0.0f;
-                    if (element.HasMember("x") && element["x"].IsDouble()) {
+                    if (element.HasMember("x") && element["x"].IsNumber()) {
                         x = element["x"].GetDouble();
+                        if (!in_radians) {
+                            x = glm::radians(x);
+                        }
                     }
-                    if (element.HasMember("y") && element["y"].IsDouble()) {
+                    if (element.HasMember("y") && element["y"].IsNumber()) {
                         y = element["y"].GetDouble();
+                        if (!in_radians) {
+                            y = glm::radians(y);
+                        }
                     }
-                    if (element.HasMember("z") && element["z"].IsDouble()) {
+                    if (element.HasMember("z") && element["z"].IsNumber()) {
                         z = element["z"].GetDouble();
+                        if (!in_radians) {
+                            z = glm::radians(z);
+                        }
                     }
 
                     entity_transform->SetRotation(glm::vec3(x, y, z));
@@ -130,13 +145,13 @@ bool TransformMap::DeSerialize(rapidjson::Value& node) {
                     auto& element = entity_itr->value["scale"];
 
                     double x = 0.0f, y = 0.0f, z = 0.0f;
-                    if (element.HasMember("x") && element["x"].IsDouble()) {
+                    if (element.HasMember("x") && element["x"].IsNumber()) {
                         x = element["x"].GetDouble();
                     }
-                    if (element.HasMember("y") && element["y"].IsDouble()) {
+                    if (element.HasMember("y") && element["y"].IsNumber()) {
                         y = element["y"].GetDouble();
                     }
-                    if (element.HasMember("z") && element["z"].IsDouble()) {
+                    if (element.HasMember("z") && element["z"].IsNumber()) {
                         z = element["z"].GetDouble();
                     }
 
@@ -151,5 +166,4 @@ bool TransformMap::DeSerialize(rapidjson::Value& node) {
     return false;
 }
 
-} // End of transform
 } // End of trillek

@@ -1,5 +1,5 @@
-#ifndef ENTITY_SYSTEM_HPP_INCLUDED
-#define ENTITY_SYSTEM_HPP_INCLUDED
+#ifndef COMMPONENT_FACTORY_HPP_INCLUDED
+#define COMMPONENT_FACTORY_HPP_INCLUDED
 
 #include <string>
 #include <memory>
@@ -9,7 +9,7 @@
 #include "property.hpp"
 #include "trillek.hpp"
 #include "systems/system-base.hpp"
-#include "systems/json-parser.hpp"
+#include "util/json-parser.hpp"
 
 namespace trillek {
 
@@ -28,13 +28,13 @@ public:
 };
 
 // Singleton approach derived from http://silviuardelean.ro/2012/06/05/few-singleton-approaches/ .
-class EntityMap : public json::SerializerBase {
+class ComponentFactory : public util::Parser {
 private:
-    EntityMap() : SerializerBase("entities") { }
-    EntityMap(const EntityMap& right) : SerializerBase("entities") {
+    ComponentFactory() : Parser("entities") { }
+    ComponentFactory(const ComponentFactory& right) : Parser("entities") {
         instance = right.instance;
     }
-    EntityMap& operator=(const EntityMap& right) {
+    ComponentFactory& operator=(const ComponentFactory& right) {
         if (this != &right) {
             instance = right.instance;
         }
@@ -42,27 +42,27 @@ private:
         return *this;
     }
     static std::once_flag only_one;
-    static std::shared_ptr<EntityMap> instance;
+    static std::shared_ptr<ComponentFactory> instance;
 public:
-    static std::shared_ptr<EntityMap> GetInstance() {
-        std::call_once(EntityMap::only_one,
+    static std::shared_ptr<ComponentFactory> GetInstance() {
+        std::call_once(ComponentFactory::only_one,
             [ ] () {
-            EntityMap::instance.reset(new EntityMap());
+            ComponentFactory::instance.reset(new ComponentFactory());
 
                 // Set up the default factory for an unknown type to return false.
                 auto lambda = [ ] (const unsigned int, const std::vector<Property> &properties) {
                     return nullptr;
                 };
 
-                EntityMap::instance->factories[0] = lambda;
+                ComponentFactory::instance->factories[0] = lambda;
 
-                EntityMap::instance->RegisterTypes();
+                ComponentFactory::instance->RegisterTypes();
             }
         );
 
-        return EntityMap::instance;
+        return ComponentFactory::instance;
     }
-    ~EntityMap() { }
+    ~ComponentFactory() { }
 
     /**
      * \brief Register a type to be available for factory calls.
@@ -225,11 +225,11 @@ public:
      */
     static void RegisterTypes();
 
-    // Inherited from SerializeBase
+    // Inherited from Parse
     virtual bool Serialize(rapidjson::Document& document);
 
-    // Inherited from SerializeBase
-    virtual bool DeSerialize(rapidjson::Value& node);
+    // Inherited from Parse
+    virtual bool Parse(rapidjson::Value& node);
 private:
     static std::map<unsigned int, std::map<unsigned int, std::shared_ptr<ComponentBase>>> components; // Mapping of component TypeID to loaded components
     static std::map<unsigned int, SystemBase*> systems; // Mapping of component TypeID to system to add it to

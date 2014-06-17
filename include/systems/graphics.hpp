@@ -12,22 +12,20 @@
 #include "trillek.hpp"
 #include "trillek-scheduler.hpp"
 #include "systems/system-base.hpp"
-#include "systems/json-parser.hpp"
+#include "util/json-parser.hpp"
 #include "graphics/graphics-base.hpp"
 #include "graphics/material.hpp"
 #include <map>
 
 #include "dispatcher.hpp"
 namespace trillek {
-namespace transform {
 
 class Transform;
-
-} // End of transform.
 
 namespace graphics {
 
 class Renderable;
+class CameraBase;
 
 struct MaterialGroup {
     Material material;
@@ -43,17 +41,18 @@ struct MaterialGroup {
     std::list<TextureGroup> texture_groups;
 };
 
-class RenderSystem : public event::Subscriber<transform::Transform>, public SystemBase
-        , public json::SerializerBase {
+class RenderSystem : public SystemBase,
+    public event::Subscriber<Transform>,
+    public util::Parser {
 public:
 
     RenderSystem();
 
-    // Inherited from SerializeBase
+    // Inherited from Parser
     virtual bool Serialize(rapidjson::Document& document);
 
-    // Inherited from SerializeBase
-    virtual bool DeSerialize(rapidjson::Value& node);
+    // Inherited from Parser
+    virtual bool Parse(rapidjson::Value& node);
 
     /**
      * \brief Starts the OpenGL rendering system.
@@ -83,10 +82,10 @@ public:
      * \brief Notification that a transform has changed.
      *
      * \param const unsigned int entity_id ID of the entity to update.
-     * \param const Transform transform The entity's transform.
+     * \param const Transform* transform The entity's transform.
      * \return void
      */
-    void Notify(const unsigned int entity_id, const transform::Transform* transform);
+    void Notify(const unsigned int entity_id, const Transform* transform);
 
     /**
      * \brief Sets the viewport width and height.
@@ -158,6 +157,8 @@ private:
     int gl_version[2];
     glm::mat4 projection_matrix;
     glm::mat4 view_matrix;
+
+    std::shared_ptr<CameraBase> camera;
 
     unsigned int window_width; // Store the width of our window
     unsigned int window_height; // Store the height of our window
