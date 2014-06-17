@@ -1,4 +1,5 @@
 #include "graphics/shader.hpp"
+#include "resources/text-file.hpp"
 #include <iostream>
 #include <fstream>
 
