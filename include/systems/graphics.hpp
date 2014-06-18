@@ -114,9 +114,7 @@ public:
      * prepared and stored temporarily to be retrieved by RunBatch().
      *
      */
-    void HandleEvents(const frame_tp& timepoint) override {
-        // TODO
-    };
+    void HandleEvents(const frame_tp& timepoint) override;
 
     /** \brief Save the data and terminate the system
      *

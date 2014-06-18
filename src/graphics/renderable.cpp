@@ -128,12 +128,12 @@ bool Renderable::Initialize(const std::vector<Property> &properties) {
     }
 
     this->mesh = resource::ResourceMap::Get<resource::Mesh>(mesh_name);
-    if (!mesh) {
+    if (!this->mesh) {
         return false;
     }
 
     this->shader = resource::ResourceMap::Get<graphics::Shader>(shader_name);
-    if (!shader) {
+    if (!this->shader) {
         return false;
     }
 

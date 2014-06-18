@@ -258,6 +258,9 @@ void RenderSystem::RemoveRenderable(const unsigned int entity_id) {
     }
 }
 
+void RenderSystem::HandleEvents(const frame_tp& timepoint) {
+};
+
 void RenderSystem::Terminate() {
     TrillekGame::GetOS().DetachContext();
 }
