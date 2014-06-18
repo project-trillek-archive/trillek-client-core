@@ -9,6 +9,7 @@
 #include "resources/mesh.hpp"
 #include "graphics/shader.hpp"
 #include "graphics/material.hpp"
+#include "graphics/render-layer.hpp"
 #include "graphics/renderable.hpp"
 #include "graphics/six-dof-camera.hpp"
 
@@ -59,7 +60,7 @@ bool RenderSystem::Parse(rapidjson::Value& node) {
             std::string section_type(type_itr->name.GetString(), type_itr->name.GetStringLength());
 
             if(type_itr->value.IsObject()) {
-                if(section_type == "shaders") {
+                if(section_type == reflection::GetTypeName<Shader>()) {
                     for(auto shade_itr = type_itr->value.MemberBegin();
                             shade_itr != type_itr->value.MemberEnd(); shade_itr++) {
                         std::string shader_name(shade_itr->name.GetString(), shade_itr->name.GetStringLength());
@@ -72,7 +73,41 @@ bool RenderSystem::Parse(rapidjson::Value& node) {
                             }
                         }
                         else {
+                            // TODO use logger
                             std::cerr << "[WARNING] Invalid shader entry\n";
+                        }
+                    }
+                }
+                else if(section_type == reflection::GetTypeName<RenderAttachment>()) {
+                    // TODO these sections are basically the same, and could use a more generic parse
+                    for(auto section_itr = type_itr->value.MemberBegin();
+                            section_itr != type_itr->value.MemberEnd(); section_itr++) {
+                        std::string attachment_name(section_itr->name.GetString(), section_itr->name.GetStringLength());
+                        if(section_itr->value.IsObject()) {
+                            std::shared_ptr<RenderAttachment> attachment_ptr(new RenderAttachment);
+                            if(attachment_ptr->Parse(section_itr->value)) {
+                                Add(attachment_name, attachment_ptr);
+                            }
+                        }
+                        else {
+                            // TODO use logger
+                            std::cerr << "[WARNING] Invalid attachment entry\n";
+                        }
+                    }
+                }
+                else if(section_type == reflection::GetTypeName<RenderLayer>()) {
+                    for(auto section_itr = type_itr->value.MemberBegin();
+                            section_itr != type_itr->value.MemberEnd(); section_itr++) {
+                        std::string layer_name(section_itr->name.GetString(), section_itr->name.GetStringLength());
+                        if(section_itr->value.IsObject()) {
+                            std::shared_ptr<RenderLayer> layer_ptr(new RenderLayer);
+                            if(layer_ptr->Parse(section_itr->value)) {
+                                Add(layer_name, layer_ptr);
+                            }
+                        }
+                        else {
+                            // TODO use logger
+                            std::cerr << "[WARNING] Invalid render layer entry\n";
                         }
                     }
                 }

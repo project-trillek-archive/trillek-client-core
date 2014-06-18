@@ -103,6 +103,7 @@ file(GLOB TCCExtra_SRC
 "${TCCSRC}/resources/mesh.cpp"
 "${TCCSRC}/graphics/renderable.cpp"
 "${TCCSRC}/graphics/shader.cpp"
+"${TCCSRC}/graphics/render-layer.cpp"
 "${TCCSRC}/graphics/material.cpp"
 "${TCCSRC}/graphics/texture.cpp"
 "${TCCSRC}/transform.cpp"

@@ -24,6 +24,11 @@ public:
     RenderAttachment(RenderAttachment &&that);
     RenderAttachment& operator=(RenderAttachment &&that);
 
+    /**
+     * \brief parse a RenderAttachment from json
+     * \return false on errors, true for success
+     */
+    bool Parse(rapidjson::Value& node);
 private:
     GLuint renderbuf;
     bool multisample;

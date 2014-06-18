@@ -33,6 +33,10 @@ RenderAttachment& RenderAttachment::operator=(RenderAttachment &&that) {
     return *this;
 }
 
+bool RenderAttachment::Parse(rapidjson::Value& node) {
+    return true;
+}
+
 RenderLayer::RenderLayer() {
     fbo_id = 0;
 }

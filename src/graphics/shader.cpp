@@ -29,8 +29,14 @@ void Shader::SetOutputBinding(ShaderOutputType outtype) {
     if(program == 0) {
         program = glCreateProgram();
     }
+    if(output_bindings.size() > 0 && outtype == ShaderOutputType::DEFAULT_TARGETS) {
+        for(auto bindpair : output_bindings) {
+            glBindFragDataLocation(program, bindpair.second, bindpair.first.c_str());
+        }
+        return;
+    }
     switch(outtype) {
-    case ShaderOutputType::DEFAULT_3TARGET:
+    case ShaderOutputType::DEFAULT_TARGETS:
     default:
         // Setup output for multiple render targets
         glBindFragDataLocation(program, 0, "out_Color");
@@ -43,7 +49,7 @@ void Shader::SetOutputBinding(ShaderOutputType outtype) {
 bool Shader::LinkProgram() {
     if(program == 0) {
         program = glCreateProgram();
-        SetOutputBinding(ShaderOutputType::DEFAULT_3TARGET);
+        SetOutputBinding(ShaderOutputType::DEFAULT_TARGETS);
     }
 
     // attach all shaders
@@ -179,6 +185,22 @@ bool Shader::Parse(const std::string &shader_name, rapidjson::Value& node) {
                         // invalid
                         // TODO use a logger
                         std::cerr << "[ERROR] Invalid shader define\n";
+                        return false;
+                    }
+                }
+            }
+            else if(param_name == "colorbinding") {
+                for(auto sdef_itr = shade_param_itr->value.MemberBegin();
+                        sdef_itr != shade_param_itr->value.MemberEnd(); sdef_itr++) {
+                    std::string bind_name(sdef_itr->name.GetString(), sdef_itr->name.GetStringLength());
+                    if(sdef_itr->value.IsUint()) {
+                        GLuint bindid = sdef_itr->value.GetUint();
+                        output_bindings.push_back(std::pair<std::string, GLuint>(bind_name, bindid));
+                    }
+                    else {
+                        // invalid
+                        // TODO use a logger
+                        std::cerr << "[ERROR] Invalid output definition\n";
                         return false;
                     }
                 }

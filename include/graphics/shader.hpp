@@ -21,7 +21,7 @@ enum ShaderType : GLenum {
 };
 
 enum class ShaderOutputType {
-    DEFAULT_3TARGET
+    DEFAULT_TARGETS
 };
 
 class Shader : public GraphicsBase {
@@ -58,6 +58,7 @@ public:
 private:
     GLuint program;
     std::vector<GLuint> shaders;
+    std::vector<std::pair<std::string, GLuint>> output_bindings;
     std::map<std::string, GLuint> attributes_list;
     std::map<std::string, GLuint> uniforms_list;
 };
@@ -66,7 +67,7 @@ private:
 
 namespace reflection {
 
-template <> inline const char* GetTypeName<graphics::Shader>() { return "shader"; }
+template <> inline const char* GetTypeName<graphics::Shader>() { return "shaders"; }
 template <> inline const unsigned int GetTypeID<graphics::Shader>() { return 401; }
 
 } // namespace reflection
