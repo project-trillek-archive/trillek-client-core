@@ -9,6 +9,7 @@
 #include "graphics/material.hpp"
 #include "graphics/renderable.hpp"
 #include "graphics/six-dof-camera.hpp"
+#include "graphics/animation.hpp"
 
 namespace trillek {
 namespace graphics {
@@ -69,8 +70,18 @@ void RenderSystem::RunBatch() const {
                 glBindVertexArray(bufgrp->vao);
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufgrp->ibo);
 
+                static GLint temp;
                 for (unsigned int entity_id : rengrp.instances) {
                     glUniformMatrix4fv((*shader)("model"), 1, GL_FALSE, &this->model_matrices.at(entity_id)[0][0]);
+                    if (rengrp.animations.find(entity_id) != rengrp.animations.end()) {
+                        temp = 1;
+                        glUniform1iv((*shader)("animated"), 1, &temp);
+                        glUniformMatrix4fv((*shader)("animation_matrix"), rengrp.animations.at(entity_id)->animation_matricies.size(), GL_FALSE, &rengrp.animations.at(entity_id)->animation_matricies[0][0][0]);
+                    }
+                    else {
+                        temp = 0;
+                        glUniform1iv((*shader)("animated"), 1, &temp);
+                    }
                     glDrawElements(GL_TRIANGLES, bufgrp->ibo_count, GL_UNSIGNED_INT, 0);
                 }
             }
@@ -154,6 +165,8 @@ void RenderSystem::AddComponent(const unsigned int entity_id, std::shared_ptr<Co
         shader->AddUniform("view");
         shader->AddUniform("projection");
         shader->AddUniform("model");
+        shader->AddUniform("animation_matrix");
+        shader->AddUniform("animated");
         shader->UnUse();
     }
 
@@ -195,12 +208,19 @@ void RenderSystem::AddComponent(const unsigned int entity_id, std::shared_ptr<Co
             if ((ren_grp_itr.renderable->GetMesh() == ren->GetMesh()) && (ren_grp_itr.buffer_group_index == i)) {
                 rengrp = &ren_grp_itr;
                 rengrp->instances.push_back(entity_id);
+                if (ren->GetAnimation()) {
+                    rengrp->animations[entity_id] = ren->GetAnimation();
+                }
                 break;
             }
         }
         if (rengrp == nullptr) {
             MaterialGroup::TextureGroup::RenderableGroup temp;
             temp.renderable = ren;
+            if (ren->GetAnimation()) {
+                temp.animations[entity_id] = ren->GetAnimation();
+            }
+
             temp.buffer_group_index = i;
             temp.instances.push_back(entity_id);
 
@@ -259,6 +279,14 @@ void RenderSystem::RemoveRenderable(const unsigned int entity_id) {
 }
 
 void RenderSystem::HandleEvents(const frame_tp& timepoint) {
+    static frame_tp last_tp;
+    std::chrono::duration<float> delta = timepoint - last_tp;
+    last_tp = timepoint;
+    for (auto ren : this->renderables) {
+        if (ren.second->GetAnimation()) {
+            ren.second->GetAnimation()->UpdateAnimation(delta.count());
+        }
+    }
 };
 
 void RenderSystem::Terminate() {

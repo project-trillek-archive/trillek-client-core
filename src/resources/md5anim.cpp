@@ -234,8 +234,7 @@ void MD5Anim::BuildFrameSkeleton(size_t frame_index) {
 
         skeleton_joint.ComputeW();
 
-        if (skeleton_joint.parent >= 0) // Has a parent joint
-        {
+        if (skeleton_joint.parent >= 0) {
             const auto& parent_joint = frame->skeleton.skeleton_joints[skeleton_joint.parent];
             glm::vec3 rotPos = parent_joint.orientation * skeleton_joint.position;
 
