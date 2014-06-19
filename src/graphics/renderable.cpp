@@ -1,7 +1,9 @@
 #include "graphics/renderable.hpp"
 #include "graphics/shader.hpp"
 #include "graphics/texture.hpp"
+#include "graphics/animation.hpp"
 #include "resources/mesh.hpp"
+#include "resources/md5anim.hpp"
 #include "systems/resource-system.hpp"
 
 namespace trillek {
@@ -83,6 +85,16 @@ void Renderable::UpdateBufferGroups() {
                 glVertexAttribPointer(uvLocation, 2, GL_FLOAT, GL_FALSE, sizeof(resource::VertexData),
                     (GLvoid*)offsetof(resource::VertexData, uv)); // Tell the VAO the vertex data will be stored at the location we just found.
                 glEnableVertexAttribArray(uvLocation); // Enable the VAO line for vertex data.
+
+                GLuint boneIndexLocation = glGetAttribLocation(shader_program, "boneIndex");
+                glVertexAttribIPointer(boneIndexLocation, 4, GL_UNSIGNED_INT, sizeof(resource::VertexData),
+                    (GLvoid*)offsetof(resource::VertexData, bone_indicies)); // Tell the VAO the vertex data will be stored at the location we just found.
+                glEnableVertexAttribArray(boneIndexLocation); // Enable the VAO line for vertex data.
+
+                GLuint boneWeightLocation = glGetAttribLocation(shader_program, "boneWeight");
+                glVertexAttribPointer(boneWeightLocation, 4, GL_FLOAT, GL_FALSE, sizeof(resource::VertexData),
+                    (GLvoid*)offsetof(resource::VertexData, bone_weights)); // Tell the VAO the vertex data will be stored at the location we just found.
+                glEnableVertexAttribArray(boneWeightLocation); // Enable the VAO line for vertex data.
             }
 
             if (temp_meshgroup->indicies.size() > 0) {
@@ -114,9 +126,18 @@ std::shared_ptr<Shader> Renderable::GetShader() const {
     return this->shader;
 }
 
+void Renderable::SetAnimation(std::shared_ptr<Animation> a) {
+    this->animation = a;
+}
+
+std::shared_ptr<Animation> Renderable::GetAnimation() const {
+    return this->animation;
+}
+
 bool Renderable::Initialize(const std::vector<Property> &properties) {
     std::string mesh_name;
     std::string shader_name;
+    std::string animation_name;
     for (const Property& p : properties) {
         std::string name = p.GetName();
         if (name == "mesh") {
@@ -124,6 +145,9 @@ bool Renderable::Initialize(const std::vector<Property> &properties) {
         }
         else if (name == "shader") {
             shader_name = p.Get<std::string>();
+        }
+        else if (name == "animation") {
+            animation_name = p.Get<std::string>();
         }
     }
 
@@ -135,6 +159,18 @@ bool Renderable::Initialize(const std::vector<Property> &properties) {
     this->shader = resource::ResourceMap::Get<graphics::Shader>(shader_name);
     if (!this->shader) {
         return false;
+    }
+
+    auto animation_file = resource::ResourceMap::Get<resource::MD5Anim>(animation_name);
+    if (animation_file) {
+        // Make sure the mesh is valid for the animation file.
+        if (animation_file->CheckMesh(this->mesh)) {
+            this->animation = std::make_shared<Animation>();
+            this->animation->SetAnimationFile(animation_file);
+        }
+        else {
+            return false;
+        }
     }
 
     UpdateBufferGroups();
