@@ -17,6 +17,7 @@ namespace trillek {
 namespace graphics {
 
 RenderSystem::RenderSystem() : Parser("graphics") {
+    Shader::InitializeTypes();
 }
 
 const int* RenderSystem::Start(const unsigned int width, const unsigned int height) {

@@ -14,6 +14,22 @@ Shader::~Shader() {
     DeleteProgram();
 }
 
+std::once_flag Shader::types_once;
+std::map<std::string, ShaderType> Shader::shaderclass;
+
+void Shader::InitializeTypes() {
+    std::call_once(Shader::types_once,
+        [ ] () {
+        Shader::shaderclass["vertex"] = VERTEX_SHADER;
+        Shader::shaderclass["fragment"] = FRAGMENT_SHADER;
+        Shader::shaderclass["geometry"] = GEOMETRY_SHADER;
+        Shader::shaderclass["tess-cntl"] = TESS_CONTROL_SHADER;
+        Shader::shaderclass["tess-eval"] = TESS_EVAL_SHADER;
+        Shader::shaderclass["compute"] = COMPUTE_SHADER;
+
+    });
+}
+
 void Shader::DeleteProgram() {
     if(program != 0) {
         glDeleteProgram(program);
@@ -115,78 +131,122 @@ GLuint Shader::GetProgram() {
     return program;
 }
 
+bool Shader::ParseDefines(std::string &defstring, rapidjson::Value& node) {
+    for(auto sdef_itr = node.MemberBegin();
+            sdef_itr != node.MemberEnd(); sdef_itr++) {
+        std::string define_name(sdef_itr->name.GetString(), sdef_itr->name.GetStringLength());
+        if(sdef_itr->value.IsNumber()) {
+            std::string define_val(sdef_itr->name.GetString(), sdef_itr->name.GetStringLength());
+            // add a valued define
+            defstring.append("#define ").append(define_name);
+            defstring.append(" ").append(define_val).append("\n");
+        }
+        else if(sdef_itr->value.IsNull()) {
+            // add a blank define
+            defstring.append("#define ").append(define_name).append("\n");
+        }
+        else {
+            // invalid
+            // TODO use a logger
+            std::cerr << "[ERROR] Invalid shader define\n";
+            return false;
+        }
+    }
+    return true;
+}
+
 bool Shader::Parse(const std::string &shader_name, rapidjson::Value& node) {
+    std::string globdefines;
 
     for(auto shade_param_itr = node.MemberBegin();
             shade_param_itr != node.MemberEnd(); shade_param_itr++) {
         std::string param_name(shade_param_itr->name.GetString(), shade_param_itr->name.GetStringLength());
         if(shade_param_itr->value.IsString()) {
             std::string param_val(shade_param_itr->value.GetString(), shade_param_itr->value.GetStringLength());
-            if(param_name == "vertex") {
-                // get source text
+
+            auto param_scan = Shader::shaderclass.find(param_name);
+            if(param_scan != Shader::shaderclass.end()) {
                 auto textdata = resource::ResourceMap::Get<resource::TextFile>(param_val);
                 if(textdata) {
-                    LoadFromString(VERTEX_SHADER, textdata->GetText());
-                }
-            }
-            else if(param_name == "fragment") {
-                // get source text
-                auto textdata = resource::ResourceMap::Get<resource::TextFile>(param_val);
-                if(textdata) {
-                    LoadFromString(FRAGMENT_SHADER, textdata->GetText());
-                }
-            }
-            else if(param_name == "geometry") {
-                // should check for GL 3.2+
-                // get source text
-                auto textdata = resource::ResourceMap::Get<resource::TextFile>(param_val);
-                if(textdata) {
-                    LoadFromString(GEOMETRY_SHADER, textdata->GetText());
-                }
-            }
-            else if(param_name == "tess-cntl") {
-                // TODO check for GL 4.0+
-                // get source text
-                auto textdata = resource::ResourceMap::Get<resource::TextFile>(param_val);
-                if(textdata) {
-                    LoadFromString(TESS_CONTROL_SHADER, textdata->GetText());
-                }
-            }
-            else if(param_name == "tess-eval") {
-                // TODO check for GL 4.0+
-                // get source text
-                auto textdata = resource::ResourceMap::Get<resource::TextFile>(param_val);
-                if(textdata) {
-                    LoadFromString(TESS_EVAL_SHADER, textdata->GetText());
-                }
-            }
-            else if(param_name == "compute") {
-                // TODO check for GL 4.4+
-                // get source text
-                auto textdata = resource::ResourceMap::Get<resource::TextFile>(param_val);
-                if(textdata) {
-                    LoadFromString(COMPUTE_SHADER, textdata->GetText());
+                    std::vector<std::string> shadersrc;
+                    shadersrc.push_back(globdefines);
+                    shadersrc.push_back(textdata->GetText());
+                    LoadFromStrings(param_scan->second, shadersrc);
                 }
             }
         }
         else if(shade_param_itr->value.IsObject()) {
-            if(param_name == "define") {
+            auto param_scan = Shader::shaderclass.find(param_name);
+            if(param_scan != Shader::shaderclass.end()) {
+                // scan sections
+                std::string sectiondefines;
+                std::string shadertext;
                 for(auto sdef_itr = shade_param_itr->value.MemberBegin();
                         sdef_itr != shade_param_itr->value.MemberEnd(); sdef_itr++) {
-                    std::string define_name(sdef_itr->name.GetString(), sdef_itr->name.GetStringLength());
-                    if(sdef_itr->value.IsString()) {
-                        std::string define_val(sdef_itr->name.GetString(), sdef_itr->name.GetStringLength());
-                        // add a valued define
+                    std::string ssec_name(sdef_itr->name.GetString(), sdef_itr->name.GetStringLength());
+                    if(ssec_name == "define") {
+                        if(sdef_itr->value.IsObject()) {
+                            if(!ParseDefines(sectiondefines, sdef_itr->value)) {
+                                return false;
+                            }
+                        }
+                        else {
+                            // TODO use a logger
+                            std::cerr << "[ERROR] Invalid define section\n";
+                        }
                     }
-                    else if(sdef_itr->value.IsNull()) {
-                        // add a blank define
+                    else if(ssec_name == "src" || ssec_name == "source") {
+                        if(sdef_itr->value.IsString()) {
+                            std::string ssec_val(sdef_itr->value.GetString(), sdef_itr->value.GetStringLength());
+                            auto textdata = resource::ResourceMap::Get<resource::TextFile>(ssec_val);
+                            if(textdata) {
+                                shadertext = textdata->GetText();
+                            }
+                            else {
+                                // TODO use a logger
+                                std::cerr << "[WARNING] Shader source not loaded\n";
+                            }
+                        }
+                        else {
+                            // TODO use a logger
+                            std::cerr << "[ERROR] Invalid source section\n";
+                        }
                     }
-                    else {
-                        // invalid
-                        // TODO use a logger
-                        std::cerr << "[ERROR] Invalid shader define\n";
-                        return false;
+                    else if(ssec_name == "src-file" || ssec_name == "filename") {
+                        if(sdef_itr->value.IsString()) {
+                            std::string ssec_val(sdef_itr->value.GetString(), sdef_itr->value.GetStringLength());
+                            std::vector<Property> fileprop;
+                            fileprop.push_back(Property("filename", ssec_val));
+                            resource::TextFile textdata;
+                            if(textdata.Initialize(fileprop)) {
+                                shadertext = textdata.GetText();
+                            }
+                            else {
+                                // TODO use a logger
+                                std::cerr << "[WARNING] Shader source not loaded\n";
+                            }
+                        }
+                        else {
+                            // TODO use a logger
+                            std::cerr << "[ERROR] Invalid source section\n";
+                        }
                     }
+                }
+                if(shadertext.length() > 0) {
+                    std::vector<std::string> shadersrc;
+                    shadersrc.push_back(globdefines);
+                    shadersrc.push_back(sectiondefines);
+                    shadersrc.push_back(shadertext);
+                    LoadFromStrings(param_scan->second, shadersrc);
+                }
+                else {
+                    // TODO use a logger
+                    std::cerr << "[WARNING] Empty shader definition\n";
+                }
+            }
+            else if(param_name == "define") {
+                if(!ParseDefines(globdefines, shade_param_itr->value)) {
+                    return false;
                 }
             }
             else if(param_name == "colorbinding") {
@@ -212,6 +272,38 @@ bool Shader::Parse(const std::string &shader_name, rapidjson::Value& node) {
         }
     }
     return true;
+}
+
+void Shader::LoadFromStrings(ShaderType type, const std::vector<std::string> &source) {
+    GLuint shader = glCreateShader(type);
+
+    if(source.size() < 1) {
+        return;
+    }
+    GLint *slen = new GLint[source.size()];
+    const GLchar **sstr = new const GLchar*[source.size()];
+    unsigned int i, sz;
+    for(i = 0, sz = source.size(); i < sz; i++) {
+        slen[i] = source[i].length();
+        sstr[i] = source[i].c_str();
+    }
+    glShaderSource(shader, sz, sstr, slen);
+    delete slen;
+    delete sstr;
+
+    // check if the shader compiles
+    GLint status;
+    glCompileShader(shader);
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
+    if(status == GL_FALSE) {
+        GLint log_length;
+        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &log_length);
+        GLchar *info_log = new GLchar[log_length];
+        glGetShaderInfoLog(shader, log_length, NULL, info_log);
+        std::cerr << "Shader Compile: " << info_log << '\n';
+        delete[] info_log;
+    }
+    shaders.push_back(shader);
 }
 
 void Shader::LoadFromString(ShaderType type, const std::string &source) {

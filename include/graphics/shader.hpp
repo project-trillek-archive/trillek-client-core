@@ -5,6 +5,8 @@
 
 #include <map>
 #include <string>
+#include <vector>
+#include <atomic>
 #include "systems/resource-system.hpp"
 #include "graphics-base.hpp"
 
@@ -34,7 +36,9 @@ public:
      * \return false on errors, true for success
      */
     bool Parse(const std::string &shader_name, rapidjson::Value& node);
+    bool ParseDefines(std::string &defstring, rapidjson::Value& node);
     void LoadFromString(ShaderType whichShader, const std::string & source);
+    void LoadFromStrings(ShaderType whichShader, const std::vector<std::string> & source);
     void LoadFromFile(ShaderType whichShader, const std::string & filename);
     void SetOutputBinding(ShaderOutputType);
 
@@ -55,12 +59,17 @@ public:
     //Program deletion
     void DeleteProgram();
     bool isLoaded() { return program != 0; }
+
+    static void InitializeTypes();
 private:
     GLuint program;
     std::vector<GLuint> shaders;
     std::vector<std::pair<std::string, GLuint>> output_bindings;
     std::map<std::string, GLuint> attributes_list;
     std::map<std::string, GLuint> uniforms_list;
+
+    static std::once_flag types_once;
+    static std::map<std::string, ShaderType> shaderclass;
 };
 
 } // End of graphics

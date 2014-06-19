@@ -152,7 +152,7 @@ public:
         graphics_instances[type_id][instancename] = instanceptr;
     }
 private:
-    bool ParseShader(const std::string &shader_name, rapidjson::Value& node);
+//	bool ParseShader(const std::string &shader_name, rapidjson::Value& node);
 
     int gl_version[2];
     glm::mat4 projection_matrix;
