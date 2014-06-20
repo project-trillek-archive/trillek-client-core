@@ -16,6 +16,8 @@ struct VertexData {
     glm::vec4 color;
     glm::vec3 normal;
     glm::vec2 uv;
+    glm::vec4 bone_weights; // Used for animation.
+    glm::uvec4 bone_indicies; // Used for animation.
 };
 
 // Container for holding sub-mesh groups.

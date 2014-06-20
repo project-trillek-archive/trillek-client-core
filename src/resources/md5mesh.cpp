@@ -4,6 +4,9 @@
 #include <memory>
 #include <sstream>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 namespace trillek {
 namespace resource {
 
@@ -62,6 +65,13 @@ MD5Mesh::Joint ParseJoint(std::stringstream& ss) {
     ss >> j.position[0]; ss >> j.position[1]; ss >> j.position[2];
     ss >> j.orientation[0]; ss >> j.orientation[1]; ss >> j.orientation[2];
     j.ComputeW();
+
+    glm::mat4x4 boneTranslation = glm::translate(glm::mat4(1.0f), j.position);
+    glm::mat4x4 boneRotation = glm::toMat4(j.orientation);
+
+    j.bind_pose = (boneTranslation * boneRotation);
+    j.bind_pose_inverse = glm::inverse(j.bind_pose);
+
     return j;
 }
 
@@ -252,6 +262,8 @@ void MD5Mesh::CalculateVertexPositions() {
 
                 /* the sum of all weight->bias should be 1.0 */
                 vdata.position += (this->joints[weight.joint]->position + wv) * weight.bias;
+                vdata.bone_indicies[k] = weight.joint;
+                vdata.bone_weights[k] = weight.bias;
             }
 
             // Cache the calculated position for later

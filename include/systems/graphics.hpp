@@ -24,6 +24,7 @@ namespace graphics {
 
 class Renderable;
 class CameraBase;
+class Animation;
 
 struct MaterialGroup {
     Material material;
@@ -31,6 +32,7 @@ struct MaterialGroup {
         std::vector<size_t> texture_indicies;
         struct RenderableGroup {
             std::shared_ptr<Renderable> renderable;
+            std::map<unsigned int, std::shared_ptr<Animation>> animations;
             std::list<unsigned int> instances;
             size_t buffer_group_index;
         };
@@ -114,9 +116,7 @@ public:
      * prepared and stored temporarily to be retrieved by RunBatch().
      *
      */
-    void HandleEvents(const frame_tp& timepoint) override {
-        // TODO
-    };
+    void HandleEvents(const frame_tp& timepoint) override;
 
     /** \brief Save the data and terminate the system
      *
