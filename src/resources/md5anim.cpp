@@ -6,7 +6,7 @@
 #include <glm/gtx/compatibility.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "resources/MD5Mesh.hpp"
+#include "resources/md5mesh.hpp"
 
 namespace trillek {
 namespace resource {

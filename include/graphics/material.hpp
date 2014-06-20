@@ -61,6 +61,14 @@ public:
      * \return void
      */
     void ActivateTexture(const size_t index, const GLuint target);
+
+    /**
+    * \brief Deactivates the specified texture unit.
+    *
+    * \param GLuint target Target texture unit to deactivate.
+    * \return void
+    */
+    void DeactivateTexture(const GLuint target);
 private:
     // Stores a mapping of texture to GL texture ID.
     // During rendering a change is done via the vector index.

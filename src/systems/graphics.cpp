@@ -85,6 +85,9 @@ void RenderSystem::RunBatch() const {
                     glDrawElements(GL_TRIANGLES, bufgrp->ibo_count, GL_UNSIGNED_INT, 0);
                 }
             }
+            for (size_t tex_index = 0; tex_index < texgrp.texture_indicies.size(); ++tex_index) {
+                matgrp.material.DeactivateTexture(tex_index);
+            }
         }
     }
     TrillekGame::GetOS().SwapBuffers();

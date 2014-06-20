@@ -43,5 +43,10 @@ void Material::ActivateTexture(const size_t index, const GLuint target) {
     }
 }
 
+void Material::DeactivateTexture(const GLuint target) {
+    glActiveTexture(GL_TEXTURE0 + target);
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
 } // End of graphics
 } // End of trillek
