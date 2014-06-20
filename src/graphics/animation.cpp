@@ -10,7 +10,7 @@ namespace trillek {
 namespace graphics {
 
 void Animation::UpdateAnimation(const float delta) {
-    if (frame_count < 1) {
+    if (this->frame_count < 1) {
         return;
     }
 

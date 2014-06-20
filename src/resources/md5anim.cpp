@@ -48,21 +48,6 @@ void MD5Anim::SkeletonJoint::ComputeW() {
 */
 extern std::string CleanString(std::string str);
 
-/**
-* \brief Parses a joint line.
-
-* \param[in] std::stringstream& ss The stream that contains the joint to parse.
-* \return The parsed joint or a default one if the parsing failed.
-*/
-MD5Anim::Joint ParseJoint(std::stringstream& ss) {
-    MD5Anim::Joint joint;
-    ss >> joint.name;
-    ss >> joint.parent;
-    ss >> joint.flags;
-    ss >> joint.start_index;
-    return joint;
-}
-
 bool MD5Anim::Initialize(const std::vector<Property> &properties) {
     for (const Property& p : properties) {
         std::string name = p.GetName();
@@ -123,7 +108,11 @@ bool MD5Anim::Parse() {
             while (std::getline(f, line)) {
                 if (line.find("\"") != std::string::npos) {
                     ss.str(CleanString(line));
-                    std::unique_ptr<Joint> bone(new Joint(ParseJoint(ss)));
+                    std::unique_ptr<Joint> bone(new Joint());
+                    ss >> bone->name;
+                    ss >> bone->parent;
+                    ss >> bone->flags;
+                    ss >> bone->start_index;
                     this->joints.push_back(std::move(bone));
                 }
                 // Check if the line contained the closing brace. This is done after parsing
