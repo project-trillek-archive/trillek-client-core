@@ -68,27 +68,32 @@ System::~System() {
     alureShutdownDevice();
 }
 
-std::shared_ptr<Sound> System::CreateSoundFromFile(const std::string& file_name) {
-    std::shared_ptr<Sound> sound(new Sound);
+std::shared_ptr<Sound> System::GetSound(const std::string& id) {
+    if(sounds.find(id) != sounds.end()) {
+        std::shared_ptr<Sound> sound(new Sound);
+        alGenSources(1, &sound->src);
 
-    alGenSources(1, &sound->src);
+        if(alGetError() != AL_NO_ERROR) {
+            std::cout << "Failed to create OpenAL source for sound: " << id << std::endl;
+            return nullptr;
+        }
 
-    if(alGetError() != AL_NO_ERROR) {
-        std::cout << "Failed to create OpenAL source." << std::endl;
-        return 0;
+        // create openal buffer from source
+        sound->buff = alureCreateBufferFromFile(sounds[id]->src.c_str());
+
+        if(sound->buff  == 0) {
+            std::cout << "Could not load: " << sound->buff << " : " << alureGetErrorString() << std::endl;
+            return nullptr;
+        }
+
+        alSourcei(sound->src, AL_BUFFER, sound->buff);
+        alSourcei(sound->src, AL_LOOPING, sounds[id]->loop);
+        alSourcef(sound->src, AL_GAIN, sounds[id]->volume);
+        alSourcei(sound->src, AL_SOURCE_RELATIVE, !sounds[id]->spatial);
+
+        return sound;
     }
-
-    sound->buff = alureCreateBufferFromFile(file_name.c_str());
-
-    if(sound->buff == 0) {
-        std::cout << "Could not load: " << file_name << " : " << alureGetErrorString() << std::endl;
-        alDeleteSources(1, &sound->src);
-        return 0;
-    }
-
-    alSourcei(sound->src, AL_BUFFER, sound->buff);
-
-    return sound;
+    return nullptr;
 }
 
 void System::Update() {
@@ -108,6 +113,49 @@ void System::SetListenerOrientation(glm::vec3 at, glm::vec3 up) {
     alListenerfv(AL_ORIENTATION, orientation);
 }
 
+bool System::Serialize(rapidjson::Document& document) {
+
+}
+
+bool System::DeSerialize(rapidjson::Value& node) {
+    if(node.IsArray()) {
+
+        for(auto sound_itr = node.Begin(); sound_itr != node.End(); sound_itr ++) {
+
+            if(sound_itr->IsObject()) {
+                auto& element = (*sound_itr);
+
+                std::shared_ptr<sound_info> sinfo = std::shared_ptr<sound_info>(new sound_info());
+
+                if(element.HasMember("id") && element["id"].IsString()) {
+                    sinfo->id = element["id"].GetString();
+                }
+
+                if(element.HasMember("src") && element["src"].IsString()) {
+                    sinfo->src = element["src"].GetString();
+                }
+
+                if(element.HasMember("loop") && element["loop"].IsBool()) {
+                    sinfo->loop = element["loop"].GetBool();
+                }
+
+                if(element.HasMember("volume") && element["volume"].IsNumber()) {
+                    sinfo->volume = element["volume"].GetDouble();
+                }
+
+                if(element.HasMember("spatial") && element["spatial"].IsBool()) {
+                    sinfo->spatial = element["spatial"].GetBool();
+                }
+
+                // store sound info
+                sounds[sinfo->id] = sinfo;
+
+            }
+
+        }
+
+    }
+}
 
 } // end of namespace sound
 } // end of namespace trillek

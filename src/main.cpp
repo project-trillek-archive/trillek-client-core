@@ -21,14 +21,14 @@ int main(int argCount, char** argValues) {
     trillek::resource::System::GetInstance();
 
     trillek::json::System jparser;
-    jparser.Parse("assets/tests/sample.json");
+    //jparser.Parse("assets/tests/sample.json");
+    jparser.Parse("assets/settings/audio.json");
 
     std::shared_ptr<trillek::sound::System> soundsystem = trillek::sound::System::GetInstance();
     soundsystem->SetListenerPosition(glm::vec3(0, 0, 0));
     soundsystem->SetListenerOrientation(glm::vec3(0, 0, -1), glm::vec3(0, 1, 0));
 
-    // needs to be a mono sound for 3d effects to work
-    std::shared_ptr<trillek::sound::Sound> s1 = soundsystem->CreateSoundFromFile("tnt_mono.ogg");
+    std::shared_ptr<trillek::sound::Sound> s1 = soundsystem->GetSound("music_track_1");
     s1->Play();
 
     trillek::graphics::System gl;

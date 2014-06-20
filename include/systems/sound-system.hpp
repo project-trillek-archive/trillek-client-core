@@ -7,6 +7,9 @@
 #include "AL/alure.h"
 #include "glm/glm.hpp"
 #include <iostream>
+#include <unordered_map>
+
+#include "systems/json-parser.hpp"
 
 namespace trillek {
 namespace sound {
@@ -79,10 +82,11 @@ public:
     ALuint src, buff; /// OpenAL source and buffer object
 }; // end of class Sound
 
-class System {
+
+class System : public json::SerializerBase {
 private:
-    System() { }
-    System(const System& right) {
+    System() : SerializerBase("sounds") { }
+    System(const System& right) : SerializerBase("sounds") {
         instance = right.instance;
     }
     System& operator=(const System& right) {
@@ -111,13 +115,13 @@ public:
 
     ~System();
 
-    /** \brief Creates a sound object from a file
+    /** \brief Creates and returns a Sound if successful
      *
-     * \param file_name const std::string&
+     * \param id const std::string&
      * \return std::shared_ptr<Sound>
      *
      */
-    std::shared_ptr<Sound> CreateSoundFromFile(const std::string& file_name);
+    std::shared_ptr<Sound> GetSound(const std::string& id);
 
     void Update();
 
@@ -145,6 +149,24 @@ public:
      *
      */
     void SetListenerOrientation(glm::vec3 at, glm::vec3 up);
+
+    // Inherited from SerializeBase
+    virtual bool Serialize(rapidjson::Document& document);
+
+    // Inherited from SerializeBase
+    virtual bool DeSerialize(rapidjson::Value& node);
+
+private:
+    struct sound_info{
+        sound_info() : id("") , src(""), loop(false), spatial(false), volume(1.0) {};
+        std::string id, src;
+        bool loop, spatial;
+        double volume;
+    };
+
+
+    std::unordered_map<std::string, std::shared_ptr<sound_info>> sounds;
+
 }; // end of class System
 
 } // end of namespace sound

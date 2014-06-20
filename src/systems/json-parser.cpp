@@ -17,7 +17,8 @@ System::System() {
 
 bool System::Parse(const std::string& fname) {
     std::vector<Property> props;
-    Property p("filename", std::string("assets/tests/sample.json"));
+    //Property p("filename", std::string("assets/tests/sample.json"));
+    Property p("filename", fname);
     props.push_back(p);
     this->file = resource::System::GetInstance()->Create<trillek::resource::TextFile>("JSON_test", props);
 
