@@ -194,18 +194,31 @@ void RenderSystem::SetViewportSize(const unsigned int width, const unsigned int 
         );
 }
 
-void RenderSystem::AddComponent(const unsigned int entity_id, std::shared_ptr<ComponentBase> component) {
-    // Do a static_pointer_cast to make sure we do have a Renderable component.
-    auto ren = std::static_pointer_cast<Renderable>(component);
-    if (!ren) {
-        return;
+template<>
+bool RenderSystem::AddEntityComponent(const unsigned int entity_id, std::shared_ptr<LightBase> light) {
+
+    // Loop through all the lights and see if one exists for the given entity.
+    for (auto& r : this->alllights) {
+        if (r.first == entity_id) {
+            r.second = light;
+            return false;
+        }
     }
 
-    // Loop through all the renderables and see if one exists for the given entityID.
+    // No entry exists for the given entity, so add it.
+    this->alllights.push_back(std::make_pair(entity_id, light));
+
+    return true;
+}
+
+template<>
+bool RenderSystem::AddEntityComponent(const unsigned int entity_id, std::shared_ptr<Renderable> ren) {
+
+    // Loop through all the renderables and see if one exists for the given entity_id.
     for (auto& r : this->renderables) {
         if (r.first == entity_id) {
             r.second = ren;
-            return;
+            return false;
         }
     }
 
@@ -283,7 +296,32 @@ void RenderSystem::AddComponent(const unsigned int entity_id, std::shared_ptr<Co
             texgrp->renderable_groups.push_back(std::move(temp));
         }
     }
+    return true;
+}
 
+void RenderSystem::AddComponent(const unsigned int entity_id, std::shared_ptr<ComponentBase> component) {
+
+    if(reflection::GetTypeID<Renderable>() == component->component_type_id) {
+        // Do a static_pointer_cast to make sure we do have a Renderable component.
+        auto ren = std::static_pointer_cast<Renderable>(component);
+        if (!ren) {
+            return;
+        }
+        if(!AddEntityComponent(entity_id, ren)) {
+            return;
+        }
+    }
+    else if(reflection::GetTypeID<LightBase>() == component->component_type_id) {
+        auto light = std::static_pointer_cast<LightBase>(component);
+        if (!light) {
+            return;
+        }
+        if(!AddEntityComponent(entity_id, light)) {
+            return;
+        }
+    }
+
+    // TODO: should really only subscribe once per entity, not for each component on one entity ID
     // Subscribe to transform change events for this entity ID.
     event::Dispatcher<Transform>::GetInstance()->Subscribe(entity_id, this);
 

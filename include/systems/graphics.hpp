@@ -15,6 +15,7 @@
 #include "util/json-parser.hpp"
 #include "graphics/graphics-base.hpp"
 #include "graphics/material.hpp"
+#include "graphics/light.hpp"
 #include <map>
 
 #include "dispatcher.hpp"
@@ -97,12 +98,24 @@ public:
     void SetViewportSize(const unsigned int width, const unsigned int height);
 
     /**
-     * \brief Adds a renderable component to the system.
+     * \brief Template for adding components to the system.
+     *
+     * \param const unsigned int The entity ID the component belongs to.
+     * \param std::shared_ptr<typename CT> The component to add.
+     * \return bool false if the component exists on the entity
+     */
+    template<typename CT>
+    bool AddEntityComponent(const unsigned int entity_id, std::shared_ptr<CT>) {
+        return false;
+    }
+
+    /**
+     * \brief Adds a component to the system.
      *
      * A static_pointer_case is applied to the component shared_ptr to cast it to
-     * a Renderable component. If the cast results in a nullptr the method returns
-     * without adding the renderable component.
-     * \param const unsigned int entityID The entity ID the compoennt belongs to.
+     * a the component based off the type_id. If the cast results in a nullptr the
+     * method returns without adding the component.
+     * \param const unsigned int The entity ID the component belongs to.
      * \param std::shared_ptr<ComponentBase> component The component to add.
      * \return void
      */
@@ -146,6 +159,9 @@ public:
         }
         return std::static_pointer_cast<T>(instance_ptr->second);
     }
+    /**
+     * \brief Adds a graphics object to the system.
+     */
     template<typename T>
     void Add(const std::string & instancename, std::shared_ptr<T> instanceptr) {
         unsigned int type_id = reflection::GetTypeID<T>();
@@ -165,10 +181,27 @@ private:
 
     // A list of the renderables in the system. Stored as a pair (entity ID, Renderable).
     std::list<std::pair<unsigned int, std::shared_ptr<Renderable>>> renderables;
+
+    // A list of the lights in the system. Stored as a pair (entity ID, LightBase).
+    std::list<std::pair<unsigned int, std::shared_ptr<LightBase>>> alllights;
+
     std::map<unsigned int, std::map<std::string, std::shared_ptr<GraphicsBase>>> graphics_instances;
     std::map<unsigned int, glm::mat4> model_matrices;
     std::list<MaterialGroup> material_groups;
 };
+
+/**
+ * \brief Adds a renderable component to the system.
+ */
+template<>
+bool RenderSystem::AddEntityComponent(const unsigned int entity_id, std::shared_ptr<Renderable>);
+
+/**
+ * \brief Adds a light component to the system.
+ */
+template<>
+bool RenderSystem::AddEntityComponent(const unsigned int entity_id, std::shared_ptr<LightBase>);
+
 
 } // End of graphics
 } // End of trillek

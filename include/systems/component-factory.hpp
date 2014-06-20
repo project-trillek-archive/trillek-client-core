@@ -15,7 +15,7 @@ namespace trillek {
 
 class ComponentBase {
 public:
-    ComponentBase() { }
+    ComponentBase() : component_type_id(0) { }
     ~ComponentBase() { }
 
     /**
@@ -25,6 +25,8 @@ public:
      * \return bool True if initialization finished with no errors.
      */
     virtual bool Initialize(const std::vector<Property> &properties) = 0;
+
+    unsigned int component_type_id;
 };
 
 // Singleton approach derived from http://silviuardelean.ro/2012/06/05/few-singleton-approaches/ .
@@ -159,11 +161,14 @@ public:
     static std::shared_ptr<T> Create(const unsigned int entity_id, const std::vector<Property> &properties) {
         unsigned int type_id = reflection::GetTypeID<T>();
         if (instance->components[type_id].find(entity_id) == instance->components[type_id].end()) {
-            instance->components[type_id][entity_id] = std::make_shared<T>();
-            if (!instance->components[type_id][entity_id]->Initialize(properties)) {
+            auto sharedcomp = std::make_shared<T>();
+            sharedcomp->component_type_id = type_id;
+            if (!sharedcomp->Initialize(properties)) {
                 instance->components[type_id].erase(entity_id);
                 return nullptr;
             }
+            instance->components[type_id][entity_id] = sharedcomp;
+            return sharedcomp;
         }
         return std::static_pointer_cast<T>(instance->components[type_id][entity_id]);
     }
