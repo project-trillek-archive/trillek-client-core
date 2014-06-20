@@ -23,7 +23,7 @@ public:
             camera_orientation * UP_VECTOR);
     }
 
-    void Notify(const unsigned int entity_id, const KeyboardEvent* key_event) {
+    void Notify(const KeyboardEvent* key_event) {
         if (!this->camera_transform) {
             return;
         }
