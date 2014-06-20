@@ -21,8 +21,7 @@ int main(int argCount, char** argValues) {
     trillek::resource::System::GetInstance();
 
     trillek::json::System jparser;
-    //jparser.Parse("assets/tests/sample.json");
-    jparser.Parse("assets/settings/audio.json");
+    jparser.Parse("assets/tests/sample.json");
 
     std::shared_ptr<trillek::sound::System> soundsystem = trillek::sound::System::GetInstance();
     soundsystem->SetListenerPosition(glm::vec3(0, 0, 0));
