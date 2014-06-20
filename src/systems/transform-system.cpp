@@ -1,13 +1,12 @@
 #include "systems/transform-system.hpp"
-#include "resources/transform.hpp"
+#include "transform.hpp"
 
 namespace trillek {
-namespace transform {
 
-std::once_flag System::only_one;
-std::shared_ptr<System> System::instance = nullptr;
+std::once_flag TransformMap::only_one;
+std::shared_ptr<TransformMap> TransformMap::instance = nullptr;
 
-std::shared_ptr<Transform> System::GetTransform(const unsigned int entity_id) {
+std::shared_ptr<Transform> TransformMap::GetTransform(const unsigned int entity_id) {
     if (instance->transforms.find(entity_id) != instance->transforms.end()) {
         return instance->transforms[entity_id];
     }
@@ -15,9 +14,9 @@ std::shared_ptr<Transform> System::GetTransform(const unsigned int entity_id) {
     return nullptr;
 }
 
-std::shared_ptr<Transform> System::AddTransform(const unsigned int entity_id) {
+std::shared_ptr<Transform> TransformMap::AddTransform(const unsigned int entity_id) {
     if (instance->transforms.find(entity_id) == instance->transforms.end()) {
-        std::shared_ptr<Transform> transform = std::make_shared<Transform>();
+        std::shared_ptr<Transform> transform = std::make_shared<Transform>(entity_id);
 
         instance->transforms[entity_id] = transform;
     }
@@ -25,11 +24,11 @@ std::shared_ptr<Transform> System::AddTransform(const unsigned int entity_id) {
     return instance->transforms[entity_id];
 }
 
-void System::RemoveTransform(const unsigned int entity_id) {
+void TransformMap::RemoveTransform(const unsigned int entity_id) {
     instance->transforms.erase(entity_id);
 }
 
-bool System::Serialize(rapidjson::Document& document) {
+bool TransformMap::Serialize(rapidjson::Document& document) {
     rapidjson::Value transform_node(rapidjson::kObjectType);
 
     for (auto entity_transform : this->transforms) {
@@ -38,22 +37,23 @@ bool System::Serialize(rapidjson::Document& document) {
         rapidjson::Value translation_element(rapidjson::kObjectType);
         glm::vec3 translation = entity_transform.second->GetTranslation();
         translation_element.AddMember("x", translation.x, document.GetAllocator());
-        translation_element.AddMember("y", translation.x, document.GetAllocator());
-        translation_element.AddMember("z", translation.x, document.GetAllocator());
+        translation_element.AddMember("y", translation.y, document.GetAllocator());
+        translation_element.AddMember("z", translation.z, document.GetAllocator());
         transform_object.AddMember("position", translation_element, document.GetAllocator());
 
         rapidjson::Value rotation_element(rapidjson::kObjectType);
         glm::vec3 rotation = entity_transform.second->GetRotation();
+        rotation_element.AddMember("radians", true, document.GetAllocator());
         rotation_element.AddMember("x", rotation.x, document.GetAllocator());
-        rotation_element.AddMember("y", rotation.x, document.GetAllocator());
-        rotation_element.AddMember("z", rotation.x, document.GetAllocator());
+        rotation_element.AddMember("y", rotation.y, document.GetAllocator());
+        rotation_element.AddMember("z", rotation.z, document.GetAllocator());
         transform_object.AddMember("rotation", rotation_element, document.GetAllocator());
 
         rapidjson::Value scale_element(rapidjson::kObjectType);
         glm::vec3 scale = entity_transform.second->GetScale();
         scale_element.AddMember("x", scale.x, document.GetAllocator());
-        scale_element.AddMember("y", scale.x, document.GetAllocator());
-        scale_element.AddMember("z", scale.x, document.GetAllocator());
+        scale_element.AddMember("y", scale.y, document.GetAllocator());
+        scale_element.AddMember("z", scale.z, document.GetAllocator());
         transform_object.AddMember("scale", scale_element, document.GetAllocator()); 
 
         std::string id = std::to_string(entity_transform.first);
@@ -62,7 +62,7 @@ bool System::Serialize(rapidjson::Document& document) {
         transform_node.AddMember(entity_id, transform_object, document.GetAllocator());
     }
 
-    document.AddMember("transform", transform_node, document.GetAllocator());
+    document.AddMember("transforms", transform_node, document.GetAllocator());
 
     return true;
 }
@@ -86,7 +86,7 @@ bool System::Serialize(rapidjson::Document& document) {
 //          }
 //      }
 //  }
-bool System::DeSerialize(rapidjson::Value& node) {
+bool TransformMap::Parse(rapidjson::Value& node) {
     if (node.IsObject()) {
         // Iterate over the entity ids.
         for (auto entity_itr = node.MemberBegin(); entity_itr != node.MemberEnd(); ++entity_itr) {
@@ -98,49 +98,64 @@ bool System::DeSerialize(rapidjson::Value& node) {
                     auto& element = entity_itr->value["position"];
 
                     double x = 0.0f, y = 0.0f, z = 0.0f;
-                    if (element.HasMember("x") && element["x"].IsDouble()) {
+                    if (element.HasMember("x") && element["x"].IsNumber()) {
                         x = element["x"].GetDouble();
                     }
-                    if (element.HasMember("y") && element["y"].IsDouble()) {
+                    if (element.HasMember("y") && element["y"].IsNumber()) {
                         y = element["y"].GetDouble();
                     }
-                    if (element.HasMember("z") && element["z"].IsDouble()) {
+                    if (element.HasMember("z") && element["z"].IsNumber()) {
                         z = element["z"].GetDouble();
                     }
 
-                    entity_transform->Translate(glm::vec3(x, y, z));
+                    entity_transform->SetTranslation(glm::vec3(x, y, z));
                 }
                 if (entity_itr->value.HasMember("rotation")) {
                     auto& element = entity_itr->value["rotation"];
 
-                    double x = 0.0f, y = 0.0f, z = 0.0f;
-                    if (element.HasMember("x") && element["x"].IsDouble()) {
-                        x = element["x"].GetDouble();
-                    }
-                    if (element.HasMember("y") && element["y"].IsDouble()) {
-                        y = element["y"].GetDouble();
-                    }
-                    if (element.HasMember("z") && element["z"].IsDouble()) {
-                        z = element["z"].GetDouble();
+                    bool in_radians = false;
+
+                    if (element.HasMember("radians") && element["radians"].IsBool()) {
+                        in_radians = element["radians"].GetBool();
                     }
 
-                    entity_transform->Rotate(glm::vec3(x, y, z));
+                    double x = 0.0f, y = 0.0f, z = 0.0f;
+                    if (element.HasMember("x") && element["x"].IsNumber()) {
+                        x = element["x"].GetDouble();
+                        if (!in_radians) {
+                            x = glm::radians(x);
+                        }
+                    }
+                    if (element.HasMember("y") && element["y"].IsNumber()) {
+                        y = element["y"].GetDouble();
+                        if (!in_radians) {
+                            y = glm::radians(y);
+                        }
+                    }
+                    if (element.HasMember("z") && element["z"].IsNumber()) {
+                        z = element["z"].GetDouble();
+                        if (!in_radians) {
+                            z = glm::radians(z);
+                        }
+                    }
+
+                    entity_transform->SetRotation(glm::vec3(x, y, z));
                 }
                 if (entity_itr->value.HasMember("scale")) {
                     auto& element = entity_itr->value["scale"];
 
                     double x = 0.0f, y = 0.0f, z = 0.0f;
-                    if (element.HasMember("x") && element["x"].IsDouble()) {
+                    if (element.HasMember("x") && element["x"].IsNumber()) {
                         x = element["x"].GetDouble();
                     }
-                    if (element.HasMember("y") && element["y"].IsDouble()) {
+                    if (element.HasMember("y") && element["y"].IsNumber()) {
                         y = element["y"].GetDouble();
                     }
-                    if (element.HasMember("z") && element["z"].IsDouble()) {
+                    if (element.HasMember("z") && element["z"].IsNumber()) {
                         z = element["z"].GetDouble();
                     }
 
-                    entity_transform->Scale(glm::vec3(x, y, z));
+                    entity_transform->SetScale(glm::vec3(x, y, z));
                 }
             }
         }
@@ -151,5 +166,4 @@ bool System::DeSerialize(rapidjson::Value& node) {
     return false;
 }
 
-} // End of transform
 } // End of trillek

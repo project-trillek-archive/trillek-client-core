@@ -3,10 +3,13 @@
 namespace trillek {
 namespace resource {
 
-std::once_flag System::only_one;
-std::shared_ptr<System> System::instance = nullptr;
+std::once_flag ResourceMap::only_one;
+std::shared_ptr<ResourceMap> ResourceMap::instance = nullptr;
+std::map<std::string, unsigned int> ResourceMap::resource_type_id;
+std::map<unsigned int, std::function<std::shared_ptr<resource::ResourceBase>(const std::string& name, const std::vector<Property> &properties)>> ResourceMap::factories;
+std::map<unsigned int, std::map<std::string, std::shared_ptr<resource::ResourceBase>>> ResourceMap::resources;
 
-bool System::Serialize(rapidjson::Document& document) {
+bool ResourceMap::Serialize(rapidjson::Document& document) {
     rapidjson::Value resource_node(rapidjson::kObjectType);
 
     document.AddMember("resources", resource_node, document.GetAllocator());
@@ -23,7 +26,7 @@ bool System::Serialize(rapidjson::Document& document) {
 //     }
 //   }
 // }
-bool System::DeSerialize(rapidjson::Value& node) {
+bool ResourceMap::Parse(rapidjson::Value& node) {
     if (node.IsObject()) {
         // Iterate over the resrouce types.
         for (auto type_itr = node.MemberBegin(); type_itr != node.MemberEnd(); ++type_itr) {

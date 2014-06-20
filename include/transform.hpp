@@ -6,7 +6,6 @@
 #include <glm/gtc/quaternion.hpp>
 
 namespace trillek {
-namespace transform {
 
 static glm::vec3 FORWARD_VECTOR(0.0f, 0.0f, -1.0f);
 static glm::vec3 UP_VECTOR(0.0f, 1.0f, 0.0f);
@@ -14,6 +13,7 @@ static glm::vec3 RIGHT_VECTOR(1.0f, 0.0f, 0.0f);
 
 class Transform {
 public:
+    Transform(unsigned int entity_id);
     /**
     * \brief Translates by the provided amount relative to the current translation.
     *
@@ -33,8 +33,27 @@ public:
     void Rotate(const glm::vec3 amount);
 
     /**
+    * \brief Translates by the provided amount relative to the current translation and orientation.
+    *
+    * \param[in] const glm::vec3 amount The amount to translate by.
+    * \return
+    */
+    void OrientedTranslate(const glm::vec3 amount);
+
+    /**
+    * \brief Rotates by the provided amount relative to the current rotation and orientation.
+    *
+    * The arguments is in the form of (rotation about x, rotation about y, rotation about z).
+    * The orientation is also updated by computing the axis-angle.
+    * \param[in] const glm::vec3 amount The amount ot rotate by.
+    * \return
+    */
+    void OrientedRotate(const glm::vec3 amount);
+
+    /**
     * \brief Scales by the provided amount relative to the current scale.
     *
+    * The current scale is multiplied by the given amount.
     * \param[in] const glm::vec3 amount The amount to scale by.
     * \return
     */
@@ -98,10 +117,9 @@ private:
     glm::vec3 rotation;
     glm::vec3 scale;
     glm::quat orientation;
-
+    unsigned int entity_id;
 };
 
-} // End of resource
 } // End of trillek
 
 #endif

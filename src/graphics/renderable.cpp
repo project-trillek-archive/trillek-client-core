@@ -1,12 +1,13 @@
-#include "components/renderable.hpp"
-#include "resources/material.hpp"
-#include "resources/shader.hpp"
+#include "graphics/renderable.hpp"
+#include "graphics/shader.hpp"
+#include "graphics/texture.hpp"
 #include "resources/mesh.hpp"
+#include "systems/resource-system.hpp"
 
 namespace trillek {
 namespace graphics {
 
-Renderable::Renderable() : material(std::make_shared<Material>()) { }
+Renderable::Renderable() { }
 Renderable::~Renderable() { }
 
 void Renderable::UpdateBufferGroups() {
@@ -33,15 +34,34 @@ void Renderable::UpdateBufferGroups() {
 
         auto temp_meshgroup = mesh_group.lock();
 
+        // TODO: Loop through all the texture names in the mesh group and add the textures to the material.
+        for (std::string texture_name : temp_meshgroup->textures) {
+            std::shared_ptr<Texture> texture = resource::ResourceMap::Get<Texture>(texture_name);
+            if (!texture) {
+                std::vector<Property> props;
+                props.push_back(Property("filename", texture_name));
+                auto pixel_data = resource::ResourceMap::Create<resource::PixelBuffer>(texture_name, props);
+                if (pixel_data) {
+                    texture = std::make_shared<Texture>(*pixel_data.get());
+                    resource::ResourceMap::Add<Texture>(texture_name, texture);
+                }
+            }
+
+            if (texture) {
+                buffer_group->textures.push_back(texture);
+            }
+        }
+
         if (temp_meshgroup) {
             if (temp_meshgroup->verts.size() > 0) {
 
                 glBindBuffer(GL_ARRAY_BUFFER, buffer_group->vbo); // Bind the vertex buffer.
-                glBufferData(GL_ARRAY_BUFFER, sizeof(resource::VertexData) * temp_meshgroup->verts.size(), &temp_meshgroup->verts[0], GL_STATIC_DRAW); // Stores the verts in the vertex buffer.
+                glBufferData(GL_ARRAY_BUFFER, sizeof(resource::VertexData) * temp_meshgroup->verts.size(),
+                    &temp_meshgroup->verts[0], GL_STATIC_DRAW); // Stores the verts in the vertex buffer.
 
                 GLuint shader_program = 0;
-                if (this->material) {
-                    shader_program = this->material->GetShader()->GetProgram();
+                if (this->shader) {
+                    shader_program = this->shader->GetProgram();
                 }
 
                 GLuint posLocation = glGetAttribLocation(shader_program, "pos");
@@ -67,7 +87,8 @@ void Renderable::UpdateBufferGroups() {
 
             if (temp_meshgroup->indicies.size() > 0) {
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer_group->ibo); // Bind the element buffer.
-                glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int)* temp_meshgroup->indicies.size(), &temp_meshgroup->indicies[0], GL_STATIC_DRAW); // Store the faces in the element buffer.
+                glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int)* temp_meshgroup->indicies.size(),
+                    &temp_meshgroup->indicies[0], GL_STATIC_DRAW); // Store the faces in the element buffer.
                 buffer_group->ibo_count = temp_meshgroup->indicies.size();
             }
         }
@@ -85,12 +106,40 @@ std::shared_ptr<resource::Mesh> Renderable::GetMesh() const {
     return this->mesh;
 }
 
-void Renderable::SetMaterial(std::shared_ptr<Material> m) {
-    this->material = m;
+void Renderable::SetShader(std::shared_ptr<Shader> m) {
+    this->shader = m;
 }
 
-std::shared_ptr<Material> Renderable::GetMaterial() const {
-    return this->material;
+std::shared_ptr<Shader> Renderable::GetShader() const {
+    return this->shader;
+}
+
+bool Renderable::Initialize(const std::vector<Property> &properties) {
+    std::string mesh_name;
+    std::string shader_name;
+    for (const Property& p : properties) {
+        std::string name = p.GetName();
+        if (name == "mesh") {
+            mesh_name = p.Get<std::string>();
+        }
+        else if (name == "shader") {
+            shader_name = p.Get<std::string>();
+        }
+    }
+
+    this->mesh = resource::ResourceMap::Get<resource::Mesh>(mesh_name);
+    if (!mesh) {
+        return false;
+    }
+
+    this->shader = resource::ResourceMap::Get<graphics::Shader>(shader_name);
+    if (!shader) {
+        return false;
+    }
+
+    UpdateBufferGroups();
+
+    return true;
 }
 
 } // End of graphics

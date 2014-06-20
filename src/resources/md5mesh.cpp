@@ -239,6 +239,7 @@ void MD5Mesh::CalculateVertexPositions() {
         if (this->mesh_groups[i]->verts.size() < this->meshes[i]->verts.size()) {
             this->mesh_groups[i]->verts.resize(this->meshes[i]->verts.size());
         }
+        this->mesh_groups[i]->textures.push_back(this->meshes[i]->shader);
         for (size_t j = 0; j < this->meshes[i]->verts.size(); ++j) {
             VertexData vdata;
 
@@ -323,7 +324,7 @@ void MD5Mesh::UpdateIndexList() {
         }
     }
 
-    // Copy the triangle indexes.
+    // Copy the triangle indicies.
     for (size_t i = 0; i < this->meshes.size(); ++i) {
         if (this->mesh_groups[i]->indicies.size() < this->meshes[i]->tris.size()) {
             this->mesh_groups[i]->indicies.resize(this->meshes[i]->tris.size() * 3);

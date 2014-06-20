@@ -1,4 +1,4 @@
-#include "systems/json-parser.hpp"
+#include "util/json-parser.hpp"
 #include "resources/text-file.hpp"
 #include "systems/resource-system.hpp"
 #include "rapidjson/prettywriter.h"
@@ -7,20 +7,19 @@
 #include <mutex>
 
 namespace trillek {
-namespace json {
+namespace util {
 
-System::System() {
+JSONPasrser::JSONPasrser() {
     static std::once_flag only_one;
 
     std::call_once(only_one, [this] () { RegisterTypes(); } );
 }
 
-bool System::Parse(const std::string& fname) {
+bool JSONPasrser::Parse(const std::string& fname) {
     std::vector<Property> props;
-    //Property p("filename", std::string("assets/tests/sample.json"));
     Property p("filename", fname);
     props.push_back(p);
-    this->file = resource::System::GetInstance()->Create<trillek::resource::TextFile>("JSON_test", props);
+    this->file = resource::ResourceMap::Create<trillek::resource::TextFile>("JSON_test", props);
 
     this->document.Parse<0>(this->file->GetText().c_str());
     if (this->document.HasParseError()) {
@@ -30,8 +29,8 @@ bool System::Parse(const std::string& fname) {
     if (this->document.IsObject()) {
         for (auto itr = document.MemberBegin(); itr != document.MemberEnd(); ++itr) {
             std::string name(itr->name.GetString(), itr->name.GetStringLength());
-            if (this->serializer_types.find(name) != this->serializer_types.end()) {
-                this->serializer_types[name]->DeSerialize(itr->value);
+            if (this->parsers.find(name) != this->parsers.end()) {
+                this->parsers[name]->Parse(itr->value);
             }
         }
     }
@@ -39,12 +38,12 @@ bool System::Parse(const std::string& fname) {
     return true;
 }
 
-void System::Save(const std::string& out_directory, const std::string& fname) {
+void JSONPasrser::Serialize(const std::string& out_directory, const std::string& fname) {
     if (fname.length() > 0) {
         rapidjson::Document document;
         document.SetObject();
 
-        for (auto serializer : serializer_types) {
+        for (auto serializer : parsers) {
             serializer.second->Serialize(document);
         }
 
@@ -55,7 +54,7 @@ void System::Save(const std::string& out_directory, const std::string& fname) {
         fclose(file);
     }
     else {
-        for (auto serializer : serializer_types) {
+        for (auto serializer : parsers) {
             rapidjson::Document document;
             document.SetObject();
             serializer.second->Serialize(document);
@@ -69,10 +68,10 @@ void System::Save(const std::string& out_directory, const std::string& fname) {
     }
 }
 
-std::map<std::string, std::shared_ptr<SerializerBase>> System::serializer_types;
+std::map<std::string, std::shared_ptr<Parser>> JSONPasrser::parsers;
 
-void System::RegisterSerializer(std::shared_ptr<SerializerBase> serializer) {
-    serializer_types[serializer->GetName()] = serializer;
+void JSONPasrser::RegisterParser(std::shared_ptr<Parser> parser) {
+    parsers[parser->GetNodeTypeName()] = parser;
 }
 
 } // End of json

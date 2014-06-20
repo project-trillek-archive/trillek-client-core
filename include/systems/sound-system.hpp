@@ -9,7 +9,7 @@
 #include <iostream>
 #include <unordered_map>
 
-#include "systems/json-parser.hpp"
+#include "util/json-parser.hpp"
 
 namespace trillek {
 namespace sound {
@@ -83,10 +83,10 @@ public:
 }; // end of class Sound
 
 
-class System : public json::SerializerBase {
+class System : public util::Parser {
 private:
-    System() : SerializerBase("sounds") { }
-    System(const System& right) : SerializerBase("sounds") {
+    System() : Parser("sounds") { }
+    System(const System& right) : Parser("sounds") {
         instance = right.instance;
     }
     System& operator=(const System& right) {
@@ -154,7 +154,7 @@ public:
     virtual bool Serialize(rapidjson::Document& document);
 
     // Inherited from SerializeBase
-    virtual bool DeSerialize(rapidjson::Value& node);
+    virtual bool Parse(rapidjson::Value& node);
 
 private:
     struct sound_info{
