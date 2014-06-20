@@ -1,5 +1,9 @@
+#include "trillek-game.hpp"
+#include <queue>
+#include <thread>
+#include <chrono>
 #include "os.hpp"
-#include "systems/json-parser.hpp"
+#include "util/json-parser.hpp"
 #include "systems/transform-system.hpp"
 #include "systems/resource-system.hpp"
 #include "systems/graphics.hpp"
@@ -8,8 +12,9 @@
 
 size_t gAllocatedSize = 0;
 
-int main(int argCount, char** argValues) {
-    trillek::OS os;
+int main(int argCount, char **argValues) {
+    // create the window
+    auto& os = trillek::TrillekGame::GetOS();
 #if __APPLE__
     os.InitializeWindow(800, 600, "Trillek Client Core", 3, 2);
 #else
@@ -17,10 +22,10 @@ int main(int argCount, char** argValues) {
 #endif
 
     // Call each system's GetInstance to create the initial instance.
-    trillek::transform::System::GetInstance();
-    trillek::resource::System::GetInstance();
+    trillek::TransformMap::GetInstance();
+    trillek::resource::ResourceMap::GetInstance();
 
-    trillek::json::System jparser;
+    trillek::util::JSONPasrser jparser;
     jparser.Parse("assets/tests/sample.json");
 
     std::shared_ptr<trillek::sound::System> soundsystem = trillek::sound::System::GetInstance();
@@ -32,32 +37,34 @@ int main(int argCount, char** argValues) {
     if (s1) {
         s1->Play();
     }
+    // start the graphic system
+    trillek::TrillekGame::GetGraphicSystem().Start(os.GetWindowWidth(), os.GetWindowHeight());
 
-    trillek::graphics::System gl;
-    gl.Start(os.GetWindowWidth(), os.GetWindowHeight());
+    // we register the systems in this queue
+    std::queue<trillek::SystemBase*> systems;
 
-    double x, y = 0.0;
-    double time = 0.0;
+    // register the fake system. Comment this to cancel
+    systems.push(&trillek::TrillekGame::GetFakeSystem());
 
-    while(!os.Closing()) {
+    // register the graphic system
+    systems.push(&trillek::TrillekGame::GetGraphicSystem());
+
+    // Detach the window from the current thread
+    os.DetachContext();
+
+    // start the scheduler in another thread
+    std::thread tp(
+                   &trillek::TrillekScheduler::Initialize,
+                   &trillek::TrillekGame::GetScheduler(),
+                   5,
+                   std::ref(systems));
+    while (!os.Closing()) {
         os.OSMessageLoop();
-
-        // sound
-        {
-            soundsystem->Update();
-            // sound position
-            const double dt = os.GetDeltaTime();
-            time += dt;
-            x = cos(time) * 2.0;
-            y = sin(time) * 2.0;
-            s1->SetPosition(glm::vec3(x, 0, y));
-        }
-
-        gl.Update(0);
-        os.SwapBuffers();
     }
+    tp.join();
 
+    // Terminating program
+    os.MakeCurrent();
     os.Terminate();
-
     return 0;
 }

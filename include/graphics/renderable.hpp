@@ -9,6 +9,7 @@
 
 #include <memory>
 #include <vector>
+#include "systems/component-factory.hpp"
 
 namespace trillek {
 namespace resource {
@@ -19,9 +20,10 @@ class Mesh;
 
 namespace graphics {
 
-class Material;
+class Shader;
+class Texture;
 
-class Renderable {
+class Renderable : public ComponentBase {
 public:
     Renderable();
     ~Renderable();
@@ -32,6 +34,7 @@ public:
         GLuint vbo;
         GLuint ibo;
         unsigned int ibo_count;
+        std::vector<std::shared_ptr<Texture>> textures;
     };
 
     /**
@@ -61,17 +64,17 @@ public:
     /**
     * \brief Sets the shader resource associated with this component.
     *
-    * \param std::shared_ptr<Material> m The material for this component.
+    * \param std::shared_ptr<Material> m The shader for this component.
     * \return void
     */
-    void SetMaterial(std::shared_ptr<Material> s);
+    void SetShader(std::shared_ptr<Shader> s);
 
     /**
-    * \brief Gets the material for this renderable
+    * \brief Gets the shader for this renderable
     *
-    * \return std::shared_ptr<Material> This material for this component.
+    * \return std::shared_ptr<Material> This shader for this component.
     */
-    std::shared_ptr<Material> GetMaterial() const;
+    std::shared_ptr<Shader> GetShader() const;
 
     /**
     * \brief Gets the number of buffer groups.
@@ -95,15 +98,31 @@ public:
 
         return nullptr;
     }
+
+    /**
+    * \brief Initializes the component with the provided properties
+    *
+    * Valid properties include mesh (the mesh resource name) and shader (the shader resource name).
+    * \param[in] const std::vector<Property>& properties The creation properties for the component.
+    * \return bool True if initialization finished with no errors.
+    */
+    bool Initialize(const std::vector<Property> &properties);
 private:
     std::vector<std::shared_ptr<BufferGroup>> buffer_groups; // Render buffer ID group
 
     std::shared_ptr<resource::Mesh> mesh;
 
-    std::shared_ptr<Material> material;
+    std::shared_ptr<Shader> shader;
 };
 
 } // End of graphics
+
+namespace reflection {
+
+template <> inline const char* GetTypeName<graphics::Renderable>() { return "renderable"; }
+template <> inline const unsigned int GetTypeID<graphics::Renderable>() { return 2000; }
+
+} // End of reflection
 } // End of trillek
 
 #endif

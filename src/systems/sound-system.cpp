@@ -114,10 +114,10 @@ void System::SetListenerOrientation(glm::vec3 at, glm::vec3 up) {
 }
 
 bool System::Serialize(rapidjson::Document& document) {
-
+    return false;
 }
 
-bool System::DeSerialize(rapidjson::Value& node) {
+bool System::Parse(rapidjson::Value& node) {
     if(node.IsArray()) {
 
         for(auto sound_itr = node.Begin(); sound_itr != node.End(); sound_itr ++) {
@@ -155,6 +155,8 @@ bool System::DeSerialize(rapidjson::Value& node) {
         }
 
     }
+
+    return true;
 }
 
 } // end of namespace sound

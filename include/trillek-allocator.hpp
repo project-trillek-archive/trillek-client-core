@@ -1,6 +1,8 @@
 #ifndef TRILLEKALLOCATOR_HPP_INCLUDED
 #define TRILLEKALLOCATOR_HPP_INCLUDED
 
+#include <cstddef>
+
 extern size_t gAllocatedSize;
 
 namespace trillek {

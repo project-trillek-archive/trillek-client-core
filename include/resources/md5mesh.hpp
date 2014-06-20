@@ -18,7 +18,7 @@ public:
     ~MD5Mesh() { }
 
     /*****************************/
-    /* MD$Mesh helper structures */
+    /* MD5Mesh helper structures */
     /*****************************/
     struct Joint {
         Joint() : name(""), parent(-1), position(0.0f, 0.0f, 0.0f) { }
@@ -131,7 +131,7 @@ private:
 namespace reflection {
 
 template <> inline const char* GetTypeName<resource::MD5Mesh>() { return "MD5Mesh"; }
-template <> inline const unsigned int GetTypeID<resource::MD5Mesh>() { return 1001; }
+template <> inline const unsigned int GetTypeID<resource::MD5Mesh>() { return 1000; }
 
 } // End of reflection
 } // End of trillek

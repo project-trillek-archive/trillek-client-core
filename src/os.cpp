@@ -1,6 +1,7 @@
 #include "os.hpp"
 
 #include <iostream>
+#include "trillek-game.hpp"
 
 #ifdef __APPLE__
 // Needed so we can disable retina support for our window.
@@ -59,7 +60,7 @@ bool OS::InitializeWindow(const int width, const int height, const std::string t
     ((void (*)(id, SEL, bool)) objc_msgSend)(cocoaGLView, sel_getUid("setWantsBestResolutionOpenGLSurface:"), false);
 #endif
 
-    // Make the window's context current.
+    // attach the context
     glfwMakeContextCurrent(this->window);
 
 #ifndef __APPLE__
@@ -90,6 +91,14 @@ bool OS::InitializeWindow(const int width, const int height, const std::string t
     return true;
 }
 
+void OS::MakeCurrent() {
+    glfwMakeContextCurrent(this->window);
+}
+
+void OS::DetachContext() {
+    glfwMakeContextCurrent(NULL);
+}
+
 void OS::Terminate() {
     glfwTerminate();
 }
@@ -103,7 +112,7 @@ void OS::SwapBuffers() {
 }
 
 void OS::OSMessageLoop() {
-    glfwPollEvents();
+    glfwWaitEvents();
 }
 
 int OS::GetWindowWidth() {
@@ -114,11 +123,8 @@ int OS::GetWindowHeight() {
     return this->client_height;
 }
 
-double OS::GetDeltaTime() {
-    double time = glfwGetTime();
-    double delta = time - this->last_time;
-    this->last_time = time;
-    return delta;
+std::chrono::nanoseconds OS::GetTime() {
+    return std::chrono::nanoseconds(static_cast<int64_t>(glfwGetTime() * 1.0E9));
 }
 
 void OS::windowResized(GLFWwindow* window, int width, int height) {
@@ -184,19 +190,23 @@ void OS::UpdateWindowSize(const int width, const int height) {
 }
 
 void OS::DispatchKeyboardEvent(const int key, const int scancode, const int action, const int mods) {
+    KeyboardEvent key_event;
     if (action == GLFW_PRESS) {
-        // TODO: Dispatch a key down event.
+        key_event = { key, scancode, KeyboardEvent::KEY_DOWN, mods };
     }
     else if (action == GLFW_REPEAT) {
-        // TODO: Dispatch a key repeat event.
+        key_event = { key, scancode, KeyboardEvent::KEY_REPEAT, mods };
     }
     else if (action == GLFW_RELEASE) {
-        // TODO: Dispatch a key up event.
+        key_event = { key, scancode, KeyboardEvent::KEY_UP, mods };
     }
+    
+    event::Dispatcher<KeyboardEvent>::GetInstance()->NotifySubscribers(0, &key_event);
 }
 
 void OS::DispatchCharacterEvent(const unsigned int uchar) {
-    // TODO: Dispatch a character event.
+    KeyboardEvent key_event { uchar, 0, KeyboardEvent::KEY_CHAR, 0 };
+    event::Dispatcher<KeyboardEvent>::GetInstance()->NotifySubscribers(0, &key_event);
 }
 
 void OS::DispatchMouseMoveEvent(const double x, const double y) {

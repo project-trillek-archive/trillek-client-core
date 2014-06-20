@@ -1,6 +1,16 @@
 build/
 lib/
 bin/
+.gitattributes
+
+## Vim
+*~
+*.swp
+
+## eclipse
+.cproject
+.project
+.settings
 
 #################################
 ## Code::Blocks

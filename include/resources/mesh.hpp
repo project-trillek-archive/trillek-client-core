@@ -2,6 +2,7 @@
 #define MESH_HPP_INCLUDED
 
 #include <glm/glm.hpp>
+#include <list>
 
 #include "systems/resource-system.hpp"
 
@@ -21,6 +22,7 @@ struct VertexData {
 struct MeshGroup {
     std::vector<VertexData> verts;
     std::vector<unsigned int> indicies;
+    std::list<std::string> textures;
 };
 
 class Mesh : public ResourceBase {
@@ -49,6 +51,13 @@ protected:
 };
 
 } // End of resource
+
+namespace reflection {
+
+    template <> inline const char* GetTypeName<resource::Mesh>() { return "Mesh"; }
+    template <> inline const unsigned int GetTypeID<resource::Mesh>() { return 1000; }
+
+} // End of reflection
 } // End of trillek
 
 #endif
