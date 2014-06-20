@@ -35,8 +35,7 @@ void Animation::UpdateAnimation(const float delta) {
     if (this->animation_file) {
         auto frame_skeleton = this->animation_file->InterpolateSkeletons(
             frame_index0, frame_index1, fInterpolate);
-        this->animation_matricies.insert(this->animation_matricies.begin(),
-            frame_skeleton.bone_matricies.begin(), frame_skeleton.bone_matricies.end());
+        this->animation_matricies.assign(frame_skeleton.bone_matricies.begin(), frame_skeleton.bone_matricies.end());
     }
 }
 
@@ -49,8 +48,7 @@ void Animation::SetAnimationFile(std::shared_ptr<resource::MD5Anim> file) {
 
         auto frame_skeleton = this->animation_file->InterpolateSkeletons(
             0, 1, 0.0f);
-        this->animation_matricies.insert(this->animation_matricies.begin(),
-            frame_skeleton.bone_matricies.begin(), frame_skeleton.bone_matricies.end());
+        this->animation_matricies.assign(frame_skeleton.bone_matricies.begin(), frame_skeleton.bone_matricies.end());
     }
 }
 
