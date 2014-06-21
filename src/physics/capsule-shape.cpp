@@ -21,9 +21,9 @@ bool CapsuleShape::Initialize(const std::vector<Property> &properties) {
 void CapsuleShape::SetEntity(unsigned int entity_id) {
     this->entity_transform = TransformMap::GetTransform(entity_id);
     auto pos = this->entity_transform->GetTranslation();
-    auto rot = this->entity_transform->GetRotation();
+    auto orientation = this->entity_transform->GetOrientation();
     this->motion_state = new btDefaultMotionState(btTransform(
-        btQuaternion(rot.x, rot.y, rot.z, 1), btVector3(pos.x, pos.y, pos.z)));
+        btQuaternion(orientation.x, orientation.y, orientation.z, orientation.w), btVector3(pos.x, pos.y, pos.z)));
 }
 
 void CapsuleShape::InitializeRigidBody() {
@@ -45,7 +45,7 @@ void CapsuleShape::UpdateTransform() {
     auto pos = transform.getOrigin();
     auto rot = transform.getRotation();
     this->entity_transform->SetTranslation(glm::vec3(pos.x(), pos.y(), pos.z()));
-    this->entity_transform->SetRotation(glm::vec3(rot.x(), rot.y(), rot.z()));
+    this->entity_transform->SetOrientation(glm::quat(rot.w(), rot.x(), rot.y(), rot.z()));
 }
 
 } // End of physics

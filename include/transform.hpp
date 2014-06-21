@@ -78,6 +78,14 @@ public:
     void SetRotation(const glm::vec3 new_rotaiton);
 
     /**
+    * \brief Sets the rotation.
+    *
+    * \param[in] const glm::quat new_orientation The new orientation.
+    * \return
+    */
+    void SetOrientation(const glm::quat new_orientation);
+
+    /**
     * \brief Sets the scale.
     *
     * \param[in] const glm::vec3 new_scale The new scale.
