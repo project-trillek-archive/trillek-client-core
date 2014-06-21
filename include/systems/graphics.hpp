@@ -80,17 +80,17 @@ public:
     /**
      * \brief Renders all textured geometry for the scene.
      */
-    void RenderColorPass() const;
+    void RenderColorPass(const float *viewmatrix, const float *projmatrix) const;
 
     /**
      * \brief Renders all geometry for the scene, but only the depth channel.
      */
-    void RenderDepthOnlyPass() const;
+    void RenderDepthOnlyPass(const float *view_matrix, const float *proj_matrix) const;
 
     /**
      * \brief Renders all deferred lighting passes for the scene.
      */
-    void RenderLightingPass() const;
+    void RenderLightingPass(const float *inv_viewproj_matrix) const;
 
     /**
      * \brief Renders post processing passes for the scene.
@@ -203,6 +203,7 @@ private:
 
     unsigned int window_width; // Store the width of our window
     unsigned int window_height; // Store the height of our window
+    bool multisample;
 
     // A list of the renderables in the system. Stored as a pair (entity ID, Renderable).
     std::list<std::pair<unsigned int, std::shared_ptr<Renderable>>> renderables;

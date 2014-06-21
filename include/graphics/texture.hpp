@@ -13,6 +13,12 @@ public:
     Texture() : texture_id(0) {}
     virtual ~Texture();
 
+    // required to implement
+    virtual bool SystemStart(const std::list<Property> &) { return false; }
+    virtual bool SystemReset(const std::list<Property> &) { return false; }
+    virtual bool Parse(const std::string &object_name, rapidjson::Value& node) { return false; }
+    virtual bool Serialize(rapidjson::Document& document) { return false; }
+
     /**
      * \brief new texture instance from image
      */

@@ -1,6 +1,8 @@
 #ifndef LIGHT_HPP_INCLUDED
 #define LIGHT_HPP_INCLUDED
 
+#include "opengl.hpp"
+
 #include <memory>
 #include <vector>
 #include "systems/component-factory.hpp"
@@ -14,7 +16,10 @@ namespace graphics {
 class LightBase : public ComponentBase {
 public:
 
-    LightBase() { }
+    LightBase() {
+        enabled = true;
+        lighttype = 0;
+    }
     virtual ~LightBase() { }
 
     /**
@@ -25,7 +30,8 @@ public:
      */
     bool Initialize(const std::vector<Property> &properties);
 
-private:
+    bool enabled;
+    GLuint lighttype;
 };
 
 } // namespace graphics

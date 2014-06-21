@@ -18,6 +18,7 @@ namespace trillek {
 namespace graphics {
 
 RenderSystem::RenderSystem() : Parser("graphics") {
+    multisample = false;
     Shader::InitializeTypes();
 }
 
@@ -42,9 +43,6 @@ const int* RenderSystem::Start(const unsigned int width, const unsigned int heig
         this->view_matrix = this->camera->GetViewMatrix();
     }
 
-    // App specific global gl settings
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    glEnable(GL_DEPTH_TEST);
     return this->gl_version;
 }
 
@@ -87,7 +85,7 @@ bool RenderSystem::Parse(rapidjson::Value& node) {
                         std::string attachment_name(section_itr->name.GetString(), section_itr->name.GetStringLength());
                         if(section_itr->value.IsObject()) {
                             std::shared_ptr<RenderAttachment> attachment_ptr(new RenderAttachment);
-                            if(attachment_ptr->Parse(section_itr->value)) {
+                            if(attachment_ptr->Parse(attachment_name, section_itr->value)) {
                                 Add(attachment_name, attachment_ptr);
                             }
                         }
@@ -103,7 +101,7 @@ bool RenderSystem::Parse(rapidjson::Value& node) {
                         std::string layer_name(section_itr->name.GetString(), section_itr->name.GetStringLength());
                         if(section_itr->value.IsObject()) {
                             std::shared_ptr<RenderLayer> layer_ptr(new RenderLayer);
-                            if(layer_ptr->Parse(section_itr->value)) {
+                            if(layer_ptr->Parse(layer_name, section_itr->value)) {
                                 Add(layer_name, layer_ptr);
                             }
                         }
@@ -136,21 +134,32 @@ void RenderSystem::RunBatch() const {
 }
 
 void RenderSystem::RenderScene() const {
+
+    glm::mat4x4 inv_viewproj = glm::inverse(this->projection_matrix * this->view_matrix);
     // Clear the backbuffer and primary depth/stencil buffer
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glViewport(0, 0, this->window_width, this->window_height); // Set the viewport size to fill the window
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); // Clear required buffers
 
-    RenderColorPass();
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glEnable(GL_DEPTH_TEST);
+
+    RenderColorPass(&this->view_matrix[0][0], &this->projection_matrix[0][0]);
+
+    glDisable(GL_MULTISAMPLE);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glDisable(GL_DEPTH_TEST);
+
+    RenderLightingPass(&inv_viewproj[0][0]);
 }
 
-void RenderSystem::RenderColorPass() const {
+void RenderSystem::RenderColorPass(const float *view_matrix, const float *proj_matrix) const {
     for (auto matgrp : this->material_groups) {
         const auto& shader = matgrp.material.GetShader();
         shader->Use();
 
-        glUniformMatrix4fv((*shader)("view"), 1, GL_FALSE, &this->view_matrix[0][0]);
-        glUniformMatrix4fv((*shader)("projection"), 1, GL_FALSE, &this->projection_matrix[0][0]);
+        glUniformMatrix4fv((*shader)("view"), 1, GL_FALSE, view_matrix);
+        glUniformMatrix4fv((*shader)("projection"), 1, GL_FALSE, proj_matrix);
 
         for (const auto& texgrp : matgrp.texture_groups) {
             // Activate all textures for this texture group.
@@ -188,13 +197,18 @@ void RenderSystem::RenderColorPass() const {
     }
 }
 
-void RenderSystem::RenderDepthOnlyPass() const {
+void RenderSystem::RenderDepthOnlyPass(const float *view_matrix, const float *proj_matrix) const {
     // TODO Similar to color pass but without textures and everything uses a depth shader
     // This is intended for shadow map passes or the like
 }
 
-void RenderSystem::RenderLightingPass() const {
-
+void RenderSystem::RenderLightingPass(const float *inv_viewproj_matrix) const {
+    for (auto clight : this->alllights) {
+        if(clight.second && clight.second->enabled) {
+            LightBase *activelight = clight.second.get();
+            const float *lighttransform = &this->model_matrices.at(clight.first)[0][0];
+        }
+    }
 }
 
 void RenderSystem::RenderPostPass() const {

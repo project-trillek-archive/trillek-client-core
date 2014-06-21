@@ -41,6 +41,16 @@ void Shader::DeleteProgram() {
     program = 0;
 }
 
+bool Shader::SystemStart(const std::list<Property> &) {
+    return false;
+}
+bool Shader::SystemReset(const std::list<Property> &) {
+    return false;
+}
+bool Shader::Serialize(rapidjson::Document& document) {
+    return false;
+}
+
 void Shader::SetOutputBinding(ShaderOutputType outtype) {
     if(program == 0) {
         program = glCreateProgram();

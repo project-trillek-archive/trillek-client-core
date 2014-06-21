@@ -24,14 +24,32 @@ public:
     RenderAttachment(RenderAttachment &&that);
     RenderAttachment& operator=(RenderAttachment &&that);
 
+    virtual bool SystemStart(const std::list<Property> &);
+    virtual bool SystemReset(const std::list<Property> &);
+
     /**
-     * \brief parse a RenderAttachment from json
+     * \brief parse an attachment from json
+     * \param[in] const std::string& object_name the name of the node
+     * \param[in] rapidjson::Value& node The node to parse.
      * \return false on errors, true for success
      */
-    bool Parse(rapidjson::Value& node);
+    virtual bool Parse(const std::string &object_name, rapidjson::Value& node);
+
+    /**
+     * \brief Serialize this attachment to the provided JSON node.
+     *
+     * \param[in] rapidjson::Document& document The document to serialize to.
+     * \return bool False if an error occured in serializing.
+     */
+    virtual bool Serialize(rapidjson::Document& document);
+
+    GLenum GetAttach() const { return attachtarget; }
 private:
     GLuint renderbuf;
     bool multisample;
+    bool multisample_texture;
+    bool clearonuse;
+    float clearvalues[4];
     GLenum attachtarget;
     std::string texturename;
     std::weak_ptr<Texture> texture;
@@ -45,11 +63,29 @@ public:
     RenderLayer();
     virtual ~RenderLayer();
 
+    virtual bool SystemStart(const std::list<Property> &);
+    virtual bool SystemReset(const std::list<Property> &);
+
     /**
      * \brief parse a RenderLayer from json
+     * \param[in] const std::string& object_name the name of the node
+     * \param[in] rapidjson::Value& node The node to parse.
      * \return false on errors, true for success
      */
-    bool Parse(rapidjson::Value& node);
+    virtual bool Parse(const std::string &object_name, rapidjson::Value& node);
+
+    /**
+     * \brief Serialize this RenderLayer to the provided JSON node.
+     *
+     * \param[in] rapidjson::Document& document The document to serialize to.
+     * \return bool False if an error occured in serializing.
+     */
+    virtual bool Serialize(rapidjson::Document& document);
+
+    void BindToRender() const;
+    void UnbindFromAll() const;
+    void BindToRead() const;
+
 private:
 
     GLuint fbo_id;

@@ -31,11 +31,25 @@ public:
     Shader();
     virtual ~Shader();
 
+    virtual bool SystemStart(const std::list<Property> &);
+    virtual bool SystemReset(const std::list<Property> &);
+
     /**
      * \brief parse a shader from json
+     * \param[in] const std::string& shader_name the name of the new shader
+     * \param[in] rapidjson::Value& node The node to parse.
      * \return false on errors, true for success
      */
-    bool Parse(const std::string &shader_name, rapidjson::Value& node);
+    virtual bool Parse(const std::string &shader_name, rapidjson::Value& node);
+
+    /**
+     * \brief Serialize this shader to the provided JSON node.
+     *
+     * \param[in] rapidjson::Document& document The document to serialize to.
+     * \return bool False if an error occured in serializing.
+     */
+    virtual bool Serialize(rapidjson::Document& document);
+
     bool ParseDefines(std::string &defstring, rapidjson::Value& node);
     void LoadFromString(ShaderType whichShader, const std::string & source);
     void LoadFromStrings(ShaderType whichShader, const std::vector<std::string> & source);
