@@ -193,7 +193,23 @@ public:
         graphics_instances[type_id][instancename] = instanceptr;
     }
 private:
-//	bool ParseShader(const std::string &shader_name, rapidjson::Value& node);
+    template<class CT>
+    int TryAddComponent(const unsigned int entity_id, std::shared_ptr<ComponentBase> comp) {
+        if(reflection::GetTypeID<CT>() == comp->component_type_id) {
+            auto ccomp = std::static_pointer_cast<CT>(comp);
+            if (!ccomp) {
+                return -1;
+            }
+            if(!AddEntityComponent(entity_id, ccomp)) {
+                return -1;
+            }
+            return 1;
+        }
+        else {
+            return 0;
+        }
+    }
+
 
     int gl_version[2];
     glm::mat4 projection_matrix;

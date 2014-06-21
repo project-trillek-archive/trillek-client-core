@@ -43,6 +43,20 @@ const int* RenderSystem::Start(const unsigned int width, const unsigned int heig
         this->view_matrix = this->camera->GetViewMatrix();
     }
 
+    std::list<Property> settings;
+    settings.push_back(Property("version", gl_version[0] * 100 + gl_version[1] * 10));
+    settings.push_back(Property("screen-width", width));
+    settings.push_back(Property("screen-height", height));
+    settings.push_back(Property("multisample", this->multisample));
+    settings.push_back(Property("samples", (int)8));
+
+    for(auto ginstance : this->graphics_instances) {
+        for(auto gobject : ginstance.second) {
+            if(gobject.second) {
+                gobject.second->SystemStart(settings);
+            }
+        }
+    }
     return this->gl_version;
 }
 
@@ -361,27 +375,14 @@ bool RenderSystem::AddEntityComponent(const unsigned int entity_id, std::shared_
 
 void RenderSystem::AddComponent(const unsigned int entity_id, std::shared_ptr<ComponentBase> component) {
 
-    if(reflection::GetTypeID<Renderable>() == component->component_type_id) {
-        // Do a static_pointer_cast to make sure we do have a Renderable component.
-        auto ren = std::static_pointer_cast<Renderable>(component);
-        if (!ren) {
-            return;
-        }
-        if(!AddEntityComponent(entity_id, ren)) {
-            return;
-        }
+    int r;
+    if(0 != (r = TryAddComponent<Renderable>(entity_id, component))) {
+        if(r < 0) return;
     }
-    else if(reflection::GetTypeID<LightBase>() == component->component_type_id) {
-        auto light = std::static_pointer_cast<LightBase>(component);
-        if (!light) {
-            return;
-        }
-        if(!AddEntityComponent(entity_id, light)) {
-            return;
-        }
+    else if(0 != (r = TryAddComponent<LightBase>(entity_id, component))) {
+        if(r < 0) return;
     }
 
-    // TODO: should really only subscribe once per entity, not for each component on one entity ID
     // Subscribe to transform change events for this entity ID.
     event::Dispatcher<Transform>::GetInstance()->Subscribe(entity_id, this);
 

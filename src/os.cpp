@@ -200,12 +200,12 @@ void OS::DispatchKeyboardEvent(const int key, const int scancode, const int acti
     else if (action == GLFW_RELEASE) {
         key_event = { key, scancode, KeyboardEvent::KEY_UP, mods };
     }
-    
+
     event::Dispatcher<KeyboardEvent>::GetInstance()->NotifySubscribers(&key_event);
 }
 
 void OS::DispatchCharacterEvent(const unsigned int uchar) {
-    KeyboardEvent key_event { uchar, 0, KeyboardEvent::KEY_CHAR, 0 };
+    KeyboardEvent key_event { (const int)uchar, 0, KeyboardEvent::KEY_CHAR, 0 };
     event::Dispatcher<KeyboardEvent>::GetInstance()->NotifySubscribers(&key_event);
 }
 
