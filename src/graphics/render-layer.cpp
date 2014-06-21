@@ -12,6 +12,12 @@ RenderAttachment::RenderAttachment() {
     this->clearonuse = false;
     this->multisample_texture = false;
     this->outputnumber = 0;
+    this->clearstencil = 0;
+    this->width = 0;
+    this->height = 0;
+    for(int i = 0; i < 4; i++) {
+        this->clearvalues[i] = 0;
+    }
 }
 
 RenderAttachment::~RenderAttachment() {
@@ -26,6 +32,12 @@ RenderAttachment::RenderAttachment(RenderAttachment &&that) {
     this->multisample_texture = that.multisample_texture;
     this->clearonuse = that.clearonuse;
     this->outputnumber = that.outputnumber;
+    this->clearstencil = that.clearstencil;
+    this->width = that.width;
+    this->height = that.height;
+    for(int i = 0; i < 4; i++) {
+        this->clearvalues[i] = that.clearvalues[i];
+    }
     that.renderbuf = 0;
     this->texture = std::move(that.texture);
 }
@@ -38,6 +50,12 @@ RenderAttachment& RenderAttachment::operator=(RenderAttachment &&that) {
     this->multisample_texture = that.multisample_texture;
     this->clearonuse = that.clearonuse;
     this->outputnumber = that.outputnumber;
+    this->clearstencil = that.clearstencil;
+    this->width = that.width;
+    this->height = that.height;
+    for(int i = 0; i < 4; i++) {
+        this->clearvalues[i] = that.clearvalues[i];
+    }
     that.renderbuf = 0;
     this->texture = std::move(that.texture);
     return *this;
@@ -62,8 +80,9 @@ bool RenderAttachment::SystemStart(const std::list<Property> &settings) {
     Generate(width, height, samples);
     return true;
 }
+
 bool RenderAttachment::SystemReset(const std::list<Property> &settings) {
-    int width, height, samples;
+    int samples;
     for(auto prop : settings) {
         if(prop.GetName() == "screen-width") {
             width = prop.Get<int>();
@@ -82,6 +101,36 @@ bool RenderAttachment::SystemReset(const std::list<Property> &settings) {
     Generate(width, height, samples);
     return true;
 }
+
+void RenderAttachment::Clear() {
+    if(!this->clearonuse) {
+        return; // return if we should not clear
+    }
+    switch(this->attachtarget) {
+    case GL_COLOR_ATTACHMENT0:
+        glDrawBuffer(GetAttach());
+        glClearColor(clearvalues[0], clearvalues[1], clearvalues[2], clearvalues[3]);
+        glClear(GL_COLOR_BUFFER_BIT);
+        break;
+    case GL_DEPTH_ATTACHMENT:
+        glDrawBuffer(GL_DEPTH_ATTACHMENT);
+        glClearDepth(clearvalues[0]);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        break;
+    case GL_STENCIL_ATTACHMENT:
+        glDrawBuffer(GL_STENCIL_ATTACHMENT);
+        glClearStencil(clearstencil);
+        glClear(GL_STENCIL_BUFFER_BIT);
+        break;
+    case GL_DEPTH_STENCIL_ATTACHMENT:
+        glDrawBuffer(GL_DEPTH_STENCIL_ATTACHMENT);
+        glClearDepth(clearvalues[0]);
+        glClearStencil(clearstencil);
+        glClear(GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        break;
+    }
+}
+
 bool RenderAttachment::Serialize(rapidjson::Document& document) {
     return false;
 }
@@ -145,6 +194,9 @@ bool RenderAttachment::Parse(const std::string &object_name, rapidjson::Value& n
                     }
                     if(clearelem->value.IsNumber()) {
                         this->clearvalues[index] = clearelem->value.GetDouble();
+                        if(index <= 1 && attnode->value.IsInt()) {
+                            this->clearstencil = attnode->value.GetInt();
+                        }
                     }
                     else {
                         std::cerr << "[ERROR] Attachment: Invalid clearing value";
@@ -156,6 +208,9 @@ bool RenderAttachment::Parse(const std::string &object_name, rapidjson::Value& n
             }
             else if(attnode->value.IsNumber()) {
                 float clearval = attnode->value.GetDouble();
+                if(attnode->value.IsInt()) {
+                    this->clearstencil = attnode->value.GetInt();
+                }
                 for(int index = 0; index < 4; index++) {
                     this->clearvalues[index] = clearval;
                 }
@@ -213,11 +268,13 @@ void RenderAttachment::Destroy() {
         renderbuf = 0;
     }
 }
+
 void RenderAttachment::BindTexture() {
     if(texture) {
         glBindTexture(GL_TEXTURE0 + outputnumber, texture->GetID());
     }
 }
+
 void RenderAttachment::AttachToFBO() {
     if(renderbuf) {
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, this->attachtarget, GL_RENDERBUFFER, renderbuf);
@@ -233,25 +290,67 @@ void RenderAttachment::AttachToFBO() {
 }
 
 RenderLayer::RenderLayer() {
+    initialize_priority = 1; // start after all attachments
+    width = 0;
+    height = 0;
     fbo_id = 0;
 }
 
 RenderLayer::~RenderLayer() {
+    Destroy();
+}
 
-}
-bool RenderLayer::SystemStart(const std::list<Property> &) {
+bool RenderLayer::SystemStart(const std::list<Property> &settings) {
     return false;
 }
-bool RenderLayer::SystemReset(const std::list<Property> &) {
+
+bool RenderLayer::SystemReset(const std::list<Property> &settings) {
     return false;
 }
+
 bool RenderLayer::Serialize(rapidjson::Document& document) {
     return false;
 }
 
-void RenderLayer::BindToRender() const {}
-void RenderLayer::UnbindFromAll() const {}
-void RenderLayer::BindToRead() const {}
+void RenderLayer::Generate() {
+    if(fbo_id) return;
+    glGenFramebuffers(1, &fbo_id);
+}
+
+void RenderLayer::Destroy() {
+    if(fbo_id) {
+        glDeleteFramebuffers(1, &fbo_id);
+        fbo_id = 0;
+    }
+}
+
+void RenderLayer::BindToRender() const {
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo_id);
+    GLuint drawcount = this->attachments.size();
+    GLenum *drawto = new GLenum[drawcount];
+    int i = 0;
+    for(auto attitr : this->attachments) {
+        if(attitr) {
+            attitr->Clear();
+            drawto[i++] = attitr->GetAttach();
+        }
+        else {
+            drawto[i++] = GL_COLOR_ATTACHMENT0;
+        }
+    }
+    glDrawBuffers(drawcount, drawto);
+    delete drawto;
+}
+
+void RenderLayer::UnbindFromAll() const {
+    glDrawBuffer(GL_BACK);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+}
+
+void RenderLayer::BindToRead() const {
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo_id);
+}
 
 bool RenderLayer::Parse(const std::string &object_name, rapidjson::Value& node) {
     return true;

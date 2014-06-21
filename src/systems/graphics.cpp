@@ -50,10 +50,12 @@ const int* RenderSystem::Start(const unsigned int width, const unsigned int heig
     settings.push_back(Property("multisample", this->multisample));
     settings.push_back(Property("samples", (int)8));
 
-    for(auto ginstance : this->graphics_instances) {
-        for(auto gobject : ginstance.second) {
-            if(gobject.second) {
-                gobject.second->SystemStart(settings);
+    for(unsigned int p = 0; p < 3; p++) {
+        for(auto ginstance : this->graphics_instances) {
+            for(auto gobject : ginstance.second) {
+                if(gobject.second && gobject.second->initialize_priority == p) {
+                    gobject.second->SystemStart(settings);
+                }
             }
         }
     }

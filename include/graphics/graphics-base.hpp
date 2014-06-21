@@ -10,7 +10,7 @@ namespace graphics {
 
 class GraphicsBase {
 public:
-    GraphicsBase() {}
+    GraphicsBase() : initialize_priority(0) {}
     virtual ~GraphicsBase() {}
 
     /**
@@ -42,6 +42,8 @@ public:
      * \return bool False if an error occured in serializing.
      */
     virtual bool Serialize(rapidjson::Document& document) = 0;
+
+    unsigned int initialize_priority;
 };
 
 } // namespace graphics

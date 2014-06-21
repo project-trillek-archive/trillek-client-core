@@ -48,13 +48,23 @@ public:
     void BindTexture();
     void AttachToFBO();
 
-    GLenum GetAttach() const { return attachtarget; }
+    void Clear();
+
+    GLenum GetAttach() const {
+        if(attachtarget == GL_COLOR_ATTACHMENT0) {
+            return GL_COLOR_ATTACHMENT0 + outputnumber;
+        }
+        return attachtarget;
+    }
 private:
     GLuint renderbuf;
     bool multisample;
     bool multisample_texture;
     bool clearonuse;
     float clearvalues[4];
+    int clearstencil;
+    unsigned int width;
+    unsigned int height;
     GLenum attachtarget;
     int outputnumber;
     std::string texturename;
@@ -88,6 +98,9 @@ public:
      */
     virtual bool Serialize(rapidjson::Document& document);
 
+    void Generate();
+    void Destroy();
+
     void BindToRender() const;
     void UnbindFromAll() const;
     void BindToRead() const;
@@ -95,8 +108,10 @@ public:
 private:
 
     GLuint fbo_id;
+    unsigned int width;
+    unsigned int height;
     std::vector<std::string> attachmentnames;
-    std::vector<std::weak_ptr<RenderAttachment>> attachments;
+    std::vector<std::shared_ptr<RenderAttachment>> attachments;
 };
 
 } // namespace graphics
