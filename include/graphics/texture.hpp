@@ -60,6 +60,11 @@ public:
     void GenerateDepth(GLuint width, GLuint height, bool stencil);
 
     /**
+     * \brief create a blank stencil texture
+     */
+    void GenerateStencil(GLuint width, GLuint height);
+
+    /**
      * \brief create a blank multisample texture RGB or RGBA format
      */
     void GenerateMultisample(GLuint width, GLuint height, GLuint samples);
@@ -68,6 +73,11 @@ public:
      * \brief create a blank multisample depth texture with or without stencil
      */
     void GenerateMultisampleDepth(GLuint width, GLuint height, GLuint samples, bool stencil);
+
+    /**
+     * \brief create a blank multisample stencil texture
+     */
+    void GenerateMultisampleStencil(GLuint width, GLuint height, GLuint samples);
 
     bool operator==(const Texture & other) {
         return texture_id == other.texture_id;

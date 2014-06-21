@@ -279,8 +279,7 @@ void RenderAttachment::Generate(int width, int height, int samplecount) {
                 texture->GenerateMultisampleDepth(width, height, samplecount, false);
                 break;
             case GL_STENCIL_ATTACHMENT:
-                //TODO texture->GenerateMultisampleStencil(width, height, samplecount);
-                std::cerr << __FILE__ ":" << __LINE__ << " pure stencil format not implemented\n";
+                texture->GenerateMultisampleStencil(width, height, samplecount);
                 break;
             case GL_DEPTH_STENCIL_ATTACHMENT:
                 texture->GenerateMultisampleDepth(width, height, samplecount, true);
@@ -297,8 +296,7 @@ void RenderAttachment::Generate(int width, int height, int samplecount) {
                 texture->GenerateDepth(width, height, false);
                 break;
             case GL_STENCIL_ATTACHMENT:
-                //TODO texture->GenerateStencil(width, height);
-                std::cerr << __FILE__ ":" << __LINE__ << " pure stencil format not implemented\n";
+                texture->GenerateStencil(width, height);
                 break;
             case GL_DEPTH_STENCIL_ATTACHMENT:
                 texture->GenerateDepth(width, height, true);
@@ -315,8 +313,7 @@ void RenderAttachment::Generate(int width, int height, int samplecount) {
             texture->GenerateDepth(width, height, false);
             break;
         case GL_STENCIL_ATTACHMENT:
-            //TODO texture->GenerateStencil(width, height);
-            std::cerr << __FILE__ ":" << __LINE__ << " pure stencil format not implemented\n";
+            texture->GenerateStencil(width, height);
             break;
         case GL_DEPTH_STENCIL_ATTACHMENT:
             texture->GenerateDepth(width, height, true);
