@@ -24,6 +24,9 @@ int main(int argCount, char **argValues) {
     trillek::TransformMap::GetInstance();
     trillek::resource::ResourceMap::GetInstance();
 
+    // start the physics system, must be done before loading any components.
+    trillek::TrillekGame::GetPhysicsSystem().Start();
+
     trillek::util::JSONPasrser jparser;
     jparser.Parse("assets/tests/sample.json");
 
@@ -38,6 +41,9 @@ int main(int argCount, char **argValues) {
 
     // register the graphic system
     systems.push(&trillek::TrillekGame::GetGraphicSystem());
+
+    // register the physics system
+    systems.push(&trillek::TrillekGame::GetPhysicsSystem());
 
     // Detach the window from the current thread
     os.DetachContext();
