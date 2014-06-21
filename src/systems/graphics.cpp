@@ -125,11 +125,26 @@ void RenderSystem::ThreadInit() {
 }
 
 void RenderSystem::RunBatch() const {
+
+    RenderScene();
+
+    TrillekGame::GetOS().SwapBuffers();
+    // If the user closes the window, we notify all the systems
+    if (TrillekGame::GetOS().Closing()) {
+        TrillekGame::NotifyCloseWindow();
+    }
+}
+
+void RenderSystem::RenderScene() const {
     // Clear the backbuffer and primary depth/stencil buffer
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glViewport(0, 0, this->window_width, this->window_height); // Set the viewport size to fill the window
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); // Clear required buffers
 
+    RenderColorPass();
+}
+
+void RenderSystem::RenderColorPass() const {
     for (auto matgrp : this->material_groups) {
         const auto& shader = matgrp.material.GetShader();
         shader->Use();
@@ -152,10 +167,12 @@ void RenderSystem::RunBatch() const {
                 static GLint temp;
                 for (unsigned int entity_id : rengrp.instances) {
                     glUniformMatrix4fv((*shader)("model"), 1, GL_FALSE, &this->model_matrices.at(entity_id)[0][0]);
-                    if (rengrp.animations.find(entity_id) != rengrp.animations.end()) {
+                    auto renanim = rengrp.animations.find(entity_id);
+                    if (renanim != rengrp.animations.end()) {
                         temp = 1;
                         glUniform1iv((*shader)("animated"), 1, &temp);
-                        glUniformMatrix4fv((*shader)("animation_matrix"), rengrp.animations.at(entity_id)->animation_matricies.size(), GL_FALSE, &rengrp.animations.at(entity_id)->animation_matricies[0][0][0]);
+                        auto &animmatricies = renanim->second->animation_matricies;
+                        glUniformMatrix4fv((*shader)("animation_matrix"), animmatricies.size(), GL_FALSE, &animmatricies[0][0][0]);
                     }
                     else {
                         temp = 0;
@@ -169,11 +186,19 @@ void RenderSystem::RunBatch() const {
             }
         }
     }
-    TrillekGame::GetOS().SwapBuffers();
-    // If the user closes the window, we notify all the systems
-    if (TrillekGame::GetOS().Closing()) {
-        TrillekGame::NotifyCloseWindow();
-    }
+}
+
+void RenderSystem::RenderDepthOnlyPass() const {
+    // TODO Similar to color pass but without textures and everything uses a depth shader
+    // This is intended for shadow map passes or the like
+}
+
+void RenderSystem::RenderLightingPass() const {
+
+}
+
+void RenderSystem::RenderPostPass() const {
+
 }
 
 void RenderSystem::Notify(const unsigned int entity_id, const Transform* transform) {

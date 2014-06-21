@@ -73,6 +73,31 @@ public:
     void ThreadInit() override;
 
     /**
+     * \brief Renders all the passes for a scene and updates screen.
+     */
+    void RenderScene() const;
+
+    /**
+     * \brief Renders all textured geometry for the scene.
+     */
+    void RenderColorPass() const;
+
+    /**
+     * \brief Renders all geometry for the scene, but only the depth channel.
+     */
+    void RenderDepthOnlyPass() const;
+
+    /**
+     * \brief Renders all deferred lighting passes for the scene.
+     */
+    void RenderLightingPass() const;
+
+    /**
+     * \brief Renders post processing passes for the scene.
+     */
+    void RenderPostPass() const;
+
+    /**
      * \brief Causes an update in the system based on the change in time.
      *
      * Updates the state of the system based off how much time has elapsed since the last update.
