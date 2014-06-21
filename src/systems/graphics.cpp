@@ -220,7 +220,9 @@ void RenderSystem::RenderLightingPass(const float *inv_viewproj_matrix) const {
     for (auto clight : this->alllights) {
         if(clight.second && clight.second->enabled) {
             LightBase *activelight = clight.second.get();
-            const float *lighttransform = &this->model_matrices.at(clight.first)[0][0];
+            const glm::mat4& lightmat = this->model_matrices.at(clight.first);
+            glm::vec3 lightpos = glm::vec3(lightmat[3][0], lightmat[3][1], lightmat[3][2]);
+
         }
     }
 }

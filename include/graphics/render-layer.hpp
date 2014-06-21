@@ -43,6 +43,11 @@ public:
      */
     virtual bool Serialize(rapidjson::Document& document);
 
+    void Generate(int width, int height, int samplecount);
+    void Destroy();
+    void BindTexture();
+    void AttachToFBO();
+
     GLenum GetAttach() const { return attachtarget; }
 private:
     GLuint renderbuf;
@@ -51,8 +56,9 @@ private:
     bool clearonuse;
     float clearvalues[4];
     GLenum attachtarget;
+    int outputnumber;
     std::string texturename;
-    std::weak_ptr<Texture> texture;
+    std::shared_ptr<Texture> texture;
 };
 
 /**
@@ -89,6 +95,7 @@ public:
 private:
 
     GLuint fbo_id;
+    std::vector<std::string> attachmentnames;
     std::vector<std::weak_ptr<RenderAttachment>> attachments;
 };
 
