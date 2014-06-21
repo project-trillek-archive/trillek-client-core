@@ -30,7 +30,7 @@ install:
     # OpenAL, Vorbis and OGG
     #- sudo apt-get -q -y install libogg-dev libvorbis-dev libopenal-dev
     # Bullet
-    #- sudo apt-get -q -y install libullet-dev
+    - sudo apt-get -q -y install libullet-dev
     # install and build gtest
     - sudo apt-get -q -y install libgtest-dev
     - BUILD_PATH=$(pwd)
