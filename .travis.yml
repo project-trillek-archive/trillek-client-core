@@ -7,8 +7,8 @@ before_install:
     - sudo add-apt-repository --yes ppa:h-rayflood/llvm
     - sudo apt-get -qq update
     # Playdeb has bullet in their repo
-    #- wget http://archive.getdeb.net/install_deb/playdeb_0.3-1~getdeb1_all.deb
-    #- sudo dpkg -i playdeb_0.3-1~getdeb1_all.deb
+    - wget http://archive.getdeb.net/install_deb/playdeb_0.3-1~getdeb1_all.deb
+    - sudo dpkg -i playdeb_0.3-1~getdeb1_all.deb
     # No ppa for GLFW3 at this time. Compiling by hand!
     - sudo apt-get -qq install xorg-dev libglu1-mesa-dev
     - git clone https://github.com/glfw/glfw.git
