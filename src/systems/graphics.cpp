@@ -26,6 +26,7 @@ const int* RenderSystem::Start(const unsigned int width, const unsigned int heig
     // Use the GL3 way to get the version number
     glGetIntegerv(GL_MAJOR_VERSION, &this->gl_version[0]);
     glGetIntegerv(GL_MINOR_VERSION, &this->gl_version[1]);
+    CheckGLError();
 
     // Sanity check to make sure we are at least in a good major version number.
     assert((this->gl_version[0] > 1) && (this->gl_version[0] < 5));
@@ -42,6 +43,8 @@ const int* RenderSystem::Start(const unsigned int width, const unsigned int heig
         this->camera->Activate(0);
         this->view_matrix = this->camera->GetViewMatrix();
     }
+
+    CheckGLError();
 
     std::list<Property> settings;
     settings.push_back(Property("version", gl_version[0] * 100 + gl_version[1] * 10));

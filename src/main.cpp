@@ -19,6 +19,7 @@ int main(int argCount, char **argValues) {
 #else
     os.InitializeWindow(800, 600, "Trillek Client Core", 3, 0);
 #endif
+    glGetError(); // clear errors
 
     // Call each system's GetInstance to create the initial instance.
     trillek::TransformMap::GetInstance();

@@ -112,6 +112,7 @@ file(GLOB TCCExtra_SRC
 "${TCCSRC}/transform.cpp"
 "${TCCSRC}/trillek-game.cpp"
 "${TCCSRC}/os.cpp"
+"${TCCSRC}/opengl.cpp"
 )
 
 # For certain files we need the OpenGL symbols.

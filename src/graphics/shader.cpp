@@ -52,12 +52,15 @@ bool Shader::Serialize(rapidjson::Document& document) {
 }
 
 void Shader::SetOutputBinding(ShaderOutputType outtype) {
+
     if(program == 0) {
         program = glCreateProgram();
+        CheckGLError();
     }
     if(output_bindings.size() > 0 && outtype == ShaderOutputType::DEFAULT_TARGETS) {
         for(auto bindpair : output_bindings) {
             glBindFragDataLocation(program, bindpair.second, bindpair.first.c_str());
+            CheckGLError();
         }
         return;
     }
@@ -65,28 +68,30 @@ void Shader::SetOutputBinding(ShaderOutputType outtype) {
     case ShaderOutputType::DEFAULT_TARGETS:
     default:
         // Setup output for multiple render targets
-        glBindFragDataLocation(program, 0, "out_Color");
-        glBindFragDataLocation(program, 1, "out_Normal");
-        glBindFragDataLocation(program, 2, "out_Depth");
+        glBindFragDataLocation(program, 0, "out_Color"); CheckGLError();
+        glBindFragDataLocation(program, 1, "out_Normal"); CheckGLError();
+        glBindFragDataLocation(program, 2, "out_Depth"); CheckGLError();
         break;
     }
 }
 
 bool Shader::LinkProgram() {
     if(program == 0) {
-        program = glCreateProgram();
+        program = glCreateProgram(); CheckGLError();
         SetOutputBinding(ShaderOutputType::DEFAULT_TARGETS);
     }
 
     // attach all shaders
     for(auto shaderid_itr : shaders) {
         glAttachShader(program, shaderid_itr);
+        CheckGLError();
     }
 
     //link and check if the program links ok
     bool linkok = true;
     GLint status;
     glLinkProgram(program);
+    CheckGLError();
     glGetProgramiv(program, GL_LINK_STATUS, &status);
     if (status == GL_FALSE) {
         GLint infoLogLength;
@@ -97,6 +102,7 @@ bool Shader::LinkProgram() {
         delete[] infoLog;
         linkok = false;
     }
+    CheckGLError();
 
     for(auto shaderid_itr : shaders) {
         glDeleteShader(shaderid_itr);
@@ -318,14 +324,17 @@ void Shader::LoadFromStrings(ShaderType type, const std::vector<std::string> &so
 
 void Shader::LoadFromString(ShaderType type, const std::string &source) {
     GLuint shader = glCreateShader(type);
+    CheckGLError();
 
     GLint slen = source.length();
     const GLchar *sstr = source.data();
     glShaderSource(shader, 1, &sstr, &slen);
+    CheckGLError();
 
     // check if the shader compiles
     GLint status;
     glCompileShader(shader);
+    CheckGLError();
     glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
     if(status == GL_FALSE) {
         GLint log_length;
@@ -335,6 +344,7 @@ void Shader::LoadFromString(ShaderType type, const std::string &source) {
         std::cerr << "Shader Compile: " << info_log << '\n';
         delete[] info_log;
     }
+    CheckGLError();
     shaders.push_back(shader);
 }
 

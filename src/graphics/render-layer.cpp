@@ -139,6 +139,30 @@ static std::string MakeString(const rapidjson::Value& v) {
     return std::string(v.GetString(), v.GetStringLength());
 }
 
+/*
+ * Example json section
+ *
+  "attachment":{
+    "coloroutput" : {
+      "texture" : "newcolortexture",
+      "target" : "color", // allowed are color, depth, stencil, depth-stencil
+      "number" : 0, // only for color targets
+      "clear" : [0, 0, 0, 0] // clear colors
+    }
+    "coloroutput2" : {
+      "texture" : "newcolortexture2",
+      "target" : "color",
+      "number" : 0,
+      "clear" : 0 // clear all colors
+    }
+    "depthstencil" : {
+      "texture" : "newdepthtexture",
+      "target" : "depth-stencil",
+      "clear" : [0, 0] // clear depth
+    }
+  }
+*/
+
 bool RenderAttachment::Parse(const std::string &object_name, rapidjson::Value& node) {
     for(auto attnode = node.MemberBegin(); attnode != node.MemberEnd(); attnode++) {
         std::string attribname = MakeString(attnode->name);
@@ -148,7 +172,7 @@ bool RenderAttachment::Parse(const std::string &object_name, rapidjson::Value& n
             }
             else {
                 // TODO use logger
-                std::cerr << "[ERROR] Attachment: Invalid texture name";
+                std::cerr << "[ERROR] Attachment: Invalid texture name\n";
                 return false;
             }
         }
@@ -170,7 +194,7 @@ bool RenderAttachment::Parse(const std::string &object_name, rapidjson::Value& n
             }
             else {
                 // TODO use logger
-                std::cerr << "[ERROR] Attachment: Invalid target format";
+                std::cerr << "[ERROR] Attachment: Invalid target format\n";
                 return false;
             }
         }
@@ -180,26 +204,26 @@ bool RenderAttachment::Parse(const std::string &object_name, rapidjson::Value& n
             }
             else {
                 // TODO use logger
-                std::cerr << "[ERROR] Attachment: Invalid target";
+                std::cerr << "[ERROR] Attachment: Invalid target\n";
                 return false;
             }
         }
         else if(attribname == "clear") {
             if(attnode->value.IsArray()) {
                 int index = 0;
-                for(auto clearelem = attnode->value.MemberBegin(); clearelem != attnode->value.MemberEnd(); attnode++) {
+                for(auto clearelem = attnode->value.Begin(); clearelem != attnode->value.End(); clearelem++) {
                     if(index > 3) {
-                        std::cerr << "[WARNING] Attachment: Excess clearing value";
+                        std::cerr << "[WARNING] Attachment: Excess clearing value\n";
                         break;
                     }
-                    if(clearelem->value.IsNumber()) {
-                        this->clearvalues[index] = clearelem->value.GetDouble();
-                        if(index <= 1 && attnode->value.IsInt()) {
-                            this->clearstencil = attnode->value.GetInt();
+                    if(clearelem->IsNumber()) {
+                        this->clearvalues[index] = clearelem->GetDouble();
+                        if(index <= 1 && clearelem->IsInt()) {
+                            this->clearstencil = clearelem->GetInt();
                         }
                     }
                     else {
-                        std::cerr << "[ERROR] Attachment: Invalid clearing value";
+                        std::cerr << "[ERROR] Attachment: Invalid clearing value\n";
                         return false;
                     }
                     index++;
@@ -218,7 +242,7 @@ bool RenderAttachment::Parse(const std::string &object_name, rapidjson::Value& n
             }
             else {
                 // TODO use logger
-                std::cerr << "[ERROR] Attachment: Invalid clear";
+                std::cerr << "[ERROR] Attachment: Invalid clear\n";
                 return false;
             }
         }
@@ -250,15 +274,57 @@ void RenderAttachment::Generate(int width, int height, int samplecount) {
     }
     if(multisample) {
         if(multisample_texture) {
-            texture->GenerateMultisample(width, height, samplecount);
+            switch(attachtarget) {
+            case GL_DEPTH_ATTACHMENT:
+                texture->GenerateMultisampleDepth(width, height, samplecount, false);
+                break;
+            case GL_STENCIL_ATTACHMENT:
+                //TODO texture->GenerateMultisampleStencil(width, height, samplecount);
+                std::cerr << __FILE__ ":" << __LINE__ << " pure stencil format not implemented\n";
+                break;
+            case GL_DEPTH_STENCIL_ATTACHMENT:
+                texture->GenerateMultisampleDepth(width, height, samplecount, true);
+                break;
+            default:
+                texture->GenerateMultisample(width, height, samplecount);\
+                break;
+            }
         }
         else {
             glGenRenderbuffers(1, &renderbuf);
-            texture->Generate(width, height, true);
+            switch(attachtarget) {
+            case GL_DEPTH_ATTACHMENT:
+                texture->GenerateDepth(width, height, false);
+                break;
+            case GL_STENCIL_ATTACHMENT:
+                //TODO texture->GenerateStencil(width, height);
+                std::cerr << __FILE__ ":" << __LINE__ << " pure stencil format not implemented\n";
+                break;
+            case GL_DEPTH_STENCIL_ATTACHMENT:
+                texture->GenerateDepth(width, height, true);
+                break;
+            default:
+                texture->Generate(width, height, true);\
+                break;
+            }
         }
     }
     else {
-        texture->Generate(width, height, true);
+        switch(attachtarget) {
+        case GL_DEPTH_ATTACHMENT:
+            texture->GenerateDepth(width, height, false);
+            break;
+        case GL_STENCIL_ATTACHMENT:
+            //TODO texture->GenerateStencil(width, height);
+            std::cerr << __FILE__ ":" << __LINE__ << " pure stencil format not implemented\n";
+            break;
+        case GL_DEPTH_STENCIL_ATTACHMENT:
+            texture->GenerateDepth(width, height, true);
+            break;
+        default:
+            texture->Generate(width, height, true);\
+            break;
+        }
     }
 }
 
@@ -271,20 +337,39 @@ void RenderAttachment::Destroy() {
 
 void RenderAttachment::BindTexture() {
     if(texture) {
-        glBindTexture(GL_TEXTURE0 + outputnumber, texture->GetID());
+        glBindTexture((multisample_texture ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D), texture->GetID());
+        CheckGLError();
     }
 }
 
 void RenderAttachment::AttachToFBO() {
+    CheckGLError();
     if(renderbuf) {
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, this->attachtarget, GL_RENDERBUFFER, renderbuf);
+        CheckGLError();
     }
     else {
         if(multisample_texture) {
-            glFramebufferTexture2D(GL_FRAMEBUFFER, this->attachtarget, GL_TEXTURE_2D_MULTISAMPLE, this->texture->GetID(), 0);
+            if(texture) {
+                glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, texture->GetID());
+                CheckGLError();
+                glFramebufferTexture2D(GL_FRAMEBUFFER, this->attachtarget,
+                        GL_TEXTURE_2D_MULTISAMPLE, this->texture->GetID(), 0);
+                CheckGLError();
+                glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+                CheckGLError();
+            }
         }
         else {
-            glFramebufferTexture2D(GL_FRAMEBUFFER, this->attachtarget, GL_TEXTURE_2D, this->texture->GetID(), 0);
+            if(texture) {
+                glBindTexture(GL_TEXTURE_2D, texture->GetID());
+                CheckGLError();
+                glFramebufferTexture2D(GL_FRAMEBUFFER, this->attachtarget,
+                        GL_TEXTURE_2D, this->texture->GetID(), 0);
+                CheckGLError();
+                glBindTexture(GL_TEXTURE_2D, 0);
+                CheckGLError();
+            }
         }
     }
 }
@@ -300,8 +385,58 @@ RenderLayer::~RenderLayer() {
     Destroy();
 }
 
+static const char * GetFramebufferStatusMessage(GLuint status) {
+    switch(status) {
+    case GL_FRAMEBUFFER_COMPLETE:
+        return "Complete";
+    case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+        return "Incomplete attachment";
+    case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE:
+        return "Incomplete multisample buffer";
+    case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+        return "Missing attachment";
+    case GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS:
+        return "Incomplete layer targets";
+    case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
+        return "Incomplete draw buffer";
+    case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
+        return "Incomplete read buffer";
+    case GL_FRAMEBUFFER_UNSUPPORTED:
+        return "Not supported (check graphics drivers)";
+    }
+    return "Unknown error";
+}
+
 bool RenderLayer::SystemStart(const std::list<Property> &settings) {
-    return false;
+    this->attachments.clear();
+    for(auto attachname : this->attachmentnames) {
+        auto attachptr = TrillekGame::GetGraphicSystem().Get<RenderAttachment>(attachname);
+        if(attachptr) {
+            this->attachments.push_back(attachptr);
+        }
+        else {
+            // TODO use logger
+            std::cerr << "[ERROR] Layer: Attachment not found\n";
+            this->attachments.clear();
+            return false;
+        }
+    }
+    Generate();
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo_id); CheckGLError();
+    for(auto attachptr : this->attachments) {
+        attachptr->AttachToFBO();
+    }
+
+    GLuint status;
+    status = glCheckFramebufferStatus(GL_FRAMEBUFFER); CheckGLError();
+    if(status != GL_FRAMEBUFFER_COMPLETE) {
+        // TODO Use logger
+        std::cerr << "[ERROR] Framebuffer: " << GetFramebufferStatusMessage(status) << '\n';
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        return false;
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    return true;
 }
 
 bool RenderLayer::SystemReset(const std::list<Property> &settings) {
@@ -314,7 +449,7 @@ bool RenderLayer::Serialize(rapidjson::Document& document) {
 
 void RenderLayer::Generate() {
     if(fbo_id) return;
-    glGenFramebuffers(1, &fbo_id);
+    glGenFramebuffers(1, &fbo_id); CheckGLError();
 }
 
 void RenderLayer::Destroy() {
@@ -325,7 +460,7 @@ void RenderLayer::Destroy() {
 }
 
 void RenderLayer::BindToRender() const {
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo_id);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo_id); CheckGLError();
     GLuint drawcount = this->attachments.size();
     GLenum *drawto = new GLenum[drawcount];
     int i = 0;
@@ -338,21 +473,37 @@ void RenderLayer::BindToRender() const {
             drawto[i++] = GL_COLOR_ATTACHMENT0;
         }
     }
-    glDrawBuffers(drawcount, drawto);
+    glDrawBuffers(drawcount, drawto); CheckGLError();
     delete drawto;
 }
 
 void RenderLayer::UnbindFromAll() const {
     glDrawBuffer(GL_BACK);
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); CheckGLError();
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0); CheckGLError();
 }
 
 void RenderLayer::BindToRead() const {
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo_id);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo_id); CheckGLError();
 }
 
 bool RenderLayer::Parse(const std::string &object_name, rapidjson::Value& node) {
+    for(auto attnode = node.MemberBegin(); attnode != node.MemberEnd(); attnode++) {
+        std::string attribname = MakeString(attnode->name);
+        if(attribname == "attach") {
+            if(attnode->value.IsArray()) {
+                for(auto attach = attnode->value.Begin(); attach != attnode->value.End(); attach++) {
+                    if(attach->IsString()) {
+                        this->attachmentnames.push_back(MakeString(*attach));
+                    }
+                    else {
+                        // TODO use logger
+                        std::cerr << "[ERROR] Layer: Invalid attachment\n";
+                    }
+                }
+            }
+        }
+    }
     return true;
 }
 

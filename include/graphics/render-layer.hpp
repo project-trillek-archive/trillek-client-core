@@ -120,7 +120,7 @@ namespace reflection {
 
 template <> inline const char* GetTypeName<graphics::RenderAttachment>() { return "attachment"; }
 template <> inline const unsigned int GetTypeID<graphics::RenderAttachment>() { return 402; }
-template <> inline const char* GetTypeName<graphics::RenderLayer>() { return "render"; }
+template <> inline const char* GetTypeName<graphics::RenderLayer>() { return "layer"; }
 template <> inline const unsigned int GetTypeID<graphics::RenderLayer>() { return 403; }
 
 } // namespace reflection
