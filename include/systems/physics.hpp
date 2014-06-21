@@ -72,6 +72,12 @@ private:
     btCollisionDispatcher* dispatcher;
     btSequentialImpulseConstraintSolver* solver;
     btDiscreteDynamicsWorld* dynamicsWorld;
+
+    std::map<btRigidBody*, std::shared_ptr<CapsuleShape>> entity_bodies;
+
+    btCollisionShape* groundShape;
+    btDefaultMotionState* groundMotionState;
+    btRigidBody* groundRigidBody;
 };
 
 } // End of physcics
