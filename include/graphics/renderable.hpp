@@ -1,11 +1,7 @@
 #ifndef RENDERABLE_HPP_INCLUDED
 #define RENDERABLE_HPP_INCLUDED
 
-#ifndef __APPLE__
-#include <GL/glew.h>
-#else
-#include <OpenGL/gl3.h>
-#endif
+#include "opengl.hpp"
 
 #include <memory>
 #include <vector>
@@ -22,6 +18,7 @@ namespace graphics {
 
 class Shader;
 class Texture;
+class Animation;
 
 class Renderable : public ComponentBase {
 public:
@@ -77,6 +74,21 @@ public:
     std::shared_ptr<Shader> GetShader() const;
 
     /**
+     * \brief Sets the animation for this component.
+     *
+     * \param[in] const std::shared_ptr<Animation> a The animation for this component.
+     * \return void
+     */
+    void SetAnimation(std::shared_ptr<Animation> a);
+
+    /**
+     * \brief Gets the animation for this component.
+     *
+     * \return const std::shared_ptr<Animation> The animation for this component.
+     */
+    std::shared_ptr<Animation> GetAnimation() const;
+
+    /**
      * \brief Gets the number of buffer groups.
      *
      * \return size_t The number of buffer groups.
@@ -111,6 +123,8 @@ private:
     std::vector<std::shared_ptr<BufferGroup>> buffer_groups; // Render buffer ID group
 
     std::shared_ptr<resource::Mesh> mesh;
+
+    std::shared_ptr<Animation> animation;
 
     std::shared_ptr<Shader> shader;
 };

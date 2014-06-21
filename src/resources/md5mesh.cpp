@@ -4,16 +4,19 @@
 #include <memory>
 #include <sstream>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 namespace trillek {
 namespace resource {
 
 /**
-* \brief Cleans an input string by removing certain grouping characters.
-*
-* These characters include ", ', (, and ).
-* \param[in] std::string str The string to clean.
-* \return The cleaned string
-*/
+ * \brief Cleans an input string by removing certain grouping characters.
+ *
+ * These characters include ", ', (, and ).
+ * \param[in] std::string str The string to clean.
+ * \return The cleaned string
+ */
 std::string CleanString(std::string str) {
     while (str.find("(") != std::string::npos) {
         str.replace(str.find("("), 1, "");
@@ -46,15 +49,15 @@ void MD5Mesh::Joint::ComputeW() {
 }
 
 /**
-* \brief Parses a joint line.
-*
-* joints {
-*   "name" parent(pos.x pos.y pos.z) (orient.x orient.y orient.z)
-*   ...
-* }
-* \param[in] std::stringstream& ss The stream that contains the joint to parse.
-* \return The parsed joint or a default one if the parsing failed.
-*/
+ * \brief Parses a joint line.
+ *
+ * joints {
+ *   "name" parent(pos.x pos.y pos.z) (orient.x orient.y orient.z)
+ *   ...
+ * }
+ * \param[in] std::stringstream& ss The stream that contains the joint to parse.
+ * \return The parsed joint or a default one if the parsing failed.
+ */
 MD5Mesh::Joint ParseJoint(std::stringstream& ss) {
     MD5Mesh::Joint j;
     ss >> j.name;
@@ -62,16 +65,23 @@ MD5Mesh::Joint ParseJoint(std::stringstream& ss) {
     ss >> j.position[0]; ss >> j.position[1]; ss >> j.position[2];
     ss >> j.orientation[0]; ss >> j.orientation[1]; ss >> j.orientation[2];
     j.ComputeW();
+
+    glm::mat4x4 boneTranslation = glm::translate(glm::mat4(1.0f), j.position);
+    glm::mat4x4 boneRotation = glm::toMat4(j.orientation);
+
+    j.bind_pose = (boneTranslation * boneRotation);
+    j.bind_pose_inverse = glm::inverse(j.bind_pose);
+
     return j;
 }
 
 /**
-* \brief Parses a vertex line.
-*
-* vert vertIndex ( s t ) startWeight countWeight
-* \param[in] std::stringstream& ss The stream that contains the vertex to parse.
-* \return The parsed vertex or a default one if the parsing failed.
-*/
+ * \brief Parses a vertex line.
+ *
+ * vert vertIndex ( s t ) startWeight countWeight
+ * \param[in] std::stringstream& ss The stream that contains the vertex to parse.
+ * \return The parsed vertex or a default one if the parsing failed.
+ */
 MD5Mesh::Vertex ParseVertex(std::stringstream& ss) {
     MD5Mesh::Vertex v;
     int index;
@@ -82,12 +92,12 @@ MD5Mesh::Vertex ParseVertex(std::stringstream& ss) {
 }
 
 /**
-* \brief Parses a triangle line.
-*
-* tri triIndex vertIndex[0] vertIndex[1] vertIndex[2]
-* \param[in] std::stringstream& ss The stream that contains the triangle to parse.
-* \return The parsed triangle or a default one if the parsing failed.
-*/
+ * \brief Parses a triangle line.
+ *
+ * tri triIndex vertIndex[0] vertIndex[1] vertIndex[2]
+ * \param[in] std::stringstream& ss The stream that contains the triangle to parse.
+ * \return The parsed triangle or a default one if the parsing failed.
+ */
 MD5Mesh::Triangle ParseTriangle(std::stringstream& ss) {
     MD5Mesh::Triangle t;
     int index;
@@ -97,12 +107,12 @@ MD5Mesh::Triangle ParseTriangle(std::stringstream& ss) {
 }
 
 /**
-* \brief Parses a weight line.
-*
-* weight weightIndex joint bias ( pos.x pos.y pos.z )
-* \param[in] std::stringstream& ss The stream that contains the weight to parse.
-* \return The parsed weight or a default one if the parsing failed.
-*/
+ * \brief Parses a weight line.
+ *
+ * weight weightIndex joint bias ( pos.x pos.y pos.z )
+ * \param[in] std::stringstream& ss The stream that contains the weight to parse.
+ * \return The parsed weight or a default one if the parsing failed.
+ */
 MD5Mesh::Weight ParsesWeight(std::stringstream& ss) {
     MD5Mesh::Weight w;
     int index;
@@ -252,6 +262,8 @@ void MD5Mesh::CalculateVertexPositions() {
 
                 /* the sum of all weight->bias should be 1.0 */
                 vdata.position += (this->joints[weight.joint]->position + wv) * weight.bias;
+                vdata.bone_indicies[k] = weight.joint;
+                vdata.bone_weights[k] = weight.bias;
             }
 
             // Cache the calculated position for later

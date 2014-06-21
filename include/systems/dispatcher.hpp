@@ -13,7 +13,8 @@ namespace event {
 template <typename T>
 class Subscriber {
 public:
-    virtual void Notify(const unsigned int entity_id, const T* data) = 0;
+    virtual void Notify(const unsigned int entity_id, const T* data) { }
+    virtual void Notify(const T* data) { }
 };
 
 // Dispatches data change notifications to the various subscribers.
@@ -57,6 +58,16 @@ public:
     }
 
     /**
+    * \brief Subscribes to be notified of data change events for any entity ID.
+    *
+    * \param const Subscriber<T>* subscriber The subscriber to add.
+    * \return void
+    */
+    void Subscribe(Subscriber<T>* subscriber) {
+        this->subcriberss[0].push_back(subscriber);
+    }
+
+    /**
     * \brief Unsubscribes to notification of data change events.
     *
     * \param const unsigned int entity_id ID of the entity to unsubscribe from.
@@ -66,6 +77,18 @@ public:
     void Unsubscribe(const unsigned int entity_id, Subscriber<T>* subscriber)  {
         if (this->subcriberss.find(entity_id) != this->subcriberss.end()) {
             this->subcriberss[entity_id].remove(subscriber);
+        }
+    }
+
+    /**
+    * \brief Unsubscribes to notification of data change events.
+    *
+    * \param const Subscriber<T>* subscriber The subscriber to remove.
+    * \return void
+    */
+    void Unsubscribe(Subscriber<T>* subscriber) {
+        if (this->subcriberss.find(0) != this->subcriberss.end()) {
+            this->subcriberss[0].remove(subscriber);
         }
     }
 
@@ -81,6 +104,21 @@ public:
             auto subscriber_list = this->subcriberss.at(entity_id);
             for (Subscriber<T>* subscriber : subscriber_list) {
                 subscriber->Notify(entity_id, data);
+            }
+        }
+    }
+
+    /**
+    * \brief Called to notify all subscribers for entity ID 0 that the data has changed.
+    *
+    * \param const T* data The changed data.
+    * \return void
+    */
+    void NotifySubscribers(const T* data) {
+        if (this->subcriberss.find(0) != this->subcriberss.end()) {
+            auto subscriber_list = this->subcriberss.at(0);
+            for (Subscriber<T>* subscriber : subscriber_list) {
+                subscriber->Notify(data);
             }
         }
     }

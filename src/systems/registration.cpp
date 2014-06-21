@@ -3,6 +3,7 @@
 #include "graphics/shader.hpp"
 #include "graphics/light.hpp"
 #include "resources/md5mesh.hpp"
+#include "resources/md5anim.hpp"
 #include "resources/pixel-buffer.hpp"
 #include "resources/text-file.hpp"
 
@@ -31,6 +32,7 @@ void resource::ResourceMap::RegisterTypes() {
     RegisterResourceType<resource::TextFile>();
     RegisterResourceType<resource::MD5Mesh>();
     RegisterResourceType<resource::PixelBuffer>();
+    RegisterResourceType<resource::MD5Anim>();
 }
 
 } // End of trillek

@@ -34,6 +34,8 @@ public:
         int parent; // index
         glm::vec3 position; // Transformed position.
         glm::quat orientation; // Quaternion
+        glm::mat4 bind_pose;
+        glm::mat4 bind_pose_inverse;
     };
 
     struct Vertex {
@@ -120,6 +122,9 @@ public:
     void SetFileName(const std::string& fname) {
         this->fname = fname;
     }
+
+    // Used for MD5Anim::CheckMesh().
+    friend class MD5Anim;
 private:
     std::string fname; // Relative filename
     std::vector<std::unique_ptr<Mesh>> meshes;
