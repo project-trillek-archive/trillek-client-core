@@ -14,14 +14,6 @@ void PhysicsSystem::Start() {
     this->solver = new btSequentialImpulseConstraintSolver();
     this->dynamicsWorld = new btDiscreteDynamicsWorld(this->dispatcher, this->broadphase, this->solver, this->collisionConfiguration);
     this->dynamicsWorld->setGravity(btVector3(0, -10, 0));
-
-    groundShape = new btStaticPlaneShape(btVector3(0, 1, 0), 1);
-    groundMotionState =
-        new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, -10, 0)));
-    btRigidBody::btRigidBodyConstructionInfo
-        groundRigidBodyCI(0, groundMotionState, groundShape, btVector3(0, 0, 0));
-    groundRigidBody = new btRigidBody(groundRigidBodyCI);
-    this->dynamicsWorld->addRigidBody(groundRigidBody);
 }
 
 void PhysicsSystem::AddComponent(const unsigned int entity_id, std::shared_ptr<ComponentBase> component) {
@@ -51,16 +43,6 @@ void PhysicsSystem::HandleEvents(const frame_tp& timepoint) {
 }
 
 void PhysicsSystem::Terminate() {
-    if (this->groundRigidBody != nullptr) {
-        this->dynamicsWorld->removeRigidBody(groundRigidBody);
-        delete this->groundRigidBody;
-    }
-    if (this->groundMotionState != nullptr) {
-        delete this->groundMotionState;
-    }
-    if (this->groundShape != nullptr) {
-        delete this->groundShape;
-    }
     if (this->dynamicsWorld != nullptr) {
         delete this->dynamicsWorld;
     }

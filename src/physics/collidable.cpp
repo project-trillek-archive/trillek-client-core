@@ -66,8 +66,9 @@ bool Collidable::Initialize(const std::vector<Property> &properties) {
                     btVector3(v3.position.x, v3.position.y, v3.position.z), true);
             }
         }
-        auto& mesh_shape = std::unique_ptr<btBvhTriangleMeshShape>(
-            new btBvhTriangleMeshShape(this->mesh.get(), true));
+        auto scale = this->entity_transform->GetScale();
+        auto& mesh_shape = std::unique_ptr<btScaledBvhTriangleMeshShape>(
+            new btScaledBvhTriangleMeshShape(new btBvhTriangleMeshShape(this->mesh.get(), true), btVector3(scale.x, scale.y, scale.z)));
         this->shape = std::move(mesh_shape);
         this->mass = 0;
     }
