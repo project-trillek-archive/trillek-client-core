@@ -89,7 +89,10 @@ void RenderSystem::RunBatch() const {
                 matgrp.material.DeactivateTexture(tex_index);
             }
         }
+
+        shader->UnUse();
     }
+
     TrillekGame::GetOS().SwapBuffers();
     // If the user closes the window, we notify all the systems
     if (TrillekGame::GetOS().Closing()) {

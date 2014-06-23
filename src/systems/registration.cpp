@@ -1,7 +1,7 @@
 #include "trillek-game.hpp"
 #include "graphics/renderable.hpp"
 #include "graphics/shader.hpp"
-#include "physics/capsule-shape.hpp"
+#include "physics/collidable.hpp"
 #include "resources/md5mesh.hpp"
 #include "resources/md5anim.hpp"
 #include "resources/pixel-buffer.hpp"
@@ -16,9 +16,9 @@ namespace trillek {
 
 void ComponentFactory::RegisterTypes() {
     RegisterComponentType<graphics::Renderable>();
-    RegisterComponentType<physics::CapsuleShape>();
+    RegisterComponentType<physics::Collidable>();
     RegisterSystem<graphics::Renderable>(&TrillekGame::GetGraphicSystem());
-    RegisterSystem<physics::CapsuleShape>(&TrillekGame::GetPhysicsSystem());
+    RegisterSystem<physics::Collidable>(&TrillekGame::GetPhysicsSystem());
 }
 
 void util::JSONPasrser::RegisterTypes() {

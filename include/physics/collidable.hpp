@@ -7,17 +7,26 @@
 #include <memory>
 
 #include "systems/component-factory.hpp"
+#include "systems/dispatcher.hpp"
 
 namespace trillek {
+
+namespace resource {
+
+class Mesh;
+
+} // End of resource
 
 class Transform;
 
 namespace physics {
 
-class CapsuleShape : public ComponentBase {
+class Collidable :
+    public ComponentBase,
+    public event::Subscriber<Transform> {
 public:
-    CapsuleShape() { }
-    ~CapsuleShape() {
+    Collidable() { }
+    ~Collidable() {
         if (this->motion_state) {
             delete this->motion_state;
         }
@@ -45,7 +54,7 @@ public:
     *
     * \return void
     */
-    void InitializeRigidBody();
+    bool InitializeRigidBody();
 
     /**
     * \brief Gets the shape's rigidbody.
@@ -60,11 +69,16 @@ public:
     * \return void
     */
     void UpdateTransform();
-private:
-    double radius;
-    double height;
-    btMotionState* motion_state;
 
+    void Notify(const unsigned int entity_id, const Transform* transforum);
+private:
+    double radius; // Used for sphere and capsule shape collidable.
+    double height; // Used for capsule shape collidable.
+    btScalar mass;
+    std::unique_ptr<btTriangleMesh> mesh; // Used for mesh shape collidable.
+    std::shared_ptr<resource::Mesh> mesh_file; // Used for mesh shape collidable.
+
+    btMotionState* motion_state;
     std::unique_ptr<btCollisionShape> shape;
     std::unique_ptr<btRigidBody> body;
 
@@ -74,8 +88,8 @@ private:
 } // End of physics
 namespace reflection {
 
-template <> inline const char* GetTypeName<physics::CapsuleShape>() { return "capsule"; }
-template <> inline const unsigned int GetTypeID<physics::CapsuleShape>() { return 3000; }
+template <> inline const char* GetTypeName<physics::Collidable>() { return "collidable"; }
+template <> inline const unsigned int GetTypeID<physics::Collidable>() { return 3000; }
 
 } // End of reflection
 } // End of trillek

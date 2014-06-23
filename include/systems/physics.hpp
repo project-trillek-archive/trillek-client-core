@@ -12,7 +12,7 @@
 namespace trillek {
 namespace physics {
 
-class CapsuleShape;
+class Collidable;
 
 class PhysicsSystem : public SystemBase {
 public:
@@ -73,7 +73,7 @@ private:
     btSequentialImpulseConstraintSolver* solver;
     btDiscreteDynamicsWorld* dynamicsWorld;
 
-    std::map<btRigidBody*, std::shared_ptr<CapsuleShape>> entity_bodies;
+    std::map<btRigidBody*, std::shared_ptr<Collidable>> entity_bodies;
 
     btCollisionShape* groundShape;
     btDefaultMotionState* groundMotionState;

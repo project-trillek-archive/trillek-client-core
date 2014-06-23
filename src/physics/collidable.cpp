@@ -1,0 +1,126 @@
+#include "physics/collidable.hpp"
+#include "transform.hpp"
+#include "systems/transform-system.hpp"
+#include "systems/resource-system.hpp"
+#include "resources/mesh.hpp"
+
+#include <bullet/BulletCollision/Gimpact/btGImpactShape.h>
+
+namespace trillek {
+namespace physics {
+
+bool Collidable::Initialize(const std::vector<Property> &properties) {
+    std::string shape = "sphere";
+    std::string mesh_name;
+    this->radius = 1.0f;
+    this->height = 1.0f;
+    unsigned int entity_id;
+    for (const Property& p : properties) {
+        std::string name = p.GetName();
+        if (name == "radius") {
+            this->radius = p.Get<double>();
+        }
+        else if (name == "height") {
+            this->height = p.Get<double>();
+        }
+        else if (name == "shape") {
+            shape = p.Get<std::string>();
+        }
+        else if (name == "mesh") {
+            mesh_name = p.Get<std::string>();
+        }
+        else if (name == "entity_id") {
+            entity_id = p.Get<unsigned int>();
+        }
+    }
+
+    SetEntity(entity_id);
+    if (!this->entity_transform) {
+        return false;
+    }
+
+    if (shape == "capsule") {
+        this->shape = std::move(std::unique_ptr<btCollisionShape>(new btCapsuleShape(this->radius, this->height)));
+        this->mass = 1;
+    }
+    else if (shape == "sphere") {
+        this->shape = std::move(std::unique_ptr<btCollisionShape>(new btSphereShape(this->radius)));
+        this->mass = 1;
+    }
+    else if (shape == "static_mesh") {
+        this->mesh = std::move(std::unique_ptr<btTriangleMesh>(new btTriangleMesh()));
+        this->mesh_file = resource::ResourceMap::Get<resource::Mesh>(mesh_name);
+        if (!this->mesh_file) {
+            return false;
+        }
+        for (size_t mesh_i = 0; mesh_i < mesh_file->GetMeshGroupCount(); ++mesh_i) {
+            const auto& mesh_group = mesh_file->GetMeshGroup(mesh_i);
+            const auto& temp_lock = mesh_group.lock();
+            for (size_t face_i = 0; face_i < temp_lock->indicies.size(); ++face_i) {
+                const resource::VertexData& v1 = temp_lock->verts[temp_lock->indicies[face_i]];
+                const resource::VertexData& v2 = temp_lock->verts[temp_lock->indicies[++face_i]];
+                const resource::VertexData& v3 = temp_lock->verts[temp_lock->indicies[++face_i]];
+                this->mesh->addTriangle(
+                    btVector3(v1.position.x, v1.position.y, v1.position.z),
+                    btVector3(v2.position.x, v2.position.y, v2.position.z),
+                    btVector3(v3.position.x, v3.position.y, v3.position.z), true);
+            }
+        }
+        auto& mesh_shape = std::unique_ptr<btBvhTriangleMeshShape>(
+            new btBvhTriangleMeshShape(this->mesh.get(), true));
+        this->shape = std::move(mesh_shape);
+        this->mass = 0;
+    }
+
+    if (!this->shape) {
+        return false;
+    }
+    return InitializeRigidBody();
+}
+
+void Collidable::SetEntity(unsigned int entity_id) {
+    this->entity_transform = TransformMap::GetTransform(entity_id);
+    event::Dispatcher<Transform>::GetInstance()->Subscribe(entity_id, this);
+    auto pos = this->entity_transform->GetTranslation();
+    auto orientation = this->entity_transform->GetOrientation();
+    this->motion_state = new btDefaultMotionState(btTransform(
+        btQuaternion(orientation.x, orientation.y, orientation.z, orientation.w), btVector3(pos.x, pos.y, pos.z)));
+}
+
+bool Collidable::InitializeRigidBody() {
+    btVector3 fallInertia(0, 0, 0);
+    if (this->mass) {
+        this->shape->calculateLocalInertia(mass, fallInertia);
+    }
+    btRigidBody::btRigidBodyConstructionInfo fallRigidBodyCI(this->mass, this->motion_state, this->shape.get(), fallInertia);
+    this->body = std::move(std::unique_ptr<btRigidBody>(new btRigidBody(fallRigidBodyCI)));
+
+    if (!this->body) {
+        return false;
+    }
+
+    return true;
+}
+
+void Collidable::UpdateTransform() {
+    if (!this->motion_state && !this->entity_transform) {
+        return;
+    }
+    btTransform transform;
+    this->motion_state->getWorldTransform(transform);
+
+    auto pos = transform.getOrigin();
+    auto rot = transform.getRotation();
+    this->entity_transform->SetTranslation(glm::vec3(pos.x(), pos.y(), pos.z()));
+    this->entity_transform->SetOrientation(glm::quat(rot.w(), rot.x(), rot.y(), rot.z()));
+}
+
+void Collidable::Notify(const unsigned int entity_id, const Transform* transforum) {
+    auto pos = this->entity_transform->GetTranslation();
+    auto orientation = this->entity_transform->GetOrientation();
+    this->body->setWorldTransform(btTransform(
+        btQuaternion(orientation.x, orientation.y, orientation.z, orientation.w), btVector3(pos.x, pos.y, pos.z)));
+}
+
+} // End of physics
+} // End of trillek
