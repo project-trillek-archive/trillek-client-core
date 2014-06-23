@@ -28,11 +28,11 @@ int main(int argCount, char **argValues) {
     trillek::util::JSONPasrser jparser;
     jparser.Parse("assets/tests/sample.json");
 
-    std::shared_ptr<trillek::sound::System> soundsystem = trillek::sound::System::GetInstance();
-    soundsystem->SetListenerPosition(glm::vec3(0, 0, 0));
-    soundsystem->SetListenerOrientation(glm::vec3(0, 0, -1), glm::vec3(0, 1, 0));
+    trillek::sound::System& soundsystem = trillek::TrillekGame::GetSoundSystem();
+    soundsystem.SetListenerPosition(glm::vec3(0, 0, 0));
+    soundsystem.SetListenerOrientation(glm::vec3(0, 0, -1), glm::vec3(0, 1, 0));
 
-    std::shared_ptr<trillek::sound::Sound> s1 = soundsystem->GetSound("music_track_1");
+    std::shared_ptr<trillek::sound::Sound> s1 = soundsystem.GetSound("music_track_1");
     // needs to be a mono sound for 3d effects to work
     if (s1) {
         s1->Play();
@@ -48,6 +48,9 @@ int main(int argCount, char **argValues) {
 
     // register the graphic system
     systems.push(&trillek::TrillekGame::GetGraphicSystem());
+
+    // register the sound system
+    systems.push(&trillek::TrillekGame::GetSoundSystem());
 
     // Detach the window from the current thread
     os.DetachContext();

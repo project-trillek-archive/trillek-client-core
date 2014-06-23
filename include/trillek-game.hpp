@@ -5,6 +5,7 @@
 #include "systems/fake-system.hpp"
 #include "os.hpp"
 #include "systems/graphics.hpp"
+#include "systems/sound-system.hpp"
 
 namespace trillek {
 class TrillekGame {
@@ -33,6 +34,14 @@ public:
      *
      */
     static graphics::RenderSystem& GetGraphicSystem() { return gl_sys; };
+
+
+    /** \brief Return the sound system instance
+     *
+     * \return sound::System&
+     *
+     */
+    static sound::System& GetSoundSystem() { return *sound::System::GetInstance(); };
 
     /** \brief Get the FakeSystem
      *

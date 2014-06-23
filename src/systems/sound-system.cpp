@@ -96,8 +96,19 @@ std::shared_ptr<Sound> System::GetSound(const std::string& id) {
     return nullptr;
 }
 
-void System::Update() {
+void System::HandleEvents(const frame_tp& timepoint)
+{
+
+}
+
+void System::RunBatch() const
+{
     alureUpdate();
+}
+
+void System::Terminate()
+{
+
 }
 
 void System::SetListenerPosition(glm::vec3 position) {

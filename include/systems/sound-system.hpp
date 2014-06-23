@@ -10,6 +10,7 @@
 #include <unordered_map>
 
 #include "util/json-parser.hpp"
+#include "systems/system-base.hpp"
 
 namespace trillek {
 namespace sound {
@@ -83,7 +84,7 @@ public:
 }; // end of class Sound
 
 
-class System : public util::Parser {
+class System : public util::Parser, public SystemBase {
 private:
     System() : Parser("sounds") { }
     System(const System& right) : Parser("sounds") {
@@ -115,6 +116,11 @@ public:
 
     ~System();
 
+    // inherited from system-base
+    virtual void HandleEvents(const frame_tp& timepoint);
+    virtual void RunBatch() const;
+    virtual void Terminate();
+
     /** \brief Creates and returns a Sound if successful
      *
      * \param id const std::string&
@@ -123,7 +129,6 @@ public:
      */
     std::shared_ptr<Sound> GetSound(const std::string& id);
 
-    void Update();
 
     /** \brief Sets the position of sound listener
      *
