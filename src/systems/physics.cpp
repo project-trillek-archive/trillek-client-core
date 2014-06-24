@@ -1,5 +1,7 @@
 #include "systems/physics.hpp"
 #include "physics/collidable.hpp"
+#include <bullet/BulletCollision/Gimpact/btGImpactShape.h>
+#include <Bullet/BulletCollision/Gimpact/btGImpactCollisionAlgorithm.h>
 
 namespace trillek {
 namespace physics {
@@ -14,6 +16,10 @@ void PhysicsSystem::Start() {
     this->solver = new btSequentialImpulseConstraintSolver();
     this->dynamicsWorld = new btDiscreteDynamicsWorld(this->dispatcher, this->broadphase, this->solver, this->collisionConfiguration);
     this->dynamicsWorld->setGravity(btVector3(0, -10, 0));
+
+    // Register the collision dispatcher with the GImpact algorithm for dynamic meshes.
+    btCollisionDispatcher * dispatcher = static_cast<btCollisionDispatcher *>(this->dynamicsWorld->getDispatcher());
+    btGImpactCollisionAlgorithm::registerAlgorithm(dispatcher);
 }
 
 void PhysicsSystem::AddComponent(const unsigned int entity_id, std::shared_ptr<ComponentBase> component) {

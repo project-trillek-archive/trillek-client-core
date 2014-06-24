@@ -9,6 +9,28 @@
 namespace trillek {
 namespace physics {
 
+std::unique_ptr<btTriangleMesh> GenerateTriangleMesh(std::shared_ptr<resource::Mesh> mesh_file) {
+    auto mesh = std::unique_ptr<btTriangleMesh>(new btTriangleMesh());
+    if (!mesh_file) {
+        return nullptr;
+    }
+    for (size_t mesh_i = 0; mesh_i < mesh_file->GetMeshGroupCount(); ++mesh_i) {
+        const auto& mesh_group = mesh_file->GetMeshGroup(mesh_i);
+        const auto& temp_lock = mesh_group.lock();
+        for (size_t face_i = 0; face_i < temp_lock->indicies.size(); ++face_i) {
+            const resource::VertexData& v1 = temp_lock->verts[temp_lock->indicies[face_i]];
+            const resource::VertexData& v2 = temp_lock->verts[temp_lock->indicies[++face_i]];
+            const resource::VertexData& v3 = temp_lock->verts[temp_lock->indicies[++face_i]];
+            mesh->addTriangle(
+                btVector3(v1.position.x, v1.position.y, v1.position.z),
+                btVector3(v2.position.x, v2.position.y, v2.position.z),
+                btVector3(v3.position.x, v3.position.y, v3.position.z), true);
+        }
+    }
+
+    return std::move(mesh);
+}
+
 bool Collidable::Initialize(const std::vector<Property> &properties) {
     std::string shape = "sphere";
     std::string mesh_name;
@@ -51,29 +73,33 @@ bool Collidable::Initialize(const std::vector<Property> &properties) {
         this->mass = 1;
     }
     else if (shape == "static_mesh") {
-        this->mesh = std::move(std::unique_ptr<btTriangleMesh>(new btTriangleMesh()));
         this->mesh_file = resource::ResourceMap::Get<resource::Mesh>(mesh_name);
-        if (!this->mesh_file) {
+        this->mesh = GenerateTriangleMesh(this->mesh_file);
+        if (!this->mesh) {
             return false;
         }
-        for (size_t mesh_i = 0; mesh_i < mesh_file->GetMeshGroupCount(); ++mesh_i) {
-            const auto& mesh_group = mesh_file->GetMeshGroup(mesh_i);
-            const auto& temp_lock = mesh_group.lock();
-            for (size_t face_i = 0; face_i < temp_lock->indicies.size(); ++face_i) {
-                const resource::VertexData& v1 = temp_lock->verts[temp_lock->indicies[face_i]];
-                const resource::VertexData& v2 = temp_lock->verts[temp_lock->indicies[++face_i]];
-                const resource::VertexData& v3 = temp_lock->verts[temp_lock->indicies[++face_i]];
-                this->mesh->addTriangle(
-                    btVector3(v1.position.x, v1.position.y, v1.position.z),
-                    btVector3(v2.position.x, v2.position.y, v2.position.z),
-                    btVector3(v3.position.x, v3.position.y, v3.position.z), true);
-            }
-        }
+
         auto scale = this->entity_transform->GetScale();
         auto mesh_shape = std::unique_ptr<btScaledBvhTriangleMeshShape>(
             new btScaledBvhTriangleMeshShape(new btBvhTriangleMeshShape(this->mesh.get(), true), btVector3(scale.x, scale.y, scale.z)));
         this->shape = std::move(mesh_shape);
         this->mass = 0;
+    }
+    else if (shape == "dynamic_mesh") {
+        this->mesh_file = resource::ResourceMap::Get<resource::Mesh>(mesh_name);
+        this->mesh = GenerateTriangleMesh(this->mesh_file);
+        if (!this->mesh) {
+            return false;
+        }
+
+        auto scale = this->entity_transform->GetScale();
+        
+        auto mesh_shape = std::unique_ptr<btGImpactMeshShape>(new btGImpactMeshShape(this->mesh.get()));
+        mesh_shape->setLocalScaling(btVector3(scale.x, scale.y, scale.z));
+        mesh_shape->setMargin(0.04f);
+        mesh_shape->updateBound();
+        this->shape = std::move(mesh_shape);
+        this->mass = 1;
     }
 
     if (!this->shape) {
