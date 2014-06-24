@@ -17,6 +17,7 @@ std::shared_ptr<graphics::RenderSystem> TrillekGame::GetGraphicsInstance() {
     std::call_once(TrillekGame::once_graphics,
         [ ] () {
             TrillekGame::gl_sys_ptr.reset(new graphics::RenderSystem());
+            TrillekGame::gl_sys_ptr->RegisterTypes();
     });
     return std::shared_ptr<graphics::RenderSystem>(gl_sys_ptr);
 }

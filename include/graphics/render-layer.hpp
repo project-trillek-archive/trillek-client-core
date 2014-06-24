@@ -18,7 +18,7 @@ namespace graphics {
 class RenderAttachment : public GraphicsBase {
 public:
     RenderAttachment();
-    ~RenderAttachment();
+    virtual ~RenderAttachment();
     RenderAttachment(const RenderAttachment &) = delete;
     RenderAttachment& operator=(const RenderAttachment &) = delete;
     RenderAttachment(RenderAttachment &&that);
@@ -33,7 +33,7 @@ public:
      * \param[in] rapidjson::Value& node The node to parse.
      * \return false on errors, true for success
      */
-    virtual bool Parse(const std::string &object_name, rapidjson::Value& node);
+    virtual bool Parse(const std::string &object_name, const rapidjson::Value& node);
 
     /**
      * \brief Serialize this attachment to the provided JSON node.
@@ -88,7 +88,7 @@ public:
      * \param[in] rapidjson::Value& node The node to parse.
      * \return false on errors, true for success
      */
-    virtual bool Parse(const std::string &object_name, rapidjson::Value& node);
+    virtual bool Parse(const std::string &object_name, const rapidjson::Value& node);
 
     /**
      * \brief Serialize this RenderLayer to the provided JSON node.

@@ -147,7 +147,7 @@ GLuint Shader::GetProgram() {
     return program;
 }
 
-bool Shader::ParseDefines(std::string &defstring, rapidjson::Value& node) {
+bool Shader::ParseDefines(std::string &defstring, const rapidjson::Value& node) {
     for(auto sdef_itr = node.MemberBegin();
             sdef_itr != node.MemberEnd(); sdef_itr++) {
         std::string define_name(sdef_itr->name.GetString(), sdef_itr->name.GetStringLength());
@@ -171,9 +171,14 @@ bool Shader::ParseDefines(std::string &defstring, rapidjson::Value& node) {
     return true;
 }
 
-bool Shader::Parse(const std::string &shader_name, rapidjson::Value& node) {
+bool Shader::Parse(const std::string &shader_name, const rapidjson::Value& node) {
     std::string globdefines;
 
+    if(!node.IsObject()) {
+        // TODO use logger
+        std::cerr << "[WARNING] Invalid shader entry\n";
+        return false;
+    }
     for(auto shade_param_itr = node.MemberBegin();
             shade_param_itr != node.MemberEnd(); shade_param_itr++) {
         std::string param_name(shade_param_itr->name.GetString(), shade_param_itr->name.GetStringLength());
@@ -287,7 +292,7 @@ bool Shader::Parse(const std::string &shader_name, rapidjson::Value& node) {
             }
         }
     }
-    return true;
+    return LinkProgram();
 }
 
 void Shader::LoadFromStrings(ShaderType type, const std::vector<std::string> &source) {

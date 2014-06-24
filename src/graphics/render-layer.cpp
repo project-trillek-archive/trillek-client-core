@@ -163,7 +163,12 @@ static std::string MakeString(const rapidjson::Value& v) {
   }
 */
 
-bool RenderAttachment::Parse(const std::string &object_name, rapidjson::Value& node) {
+bool RenderAttachment::Parse(const std::string &object_name, const rapidjson::Value& node) {
+    if(!node.IsObject()) {
+        // TODO use logger
+        std::cerr << "[WARNING] Invalid attachment entry\n";
+        return false;
+    }
     for(auto attnode = node.MemberBegin(); attnode != node.MemberEnd(); attnode++) {
         std::string attribname = MakeString(attnode->name);
         if(attribname == "texture") {
@@ -484,7 +489,12 @@ void RenderLayer::BindToRead() const {
     glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo_id); CheckGLError();
 }
 
-bool RenderLayer::Parse(const std::string &object_name, rapidjson::Value& node) {
+bool RenderLayer::Parse(const std::string &object_name, const rapidjson::Value& node) {
+    if(!node.IsObject()) {
+        // TODO use logger
+        std::cerr << "[WARNING] Invalid render layer entry\n";
+        return false;
+    }
     for(auto attnode = node.MemberBegin(); attnode != node.MemberEnd(); attnode++) {
         std::string attribname = MakeString(attnode->name);
         if(attribname == "attach") {

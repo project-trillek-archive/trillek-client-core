@@ -33,7 +33,7 @@ public:
      * \param[in] rapidjson::Value& node The node to parse.
      * \return false on errors, true for success
      */
-    virtual bool Parse(const std::string &object_name, rapidjson::Value& node) = 0;
+    virtual bool Parse(const std::string &object_name, const rapidjson::Value& node) = 0;
 
     /**
      * \brief Serialize this graphics object to the provided JSON node.

@@ -14,9 +14,9 @@ public:
     virtual ~Texture();
 
     // required to implement
-    virtual bool SystemStart(const std::list<Property> &) { return false; }
-    virtual bool SystemReset(const std::list<Property> &) { return false; }
-    virtual bool Parse(const std::string &object_name, rapidjson::Value& node) { return false; }
+    virtual bool SystemStart(const std::list<Property> &) { return true; }
+    virtual bool SystemReset(const std::list<Property> &) { return true; }
+    virtual bool Parse(const std::string &object_name, const rapidjson::Value& node) { return false; }
     virtual bool Serialize(rapidjson::Document& document) { return false; }
 
     /**

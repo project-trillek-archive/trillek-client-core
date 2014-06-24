@@ -105,6 +105,7 @@ file(GLOB TCCExtra_SRC
 "${TCCSRC}/graphics/renderable.cpp"
 "${TCCSRC}/graphics/shader.cpp"
 "${TCCSRC}/graphics/render-layer.cpp"
+"${TCCSRC}/graphics/render-list.cpp"
 "${TCCSRC}/graphics/light.cpp"
 "${TCCSRC}/graphics/material.cpp"
 "${TCCSRC}/graphics/texture.cpp"

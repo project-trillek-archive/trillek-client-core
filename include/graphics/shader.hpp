@@ -40,7 +40,7 @@ public:
      * \param[in] rapidjson::Value& node The node to parse.
      * \return false on errors, true for success
      */
-    virtual bool Parse(const std::string &shader_name, rapidjson::Value& node);
+    virtual bool Parse(const std::string &shader_name, const rapidjson::Value& node);
 
     /**
      * \brief Serialize this shader to the provided JSON node.
@@ -50,7 +50,7 @@ public:
      */
     virtual bool Serialize(rapidjson::Document& document);
 
-    bool ParseDefines(std::string &defstring, rapidjson::Value& node);
+    bool ParseDefines(std::string &defstring, const rapidjson::Value& node);
     void LoadFromString(ShaderType whichShader, const std::string & source);
     void LoadFromStrings(ShaderType whichShader, const std::vector<std::string> & source);
     void LoadFromFile(ShaderType whichShader, const std::string & filename);

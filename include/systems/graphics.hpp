@@ -10,12 +10,14 @@
 #include <memory>
 #include <vector>
 #include "trillek.hpp"
+#include "trillek-game.hpp"
 #include "trillek-scheduler.hpp"
 #include "systems/system-base.hpp"
 #include "util/json-parser.hpp"
 #include "graphics/graphics-base.hpp"
 #include "graphics/material.hpp"
 #include "graphics/light.hpp"
+#include "graphics/render-list.hpp"
 #include <map>
 
 #include "dispatcher.hpp"
@@ -103,7 +105,6 @@ public:
      * Updates the state of the system based off how much time has elapsed since the last update.
      * \return void
      */
-    // TODO: This is a niave update render method. Please replace me.
     void RunBatch() const override;
 
     /**
@@ -175,6 +176,40 @@ public:
      */
     void Terminate() override;
 
+    /**
+     * \brief Registers all graphics system tables required for operation and parsing.
+     *
+     * This function is defined in a separate source file to reduce compile times.
+     * Internally it calls the templated RegisterSomething functions.
+     * \return void
+     */
+    void RegisterTypes();
+
+    /**
+     * \brief Register a function to instance and parse a graphics class
+     */
+    template<class RT>
+    void RegisterClassGenParser() {
+        RenderSystem &rensys = *this;
+        auto cgenlamda =  [&rensys] (const rapidjson::Value& node) -> bool {
+            if(!node.IsObject()) {
+                // TODO use logger
+                std::cerr << "[ERROR] Invalid type for " << reflection::GetTypeName<RT>() << "\n";
+                return false;
+            }
+            for(auto section_itr = node.MemberBegin();
+                    section_itr != node.MemberEnd(); section_itr++) {
+                std::string obj_name(section_itr->name.GetString(), section_itr->name.GetStringLength());
+                std::shared_ptr<RT> objgen_ptr(new RT);
+                if(objgen_ptr->Parse(obj_name, section_itr->value)) {
+                    rensys.Add(obj_name, objgen_ptr);
+                }
+            }
+            return true;
+        };
+        parser_functions[reflection::GetTypeName<RT>()] = cgenlamda;
+    }
+
     template<class T>
     std::shared_ptr<T> Get(const std::string & instancename) {
         unsigned int type_id = reflection::GetTypeID<T>();
@@ -221,11 +256,16 @@ private:
     unsigned int window_height; // Store the height of our window
     bool multisample;
 
+    std::map<std::string, std::function<bool(const rapidjson::Value&)>> parser_functions;
+
     // A list of the renderables in the system. Stored as a pair (entity ID, Renderable).
     std::list<std::pair<unsigned int, std::shared_ptr<Renderable>>> renderables;
 
     // A list of the lights in the system. Stored as a pair (entity ID, LightBase).
     std::list<std::pair<unsigned int, std::shared_ptr<LightBase>>> alllights;
+
+    // Active Rendering command list
+    std::shared_ptr<RenderList> activerender;
 
     std::map<unsigned int, std::map<std::string, std::shared_ptr<GraphicsBase>>> graphics_instances;
     std::map<unsigned int, glm::mat4> model_matrices;

@@ -1,18 +1,33 @@
 #include "trillek-game.hpp"
+
 #include "graphics/renderable.hpp"
 #include "graphics/shader.hpp"
 #include "graphics/light.hpp"
+#include "graphics/render-layer.hpp"
+#include "graphics/render-list.hpp"
+
 #include "resources/md5mesh.hpp"
 #include "resources/md5anim.hpp"
 #include "resources/pixel-buffer.hpp"
 #include "resources/text-file.hpp"
 
 #include "systems/resource-system.hpp"
+#include "systems/graphics.hpp"
 #include "systems/transform-system.hpp"
 #include "systems/component-factory.hpp"
+
 #include "util/json-parser.hpp"
 
 namespace trillek {
+
+void graphics::RenderSystem::RegisterTypes() {
+    // textures are implicitly instanced most of the time
+    RegisterClassGenParser<graphics::Texture>();
+    RegisterClassGenParser<graphics::Shader>();
+    RegisterClassGenParser<graphics::RenderAttachment>();
+    RegisterClassGenParser<graphics::RenderLayer>();
+    RegisterClassGenParser<graphics::RenderList>();
+}
 
 void ComponentFactory::RegisterTypes() {
     RegisterComponentType<graphics::Renderable>();
