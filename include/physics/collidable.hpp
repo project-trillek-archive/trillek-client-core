@@ -74,7 +74,9 @@ public:
 private:
     double radius; // Used for sphere and capsule shape collidable.
     double height; // Used for capsule shape collidable.
-    btScalar mass;
+    btScalar mass; // For static objects mass must be 0.
+    bool disable_deactivation; // Whether to disable automatic deactivation.
+
     std::unique_ptr<btTriangleMesh> mesh; // Used for mesh shape collidable.
     std::shared_ptr<resource::Mesh> mesh_file; // Used for mesh shape collidable.
 

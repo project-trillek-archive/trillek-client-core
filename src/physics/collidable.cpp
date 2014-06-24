@@ -20,6 +20,9 @@ bool Collidable::Initialize(const std::vector<Property> &properties) {
         if (name == "radius") {
             this->radius = p.Get<double>();
         }
+        if (name == "disable_decativation") {
+            this->disable_deactivation = p.Get<bool>();
+        }
         else if (name == "height") {
             this->height = p.Get<double>();
         }
@@ -99,6 +102,14 @@ bool Collidable::InitializeRigidBody() {
     if (!this->body) {
         return false;
     }
+
+    // Check if we want to disable automatic deactivation for this body.
+    if (this->disable_deactivation) {
+        this->body->forceActivationState(DISABLE_DEACTIVATION);
+    }
+
+    // Prevent objects from rotating from physics system.
+    this->body->setAngularFactor(btVector3(0, 0, 0));
 
     return true;
 }
