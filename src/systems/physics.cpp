@@ -1,7 +1,7 @@
 #include "systems/physics.hpp"
 #include "physics/collidable.hpp"
 #include <bullet/BulletCollision/Gimpact/btGImpactShape.h>
-#include <Bullet/BulletCollision/Gimpact/btGImpactCollisionAlgorithm.h>
+#include <bullet/BulletCollision/Gimpact/btGImpactCollisionAlgorithm.h>
 
 namespace trillek {
 namespace physics {
