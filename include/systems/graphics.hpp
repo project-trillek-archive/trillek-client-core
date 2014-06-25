@@ -191,7 +191,7 @@ public:
     template<class RT>
     void RegisterClassGenParser() {
         RenderSystem &rensys = *this;
-        auto cgenlamda =  [&rensys] (const rapidjson::Value& node) -> bool {
+        auto cgenlambda =  [&rensys] (const rapidjson::Value& node) -> bool {
             if(!node.IsObject()) {
                 // TODO use logger
                 std::cerr << "[ERROR] Invalid type for " << reflection::GetTypeName<RT>() << "\n";
@@ -207,8 +207,10 @@ public:
             }
             return true;
         };
-        parser_functions[reflection::GetTypeName<RT>()] = cgenlamda;
+        parser_functions[reflection::GetTypeName<RT>()] = cgenlambda;
     }
+
+    void RegisterStaticParsers();
 
     template<class T>
     std::shared_ptr<T> Get(const std::string & instancename) {

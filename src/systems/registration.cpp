@@ -27,6 +27,7 @@ void graphics::RenderSystem::RegisterTypes() {
     RegisterClassGenParser<graphics::RenderAttachment>();
     RegisterClassGenParser<graphics::RenderLayer>();
     RegisterClassGenParser<graphics::RenderList>();
+    RegisterStaticParsers();
 }
 
 void ComponentFactory::RegisterTypes() {

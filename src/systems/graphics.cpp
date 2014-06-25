@@ -115,20 +115,85 @@ void RenderSystem::RenderScene() const {
 
     glm::mat4x4 inv_viewproj = glm::inverse(this->projection_matrix * this->view_matrix);
     // Clear the backbuffer and primary depth/stencil buffer
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glViewport(0, 0, this->window_width, this->window_height); // Set the viewport size to fill the window
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); // Clear required buffers
 
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    glEnable(GL_DEPTH_TEST);
-
-    RenderColorPass(&this->view_matrix[0][0], &this->projection_matrix[0][0]);
-
-    glDisable(GL_MULTISAMPLE);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    glDisable(GL_DEPTH_TEST);
-
-    RenderLightingPass(&inv_viewproj[0][0]);
+    if(activerender) {
+        for(auto& cmditem : activerender->render_commands) {
+            switch(cmditem.cmd) {
+            case RenderCmd::CLEAR_SCREEN:
+                glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+                // Clear required buffers
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+                break;
+            case RenderCmd::MODULE_CMD:
+                break;
+            case RenderCmd::SCRIPT:
+                break;
+            case RenderCmd::RENDER:
+            {
+                if(!cmditem.resolved) {
+                    cmditem.run_properties.clear();
+                    if(cmditem.cmdvalue == "all-geometry") {
+                        cmditem.run_properties.push_back(Property("render", (int)0));
+                    }
+                    else if(cmditem.cmdvalue == "depth-geometry") {
+                        cmditem.run_properties.push_back(Property("render", (int)1));
+                    }
+                    else if(cmditem.cmdvalue == "lighting") {
+                        cmditem.run_properties.push_back(Property("render", (int)2));
+                    }
+                    else if(cmditem.cmdvalue == "post") {
+                        cmditem.run_properties.push_back(Property("render", (int)3));
+                    }
+                    else {
+                        break;
+                    }
+                    cmditem.resolved = true;
+                }
+                int rendertype = cmditem.run_properties.front().Get<int>();
+                switch(rendertype) {
+                case 0:
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                    glEnable(GL_DEPTH_TEST);
+                    RenderColorPass(&this->view_matrix[0][0], &this->projection_matrix[0][0]);
+                    break;
+                case 1:
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                    glEnable(GL_DEPTH_TEST);
+                    RenderDepthOnlyPass(&this->view_matrix[0][0], &this->projection_matrix[0][0]);
+                    break;
+                case 2:
+                    glDisable(GL_MULTISAMPLE);
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                    glDisable(GL_DEPTH_TEST);
+                    RenderLightingPass(&inv_viewproj[0][0]);
+                    break;
+                case 3:
+                    glDisable(GL_MULTISAMPLE);
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                    glDisable(GL_DEPTH_TEST);
+                    RenderPostPass();
+                    break;
+                default:
+                    break;
+                }
+            }
+                break;
+            case RenderCmd::SET_PARAM:
+                break;
+            case RenderCmd::READ_LAYER:
+                break;
+            case RenderCmd::WRITE_LAYER:
+                break;
+            case RenderCmd::COPY_LAYER:
+                break;
+            case RenderCmd::BIND_TEXTURE:
+                break;
+            case RenderCmd::BIND_SHADER:
+                break;
+            }
+        }
+    }
 }
 
 void RenderSystem::RenderColorPass(const float *view_matrix, const float *proj_matrix) const {
@@ -193,6 +258,17 @@ void RenderSystem::RenderLightingPass(const float *inv_viewproj_matrix) const {
 
 void RenderSystem::RenderPostPass() const {
 
+}
+
+void RenderSystem::RegisterStaticParsers() {
+    RenderSystem &rensys = *this;
+    auto aglambda =  [&rensys] (const rapidjson::Value& node) -> bool {
+        if(node.IsString()) {
+            rensys.activerender = rensys.Get<RenderList>(std::string(node.GetString(), node.GetStringLength()));
+        }
+        return true;
+    };
+    parser_functions["active-graph"] = aglambda;
 }
 
 void RenderSystem::Notify(const unsigned int entity_id, const Transform* transform) {

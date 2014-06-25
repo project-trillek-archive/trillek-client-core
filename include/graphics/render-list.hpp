@@ -5,7 +5,9 @@
 #include "graphics-base.hpp"
 #include "property.hpp"
 #include <memory>
+#include <string>
 #include <list>
+#include <tuple>
 
 namespace trillek {
 namespace graphics {
@@ -23,22 +25,44 @@ enum class RenderCmd : unsigned int {
     BIND_SHADER,
 };
 
+class RenderCommandItem {
+public:
+    RenderCommandItem(RenderCmd c, std::string &&cv, std::list<Property> &&prop) {
+        cmd = c;
+        resolved = false;
+        cmdvalue = std::move(cv);
+        load_properties = std::move(prop);
+    }
+    ~RenderCommandItem() {}
+
+    RenderCommandItem(const RenderCommandItem&) = delete;
+    RenderCommandItem& operator=(const RenderCommandItem&) = delete;
+
+    RenderCommandItem(RenderCommandItem&&) = default;
+    RenderCommandItem& operator=(RenderCommandItem&&) = default;
+
+    RenderCmd cmd;
+    std::string cmdvalue;
+    bool resolved;
+    std::list<Property> run_properties;
+    std::list<Property> load_properties;
+};
 /**
  * \brief RenderList - a class to manage the order of the scene rendering
  */
 class RenderList : public GraphicsBase {
 public:
-    RenderList() {}
+    RenderList() { initialize_priority = 2; }
     virtual ~RenderList() {}
 
     // required to implement
-    virtual bool SystemStart(const std::list<Property> &) override { return true; }
-    virtual bool SystemReset(const std::list<Property> &) override { return true; }
+    virtual bool SystemStart(const std::list<Property> &) override;
+    virtual bool SystemReset(const std::list<Property> &) override;
 
     virtual bool Serialize(rapidjson::Document& document) override;
     virtual bool Parse(const std::string &object_name, const rapidjson::Value& node) override;
 
-    std::list<std::pair<RenderCmd, std::list<Property>>> render_commands;
+    std::list<RenderCommandItem> render_commands;
 };
 
 } // namespace graphics
