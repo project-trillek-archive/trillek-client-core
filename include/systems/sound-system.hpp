@@ -8,9 +8,11 @@
 #include "glm/glm.hpp"
 #include <iostream>
 #include <unordered_map>
+#include "transform.hpp"
 
 #include "util/json-parser.hpp"
 #include "systems/system-base.hpp"
+#include "systems/dispatcher.hpp"
 
 namespace trillek {
 namespace sound {
@@ -84,10 +86,10 @@ public:
 }; // end of class Sound
 
 
-class System : public util::Parser, public SystemBase {
+class System : public util::Parser, public SystemBase, public event::Subscriber<Transform> {
 private:
     System() : Parser("sounds") { }
-    System(const System& right) : Parser("sounds") {
+    System(const System& right) : Parser("sounds")  {
         instance = right.instance;
     }
     System& operator=(const System& right) {
@@ -109,6 +111,9 @@ public:
                 std::cout << "Failed to open OpenAL device: " << alureGetErrorString() << std::endl;
             }
 
+            // get transform from entity id 0 (camera)
+            event::Dispatcher<Transform>::GetInstance()->Subscribe(0, &(*System::instance));
+
         });
 
         return System::instance;
@@ -121,6 +126,10 @@ public:
     virtual void RunBatch() const;
     virtual void Terminate();
 
+    /** \brief handles listener position and orientation when entity with id 0 is updated (camera)
+     */
+    virtual void Notify(const unsigned int entity_id, const Transform* data);
+
     /** \brief Creates and returns a Sound if successful
      *
      * \param id const std::string&
@@ -129,14 +138,13 @@ public:
      */
     std::shared_ptr<Sound> GetSound(const std::string& id);
 
-
-    /** \brief Sets the position of sound listener
+    /** \brief set the position manualy if no transform is set in the system
      *
-     * \param position glm::vec3
+     * \param position const glm::vec3&
      * \return void
      *
      */
-    void SetListenerPosition(glm::vec3 position);
+    void SetListenerPosition(const glm::vec3& position);
 
     /** \brief Sets the velocity of the sound listener
      *
@@ -144,7 +152,7 @@ public:
      * \return void
      *
      */
-    void SetListenerVelocity(glm::vec3 velocity);
+    void SetListenerVelocity(const glm::vec3& velocity);
 
     /** \brief Sets the orientation of the sound listener
      *
@@ -153,7 +161,7 @@ public:
      * \return void
      *
      */
-    void SetListenerOrientation(glm::vec3 at, glm::vec3 up);
+    void SetListenerOrientation(const glm::vec3& at, const glm::vec3& up);
 
     // Inherited from SerializeBase
     virtual bool Serialize(rapidjson::Document& document);
@@ -162,16 +170,14 @@ public:
     virtual bool Parse(rapidjson::Value& node);
 
 private:
-    struct sound_info{
+    struct sound_info {
         sound_info() : id("") , src(""), loop(false), spatial(false), volume(1.0) {};
         std::string id, src;
         bool loop, spatial;
         double volume;
     };
 
-
     std::unordered_map<std::string, std::shared_ptr<sound_info>> sounds;
-
 }; // end of class System
 
 } // end of namespace sound

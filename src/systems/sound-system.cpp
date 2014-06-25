@@ -93,33 +93,43 @@ std::shared_ptr<Sound> System::GetSound(const std::string& id) {
 
         return sound;
     }
+
     return nullptr;
 }
 
-void System::HandleEvents(const frame_tp& timepoint)
-{
+void System::HandleEvents(const frame_tp& timepoint) {
 
 }
 
-void System::RunBatch() const
-{
+void System::RunBatch() const {
     alureUpdate();
 }
 
-void System::Terminate()
-{
+void System::Terminate() {
 
 }
 
-void System::SetListenerPosition(glm::vec3 position) {
+void System::Notify(const unsigned int entity_id, const Transform* data) {
+    // assume this is the camera entity id
+    if(entity_id == 0) {
+        const glm::vec3& position = data->GetTranslation();
+        alListener3f(AL_POSITION, position.x, position.y, position.z);
+        const glm::vec3& up = data->GetOrientation() * UP_VECTOR;
+        const glm::vec3& at = data->GetOrientation() * FORWARD_VECTOR;
+        ALfloat orientation[] = {at.x, at.y, at.z, up.x, up.y, up.z};
+        alListenerfv(AL_ORIENTATION, orientation);
+    }
+}
+
+void System::SetListenerPosition(const glm::vec3& position) {
     alListener3f(AL_POSITION, position.x, position.y, position.z);
 }
 
-void System::SetListenerVelocity(glm::vec3 velocity) {
+void System::SetListenerVelocity(const glm::vec3& velocity) {
     alListener3f(AL_VELOCITY, velocity.x, velocity.y, velocity.z);
 }
 
-void System::SetListenerOrientation(glm::vec3 at, glm::vec3 up) {
+void System::SetListenerOrientation(const glm::vec3& at, const glm::vec3& up) {
     ALfloat orientation[] = {at.x, at.y, at.z, up.x, up.y, up.z};
     alListenerfv(AL_ORIENTATION, orientation);
 }
