@@ -211,12 +211,17 @@ public:
     }
 
     void RegisterStaticParsers();
+    void RegisterListResolvers();
 
     template<class T>
-    std::shared_ptr<T> Get(const std::string & instancename) {
+    std::shared_ptr<T> Get(const std::string & instancename) const {
         unsigned int type_id = reflection::GetTypeID<T>();
-        auto instance_ptr = this->graphics_instances[type_id].find(instancename);
-        if(instance_ptr == this->graphics_instances[type_id].end()) {
+        auto typedmap = this->graphics_instances.find(type_id);
+        if(typedmap == this->graphics_instances.end()) {
+            return std::shared_ptr<T>();
+        }
+        auto instance_ptr = typedmap->second.find(instancename);
+        if(instance_ptr == typedmap->second.end()) {
             return std::shared_ptr<T>();
         }
         return std::static_pointer_cast<T>(instance_ptr->second);
@@ -268,6 +273,8 @@ private:
 
     // Active Rendering command list
     std::shared_ptr<RenderList> activerender;
+
+    std::map<RenderCmd, std::function<bool(RenderCommandItem&)>> list_resolvers;
 
     std::map<unsigned int, std::map<std::string, std::shared_ptr<GraphicsBase>>> graphics_instances;
     std::map<unsigned int, glm::mat4> model_matrices;

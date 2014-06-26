@@ -96,6 +96,65 @@ bool RenderSystem::Parse(rapidjson::Value& node) {
     return false;
 }
 
+void RenderSystem::RegisterListResolvers() {
+    const RenderSystem& rensys = *this;
+    list_resolvers[RenderCmd::CLEAR_SCREEN] = [&rensys] (RenderCommandItem &rlist) -> bool {
+        return true;
+    };
+    list_resolvers[RenderCmd::MODULE_CMD] = [&rensys] (RenderCommandItem &rlist) -> bool {
+        return true;
+    };
+    list_resolvers[RenderCmd::SCRIPT] = [&rensys] (RenderCommandItem &rlist) -> bool {
+        return true;
+    };
+    list_resolvers[RenderCmd::RENDER] = [&rensys] (RenderCommandItem &rlist) -> bool {
+        if(rlist.cmdvalue == "all-geometry") {
+            rlist.run_properties.push_back(Property("render", (int)0));
+        }
+        else if(rlist.cmdvalue == "depth-geometry") {
+            rlist.run_properties.push_back(Property("render", (int)1));
+        }
+        else if(rlist.cmdvalue == "lighting") {
+            rlist.run_properties.push_back(Property("render", (int)2));
+        }
+        else if(rlist.cmdvalue == "post") {
+            rlist.run_properties.push_back(Property("render", (int)3));
+        }
+        else {
+            return false;
+        }
+        return true;
+    };
+    list_resolvers[RenderCmd::SET_PARAM] = [&rensys] (RenderCommandItem &rlist) -> bool {
+        return true;
+    };
+    list_resolvers[RenderCmd::READ_LAYER] = [&rensys] (RenderCommandItem &rlist) -> bool {
+        auto layerptr = rensys.Get<RenderLayer>(rlist.cmdvalue);
+        if(!layerptr) {
+            return false;
+        }
+        rlist.run_properties.push_back(Property("layer_ptr", layerptr));
+        return true;
+    };
+    list_resolvers[RenderCmd::WRITE_LAYER] = [&rensys] (RenderCommandItem &rlist) -> bool {
+        auto layerptr = rensys.Get<RenderLayer>(rlist.cmdvalue);
+        if(!layerptr) {
+            return false;
+        }
+        rlist.run_properties.push_back(Property("layer_ptr", layerptr));
+        return true;
+    };
+    list_resolvers[RenderCmd::COPY_LAYER] = [&rensys] (RenderCommandItem &rlist) -> bool {
+        return true;
+    };
+    list_resolvers[RenderCmd::BIND_TEXTURE] = [&rensys] (RenderCommandItem &rlist) -> bool {
+        return true;
+    };
+    list_resolvers[RenderCmd::BIND_SHADER] = [&rensys] (RenderCommandItem &rlist) -> bool {
+        return true;
+    };
+}
+
 void RenderSystem::ThreadInit() {
     TrillekGame::GetOS().MakeCurrent();
 }
@@ -119,6 +178,21 @@ void RenderSystem::RenderScene() const {
 
     if(activerender) {
         for(auto& cmditem : activerender->render_commands) {
+            if(!cmditem.resolved) {
+                auto resolve = list_resolvers.find(cmditem.cmd);
+                if(resolve != list_resolvers.end()) {
+                    cmditem.run_properties.clear();
+                    if(!resolve->second(cmditem)) {
+                        // should probably log some warning/error
+                        // since this item may not be able to render
+                        break;
+                    }
+                    cmditem.resolved = true;
+                }
+                else {
+                    break;
+                }
+            }
             switch(cmditem.cmd) {
             case RenderCmd::CLEAR_SCREEN:
                 glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -131,27 +205,7 @@ void RenderSystem::RenderScene() const {
                 break;
             case RenderCmd::RENDER:
             {
-                if(!cmditem.resolved) {
-                    cmditem.run_properties.clear();
-                    if(cmditem.cmdvalue == "all-geometry") {
-                        cmditem.run_properties.push_back(Property("render", (int)0));
-                    }
-                    else if(cmditem.cmdvalue == "depth-geometry") {
-                        cmditem.run_properties.push_back(Property("render", (int)1));
-                    }
-                    else if(cmditem.cmdvalue == "lighting") {
-                        cmditem.run_properties.push_back(Property("render", (int)2));
-                    }
-                    else if(cmditem.cmdvalue == "post") {
-                        cmditem.run_properties.push_back(Property("render", (int)3));
-                    }
-                    else {
-                        break;
-                    }
-                    cmditem.resolved = true;
-                }
-                int rendertype = cmditem.run_properties.front().Get<int>();
-                switch(rendertype) {
+                switch(cmditem.run_properties.front().Get<int>()) {
                 case 0:
                     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
                     glEnable(GL_DEPTH_TEST);
