@@ -131,9 +131,6 @@ void Texture::GenerateMultisample(GLuint width, GLuint height, GLuint samples) {
     }
     glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, texture_id);
     CheckGLError();
-    glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    CheckGLError();
     glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, GL_RGBA, width, height, GL_FALSE);
     CheckGLError();
 
@@ -146,9 +143,6 @@ void Texture::GenerateMultisampleStencil(GLuint width, GLuint height, GLuint sam
     }
     glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, texture_id);
     CheckGLError();
-    glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    CheckGLError();
     glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, GL_STENCIL_INDEX, width, height, GL_FALSE);
     CheckGLError();
 
@@ -160,9 +154,6 @@ void Texture::GenerateMultisampleDepth(GLuint width, GLuint height, GLuint sampl
         glGenTextures(1, &texture_id);
     }
     glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, texture_id);
-    CheckGLError();
-    glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     CheckGLError();
     if(stencil) {
         glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, GL_DEPTH_STENCIL, width, height, GL_FALSE);

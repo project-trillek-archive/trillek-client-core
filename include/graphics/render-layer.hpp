@@ -12,6 +12,16 @@
 namespace trillek {
 namespace graphics {
 
+struct ViewRect{
+    ViewRect() {}
+    ViewRect(GLuint x0, GLuint y0, GLuint x1, GLuint y1) :
+        x(x0), y(y0), z(x1), w(y1) { }
+    GLuint x;
+    GLuint y;
+    GLuint z;
+    GLuint w;
+};
+
 /**
  * \brief A class to manage a color or depth output from a render pass
  */
@@ -48,8 +58,12 @@ public:
     void BindTexture();
     void AttachToFBO();
 
+    bool NeedsClear() const { return clearonuse; }
     void Clear();
 
+    bool IsColor() const {
+        return (attachtarget == GL_COLOR_ATTACHMENT0);
+    }
     GLenum GetAttach() const {
         if(attachtarget == GL_COLOR_ATTACHMENT0) {
             return GL_COLOR_ATTACHMENT0 + outputnumber;
@@ -102,14 +116,29 @@ public:
     void Destroy();
 
     void BindToRender() const;
-    void UnbindFromAll() const;
+    static void UnbindFromRead();
+    static void UnbindFromWrite();
+    static void UnbindFromAll();
     void BindToRead() const;
+    void BindToWrite() const;
+
+    void GetRect(ViewRect& vr) {
+        vr.x = 0;
+        vr.y = 0;
+        vr.z = width;
+        vr.w = height;
+    }
 
 private:
 
+    bool clearany;
+    GLuint clearbits;
+    bool clearhighbuffers;
     GLuint fbo_id;
     unsigned int width;
     unsigned int height;
+    std::unique_ptr<GLenum> draworder;
+    GLuint drawcount;
     std::vector<std::string> attachmentnames;
     std::vector<std::shared_ptr<RenderAttachment>> attachments;
 };

@@ -33,6 +33,7 @@ bool RenderList::Parse(const std::string &object_name, const rapidjson::Value& n
     commandtype["set-param"   ] = RenderCmd::SET_PARAM;
     commandtype["read-layer"  ] = RenderCmd::READ_LAYER;
     commandtype["write-layer" ] = RenderCmd::WRITE_LAYER;
+    commandtype["draw-layer"  ] = RenderCmd::SET_RENDER_LAYER;
     commandtype["copy-layer"  ] = RenderCmd::COPY_LAYER;
     commandtype["bind-texture"] = RenderCmd::BIND_TEXTURE;
     commandtype["bind-shader" ] = RenderCmd::BIND_SHADER;
@@ -40,7 +41,7 @@ bool RenderList::Parse(const std::string &object_name, const rapidjson::Value& n
         if(rlobj->IsObject()) {
             bool validitem = false;
             RenderCmd rtypeval;
-            std::string rparam;
+            Container rparam;
             std::list<Property> rprops;
             for(auto rloitem = rlobj->MemberBegin(); rloitem != rlobj->MemberEnd(); rloitem++) {
                 std::string rli_name(rloitem->name.GetString(), rloitem->name.GetStringLength());
@@ -49,7 +50,25 @@ bool RenderList::Parse(const std::string &object_name, const rapidjson::Value& n
                 if(!validitem && rlitype != commandtype.end()) {
                     rtypeval = rlitype->second;
                     validitem = true;
-                    rparam = std::string(rloitem->value.GetString(), rloitem->value.GetStringLength());
+                    if(rloitem->value.IsString()) {
+                        rparam = Container(
+                            std::string(rloitem->value.GetString(),
+                                        rloitem->value.GetStringLength())
+                        );
+                    }
+                    else if(rloitem->value.IsBool()) {
+                        rparam = Container(rloitem->value.GetBool());
+                    }
+                    else if(rloitem->value.IsNull()) {
+                        rparam = Container();
+                    }
+                    else if(rloitem->value.IsUint()) {
+                        rparam = Container(rloitem->value.GetUint());
+                    }
+                    else if(rloitem->value.IsDouble()) {
+                        rparam = Container(rloitem->value.GetDouble());
+                    }
+                    //rparam = std::string(rloitem->value.GetString(), rloitem->value.GetStringLength());
                 }
                 else {
                     if(rloitem->value.IsString()) {

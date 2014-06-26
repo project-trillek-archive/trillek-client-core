@@ -62,7 +62,7 @@ RenderAttachment& RenderAttachment::operator=(RenderAttachment &&that) {
 }
 
 bool RenderAttachment::SystemStart(const std::list<Property> &settings) {
-    int width, height, samples;
+    int samples;
     for(auto prop : settings) {
         if(prop.GetName() == "screen-width") {
             width = prop.Get<int>();
@@ -108,25 +108,23 @@ void RenderAttachment::Clear() {
     }
     switch(this->attachtarget) {
     case GL_COLOR_ATTACHMENT0:
-        glDrawBuffer(GetAttach());
+        if(outputnumber > 0) {
+            glDrawBuffer(GetAttach());
+        }
         glClearColor(clearvalues[0], clearvalues[1], clearvalues[2], clearvalues[3]);
-        glClear(GL_COLOR_BUFFER_BIT);
+        if(outputnumber > 0) {
+            glClear(GL_COLOR_BUFFER_BIT);
+        }
         break;
     case GL_DEPTH_ATTACHMENT:
-        glDrawBuffer(GL_DEPTH_ATTACHMENT);
         glClearDepth(clearvalues[0]);
-        glClear(GL_DEPTH_BUFFER_BIT);
         break;
     case GL_STENCIL_ATTACHMENT:
-        glDrawBuffer(GL_STENCIL_ATTACHMENT);
         glClearStencil(clearstencil);
-        glClear(GL_STENCIL_BUFFER_BIT);
         break;
     case GL_DEPTH_STENCIL_ATTACHMENT:
-        glDrawBuffer(GL_DEPTH_STENCIL_ATTACHMENT);
         glClearDepth(clearvalues[0]);
         glClearStencil(clearstencil);
-        glClear(GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         break;
     }
 }
@@ -249,6 +247,11 @@ bool RenderAttachment::Parse(const std::string &object_name, const rapidjson::Va
                 // TODO use logger
                 std::cerr << "[ERROR] Attachment: Invalid clear\n";
                 return false;
+            }
+        }
+        else if(attribname == "multisample") {
+            if(attnode->value.IsBool()) {
+                this->multisample = attnode->value.GetBool();
             }
         }
         else if(attribname == "multisample-texture") {
@@ -381,6 +384,8 @@ RenderLayer::RenderLayer() {
     width = 0;
     height = 0;
     fbo_id = 0;
+    drawcount = 0;
+    clearhighbuffers = false;
 }
 
 RenderLayer::~RenderLayer() {
@@ -410,6 +415,14 @@ static const char * GetFramebufferStatusMessage(GLuint status) {
 }
 
 bool RenderLayer::SystemStart(const std::list<Property> &settings) {
+    for(auto prop : settings) {
+        if(prop.GetName() == "screen-width") {
+            width = prop.Get<int>();
+        }
+        else if(prop.GetName() == "screen-height") {
+            height = prop.Get<int>();
+        }
+    }
     this->attachments.clear();
     for(auto attachname : this->attachmentnames) {
         auto attachptr = TrillekGame::GetGraphicSystem().Get<RenderAttachment>(attachname);
@@ -425,9 +438,46 @@ bool RenderLayer::SystemStart(const std::list<Property> &settings) {
     }
     Generate();
     glBindFramebuffer(GL_FRAMEBUFFER, fbo_id); CheckGLError();
-    for(auto attachptr : this->attachments) {
+    int i = 0;
+    drawcount = 0;
+    clearbits = 0;
+    clearany = false;
+    for(auto& attachptr : this->attachments) {
         attachptr->AttachToFBO();
+        if(attachptr->IsColor()) {
+            drawcount++;
+            // extra steps are required if we have to clear all the color buffers
+            if(attachptr->NeedsClear()) {
+                clearany = true;
+                if(attachptr->GetAttach() != GL_COLOR_ATTACHMENT0) {
+                    clearhighbuffers = true;
+                }
+                else {
+                    clearbits |= GL_COLOR_BUFFER_BIT;
+                }
+            }
+        }
+        else if(attachptr->NeedsClear()) {
+            clearany = true;
+            switch(attachptr->GetAttach()) {
+            case GL_DEPTH_ATTACHMENT:
+                clearbits |= GL_DEPTH_BUFFER_BIT;
+                break;
+            case GL_STENCIL_ATTACHMENT:
+                clearbits |= GL_STENCIL_BUFFER_BIT;
+                break;
+            case GL_DEPTH_STENCIL_ATTACHMENT:
+                clearbits |= GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT;
+            }
+        }
     }
+    draworder.reset(new GLenum[drawcount]);
+    for(auto& attitr : this->attachments) {
+        if(attitr && attitr->IsColor()) {
+            draworder.get()[i++] = attitr->GetAttach();
+        }
+    }
+    glDrawBuffers(drawcount, draworder.get()); CheckGLError();
 
     GLuint status;
     status = glCheckFramebufferStatus(GL_FRAMEBUFFER); CheckGLError();
@@ -461,28 +511,45 @@ void RenderLayer::Destroy() {
     }
 }
 
-void RenderLayer::BindToRender() const {
+void RenderLayer::BindToWrite() const {
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo_id); CheckGLError();
-    GLuint drawcount = this->attachments.size();
-    GLenum *drawto = new GLenum[drawcount];
-    int i = 0;
-    for(auto attitr : this->attachments) {
-        if(attitr) {
-            attitr->Clear();
-            drawto[i++] = attitr->GetAttach();
-        }
-        else {
-            drawto[i++] = GL_COLOR_ATTACHMENT0;
-        }
-    }
-    glDrawBuffers(drawcount, drawto); CheckGLError();
-    delete drawto;
 }
 
-void RenderLayer::UnbindFromAll() const {
-    glDrawBuffer(GL_BACK);
+void RenderLayer::BindToRender() const {
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo_id); CheckGLError();
+    if(clearany) {
+        GLuint attachcount = this->attachments.size();
+        int k, i, primaryindex = 0;
+        for(k = this->attachments.size(),i = 0; i < k; i++) {
+            auto& attitr = this->attachments[i];
+            if(attitr) {
+                if(attitr->GetAttach() != GL_COLOR_ATTACHMENT0) {
+                    attitr->Clear();
+                }
+                else {
+                    primaryindex = i;
+                }
+            }
+        }
+        if(clearhighbuffers) {
+            // normalize the outputs, since clearing other color buffers changed them
+            glDrawBuffers(drawcount, draworder.get()); CheckGLError();
+        }
+        this->attachments[primaryindex]->Clear(); // the first color buffer just sets values
+        glClear(clearbits);
+    }
+}
+
+void RenderLayer::UnbindFromRead() {
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0); CheckGLError();
+}
+void RenderLayer::UnbindFromWrite() {
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); CheckGLError();
+}
+void RenderLayer::UnbindFromAll() {
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); CheckGLError();
     glBindFramebuffer(GL_READ_FRAMEBUFFER, 0); CheckGLError();
+    //glDrawBuffer(GL_BACK);
 }
 
 void RenderLayer::BindToRead() const {

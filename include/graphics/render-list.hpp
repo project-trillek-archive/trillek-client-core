@@ -4,6 +4,7 @@
 #include "trillek.hpp"
 #include "graphics-base.hpp"
 #include "property.hpp"
+#include "container.hpp"
 #include <memory>
 #include <string>
 #include <list>
@@ -20,6 +21,7 @@ enum class RenderCmd : unsigned int {
     SET_PARAM,
     READ_LAYER,
     WRITE_LAYER,
+    SET_RENDER_LAYER,
     COPY_LAYER,
     BIND_TEXTURE,
     BIND_SHADER,
@@ -27,7 +29,7 @@ enum class RenderCmd : unsigned int {
 
 class RenderCommandItem {
 public:
-    RenderCommandItem(RenderCmd c, std::string &&cv, std::list<Property> &&prop) {
+    RenderCommandItem(RenderCmd c, Container &&cv, std::list<Property> &&prop) {
         cmd = c;
         resolved = false;
         cmdvalue = std::move(cv);
@@ -42,9 +44,9 @@ public:
     RenderCommandItem& operator=(RenderCommandItem&&) = default;
 
     RenderCmd cmd;
-    std::string cmdvalue;
+    Container cmdvalue;
     bool resolved;
-    std::list<Property> run_properties;
+    std::list<Container> run_values;
     std::list<Property> load_properties;
 };
 /**

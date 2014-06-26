@@ -1,11 +1,11 @@
 #include "trillek-game.hpp"
 #include "transform.hpp"
+#include "type-id.hpp"
 #include "systems/graphics.hpp"
 #include "systems/resource-system.hpp"
 #include "systems/transform-system.hpp"
 #include "resources/text-file.hpp"
 #include "resources/md5mesh.hpp"
-#include "transform.hpp"
 #include "resources/mesh.hpp"
 #include "graphics/shader.hpp"
 #include "graphics/material.hpp"
@@ -97,6 +97,14 @@ bool RenderSystem::Parse(rapidjson::Value& node) {
 }
 
 void RenderSystem::RegisterListResolvers() {
+    static std::map<std::string, GLuint> fbo_copytype_map;
+    fbo_copytype_map["all"] = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT;
+    fbo_copytype_map["color"] = GL_COLOR_BUFFER_BIT;
+    fbo_copytype_map["colour"] = GL_COLOR_BUFFER_BIT; // just because
+    fbo_copytype_map["depth"] = GL_DEPTH_BUFFER_BIT;
+    fbo_copytype_map["stencil"] = GL_STENCIL_BUFFER_BIT;
+    fbo_copytype_map["depth-stencil"] = GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT;
+
     const RenderSystem& rensys = *this;
     list_resolvers[RenderCmd::CLEAR_SCREEN] = [&rensys] (RenderCommandItem &rlist) -> bool {
         return true;
@@ -108,17 +116,23 @@ void RenderSystem::RegisterListResolvers() {
         return true;
     };
     list_resolvers[RenderCmd::RENDER] = [&rensys] (RenderCommandItem &rlist) -> bool {
-        if(rlist.cmdvalue == "all-geometry") {
-            rlist.run_properties.push_back(Property("render", (int)0));
-        }
-        else if(rlist.cmdvalue == "depth-geometry") {
-            rlist.run_properties.push_back(Property("render", (int)1));
-        }
-        else if(rlist.cmdvalue == "lighting") {
-            rlist.run_properties.push_back(Property("render", (int)2));
-        }
-        else if(rlist.cmdvalue == "post") {
-            rlist.run_properties.push_back(Property("render", (int)3));
+        if(rlist.cmdvalue.Is<std::string>()) {
+            const std::string &rentype = rlist.cmdvalue.Get<std::string>();
+            if(rentype == "all-geometry") {
+                rlist.run_values.push_back(Container((int)0));
+            }
+            else if(rentype == "depth-geometry") {
+                rlist.run_values.push_back(Container((int)1));
+            }
+            else if(rentype == "lighting") {
+                rlist.run_values.push_back(Container((int)2));
+            }
+            else if(rentype == "post") {
+                rlist.run_values.push_back(Container((int)3));
+            }
+            else {
+                return false;
+            }
         }
         else {
             return false;
@@ -128,23 +142,70 @@ void RenderSystem::RegisterListResolvers() {
     list_resolvers[RenderCmd::SET_PARAM] = [&rensys] (RenderCommandItem &rlist) -> bool {
         return true;
     };
-    list_resolvers[RenderCmd::READ_LAYER] = [&rensys] (RenderCommandItem &rlist) -> bool {
-        auto layerptr = rensys.Get<RenderLayer>(rlist.cmdvalue);
-        if(!layerptr) {
-            return false;
+    auto layerresolver = [&rensys] (RenderCommandItem &rlist) -> bool {
+        if(rlist.cmdvalue.IsEmpty()) {
+            rlist.run_values.push_back(Container(false));
         }
-        rlist.run_properties.push_back(Property("layer_ptr", layerptr));
+        else if(rlist.cmdvalue.Is<std::string>()) {
+            rlist.run_values.push_back(Container(true));
+            auto layerptr = rensys.Get<RenderLayer>(rlist.cmdvalue.Get<std::string>());
+            if(!layerptr) {
+                return false;
+            }
+            rlist.run_values.push_back(Container(layerptr));
+        }
         return true;
     };
-    list_resolvers[RenderCmd::WRITE_LAYER] = [&rensys] (RenderCommandItem &rlist) -> bool {
-        auto layerptr = rensys.Get<RenderLayer>(rlist.cmdvalue);
-        if(!layerptr) {
-            return false;
+    list_resolvers[RenderCmd::READ_LAYER] = layerresolver;
+    list_resolvers[RenderCmd::WRITE_LAYER] = layerresolver;
+    list_resolvers[RenderCmd::SET_RENDER_LAYER] = layerresolver;
+    list_resolvers[RenderCmd::COPY_LAYER] = [fbo_copytype_map, &rensys] (RenderCommandItem &rlist) -> bool {
+        if(rlist.cmdvalue.IsEmpty()) {
+            rlist.run_values.push_back(Container(false));
         }
-        rlist.run_properties.push_back(Property("layer_ptr", layerptr));
-        return true;
-    };
-    list_resolvers[RenderCmd::COPY_LAYER] = [&rensys] (RenderCommandItem &rlist) -> bool {
+        else if(rlist.cmdvalue.Is<std::string>()) {
+            rlist.run_values.push_back(Container(true));
+            auto layerptr = rensys.Get<RenderLayer>(rlist.cmdvalue.Get<std::string>());
+            if(!layerptr) {
+                return false;
+            }
+            rlist.run_values.push_back(Container(layerptr));
+        }
+        std::shared_ptr<RenderLayer> target;
+        GLuint copytypebits = 0;
+        for(auto& prop : rlist.load_properties) {
+            if(prop.GetName() == "type") {
+                if(prop.Is<std::string>()) {
+                    const std::string& typestring = prop.Get<std::string>();
+                    auto fboct = fbo_copytype_map.find(typestring);
+                    if(fboct != fbo_copytype_map.end()) {
+                        copytypebits |= fboct->second;
+                    }
+                    else {
+                        return false;
+                    }
+                }
+                else {
+                    return false;
+                }
+            }
+            else if(prop.GetName() == "to") {
+                if(prop.Is<std::string>()) {
+                    target = rensys.Get<RenderLayer>(prop.Get<std::string>());
+                    if(!target) {
+                        return false;
+                    }
+                }
+            }
+        }
+        if(!target) {
+            rlist.run_values.push_back(Container(false));
+        }
+        else {
+            rlist.run_values.push_back(Container(true));
+            rlist.run_values.push_back(Container(target));
+        }
+        rlist.run_values.push_back(Container(copytypebits));
         return true;
     };
     list_resolvers[RenderCmd::BIND_TEXTURE] = [&rensys] (RenderCommandItem &rlist) -> bool {
@@ -181,7 +242,7 @@ void RenderSystem::RenderScene() const {
             if(!cmditem.resolved) {
                 auto resolve = list_resolvers.find(cmditem.cmd);
                 if(resolve != list_resolvers.end()) {
-                    cmditem.run_properties.clear();
+                    cmditem.run_values.clear();
                     if(!resolve->second(cmditem)) {
                         // should probably log some warning/error
                         // since this item may not be able to render
@@ -205,7 +266,7 @@ void RenderSystem::RenderScene() const {
                 break;
             case RenderCmd::RENDER:
             {
-                switch(cmditem.run_properties.front().Get<int>()) {
+                switch(cmditem.run_values.front().Get<int>()) {
                 case 0:
                     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
                     glEnable(GL_DEPTH_TEST);
@@ -236,10 +297,83 @@ void RenderSystem::RenderScene() const {
             case RenderCmd::SET_PARAM:
                 break;
             case RenderCmd::READ_LAYER:
+            {
+                auto run_op = cmditem.run_values.begin();
+                if(run_op->Get<bool>()) {
+                    run_op++;
+                    auto layer = run_op->Get<std::shared_ptr<RenderLayer>>();
+                    if(layer) {
+                        layer->BindToRead();
+                    }
+                }
+                else {
+                    RenderLayer::UnbindFromAll();
+                }
+            }
                 break;
             case RenderCmd::WRITE_LAYER:
+            {
+                auto run_op = cmditem.run_values.begin();
+                if(run_op->Get<bool>()) {
+                    run_op++;
+                    auto layer = run_op->Get<std::shared_ptr<RenderLayer>>();
+                    if(layer) {
+                        layer->BindToWrite();
+                    }
+                }
+                else {
+                    RenderLayer::UnbindFromAll();
+                }
+            }
+                break;
+            case RenderCmd::SET_RENDER_LAYER:
+            {
+                auto run_op = cmditem.run_values.begin();
+                if(run_op->Get<bool>()) {
+                    run_op++;
+                    auto layer = run_op->Get<std::shared_ptr<RenderLayer>>();
+                    if(layer) {
+                        layer->BindToRender();
+                    }
+                }
+                else {
+                    RenderLayer::UnbindFromAll();
+                }
+            }
                 break;
             case RenderCmd::COPY_LAYER:
+            {
+                ViewRect src, dest;
+                auto run_op = cmditem.run_values.begin();
+                if(run_op->Get<bool>()) {
+                    run_op++;
+                    auto layer = run_op->Get<std::shared_ptr<RenderLayer>>();
+                    if(layer) {
+                        layer->BindToRead();
+                        layer->GetRect(src);
+                    }
+                }
+                else {
+                    RenderLayer::UnbindFromRead();
+                    src = ViewRect(0, 0, window_width, window_height);
+                }
+                run_op++;
+                if(run_op->Get<bool>()) {
+                    run_op++;
+                    auto layer = run_op->Get<std::shared_ptr<RenderLayer>>();
+                    if(layer) {
+                        layer->BindToWrite();
+                        layer->GetRect(dest);
+                    }
+                }
+                else {
+                    RenderLayer::UnbindFromWrite();
+                    dest = ViewRect(0, 0, window_width, window_height);
+                }
+                run_op++;
+                GLuint typebits = run_op->Get<GLuint>();
+                glBlitFramebuffer(src.x, src.y, src.z, src.w, dest.x, dest.y, dest.z, dest.w, typebits, GL_NEAREST);
+            }
                 break;
             case RenderCmd::BIND_TEXTURE:
                 break;
