@@ -51,10 +51,31 @@ public:
      * Calls the Get() method of ValueHolder with the given template type.
      * \returns t The value with the given template type.
      */
-    template <typename t>
+    template <class t>
     t Get() const {
         if(this->value_holder != nullptr) {
             return static_cast<ValueHolder<t>*>(this->value_holder)->Get();
+        }
+    }
+
+    bool IsEmpty() const {
+        return nullptr == this->value_holder;
+    }
+
+    /**
+     * \brief Compares the type ID of contained value to the template type.
+     *
+     * Calls the GetType() method of ValueHolder.
+     * \returns bool true if the IDs match and are non-zero
+     */
+    template <class CT>
+    bool Is() const {
+        unsigned type_id = GetType();
+        if(type_id) {
+            return reflection::GetTypeID<CT>() == type_id;
+        }
+        else {
+            return false;
         }
     }
 
