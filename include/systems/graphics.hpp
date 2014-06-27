@@ -17,6 +17,7 @@
 #include "graphics/graphics-base.hpp"
 #include "graphics/material.hpp"
 #include "graphics/light.hpp"
+#include "graphics/render-layer.hpp"
 #include "graphics/render-list.hpp"
 #include <map>
 
@@ -234,6 +235,19 @@ public:
         unsigned int type_id = reflection::GetTypeID<T>();
         graphics_instances[type_id][instancename] = instanceptr;
     }
+
+    struct BufferTri {
+        BufferTri() : vao(0), vbo(0), ibo(0) { }
+        GLuint vao;
+        GLuint vbo;
+        GLuint ibo;
+    };
+    struct ViewMatrixSet {
+        ViewRect viewport;
+        glm::mat4 projection_matrix;
+        glm::mat4 view_matrix;
+    };
+
 private:
     template<class CT>
     int TryAddComponent(const unsigned int entity_id, std::shared_ptr<ComponentBase> comp) {
@@ -252,10 +266,13 @@ private:
         }
     }
 
-
     int gl_version[2];
+    ViewMatrixSet vp_center;
+    ViewMatrixSet vp_left;
+    ViewMatrixSet vp_right;
     glm::mat4 projection_matrix;
     glm::mat4 view_matrix;
+    BufferTri screenquad; /// the full screen quad, used for much graphics effects
 
     std::shared_ptr<CameraBase> camera;
 
@@ -271,8 +288,9 @@ private:
     // A list of the lights in the system. Stored as a pair (entity ID, LightBase).
     std::list<std::pair<unsigned int, std::shared_ptr<LightBase>>> alllights;
 
-    // Active Rendering command list
+    // Active objects
     std::shared_ptr<RenderList> activerender;
+    std::shared_ptr<Shader> lightingshader;
 
     std::map<RenderCmd, std::function<bool(RenderCommandItem&)>> list_resolvers;
 

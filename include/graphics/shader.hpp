@@ -70,6 +70,9 @@ public:
     GLuint operator[](const std::string & attribute);
     GLuint operator()(const std::string & uniform);
 
+    GLuint Attribute(const std::string & attribute);
+    GLuint Uniform(const std::string & uniform);
+
     //Program deletion
     void DeleteProgram();
     bool isLoaded() { return program != 0; }

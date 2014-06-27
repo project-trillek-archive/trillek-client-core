@@ -23,6 +23,7 @@ enum class RenderCmd : unsigned int {
     WRITE_LAYER,
     SET_RENDER_LAYER,
     COPY_LAYER,
+    BIND_LAYER_TEXTURES,
     BIND_TEXTURE,
     BIND_SHADER,
 };

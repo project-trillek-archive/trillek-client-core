@@ -35,6 +35,7 @@ bool RenderList::Parse(const std::string &object_name, const rapidjson::Value& n
     commandtype["write-layer" ] = RenderCmd::WRITE_LAYER;
     commandtype["draw-layer"  ] = RenderCmd::SET_RENDER_LAYER;
     commandtype["copy-layer"  ] = RenderCmd::COPY_LAYER;
+    commandtype["bind-layer"  ] = RenderCmd::BIND_LAYER_TEXTURES;
     commandtype["bind-texture"] = RenderCmd::BIND_TEXTURE;
     commandtype["bind-shader" ] = RenderCmd::BIND_SHADER;
     for(auto rlobj = node.Begin(); rlobj != node.End(); rlobj++) {

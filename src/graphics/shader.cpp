@@ -119,6 +119,30 @@ void Shader::UnUse() {
     glUseProgram(0);
 }
 
+GLuint Shader::Attribute(const std::string & attribute) {
+    auto attrib = attributes_list.find(attribute);
+    if(attrib == attributes_list.end()) {
+        GLuint attrib_id = glGetAttribLocation(program, attribute.c_str());
+        if(attrib_id) {
+            attributes_list[attribute] = attrib_id;
+        }
+        return attrib_id;
+    }
+    return attrib->second;
+}
+
+GLuint Shader::Uniform(const std::string & uniform) {
+    auto uniform_itr = uniforms_list.find(uniform);
+    if(uniform_itr == uniforms_list.end()) {
+        GLuint uniform_id = glGetUniformLocation(program, uniform.c_str());
+        if(uniform_id) {
+            uniforms_list[uniform] = uniform_id;
+        }
+        return uniform_id;
+    }
+    return uniform_itr->second;
+}
+
 //An indexer that returns the location of the attribute
 GLuint Shader::operator [](const std::string & attribute) {
     auto attrib = attributes_list.find(attribute);

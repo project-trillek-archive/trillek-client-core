@@ -133,10 +133,6 @@ bool RenderAttachment::Serialize(rapidjson::Document& document) {
     return false;
 }
 
-static std::string MakeString(const rapidjson::Value& v) {
-    return std::string(v.GetString(), v.GetStringLength());
-}
-
 /*
  * Example json section
  *
@@ -168,10 +164,10 @@ bool RenderAttachment::Parse(const std::string &object_name, const rapidjson::Va
         return false;
     }
     for(auto attnode = node.MemberBegin(); attnode != node.MemberEnd(); attnode++) {
-        std::string attribname = MakeString(attnode->name);
+        std::string attribname = util::MakeString(attnode->name);
         if(attribname == "texture") {
             if(attnode->value.IsString()) {
-                this->texturename = MakeString(attnode->value);
+                this->texturename = util::MakeString(attnode->value);
             }
             else {
                 // TODO use logger
@@ -181,7 +177,7 @@ bool RenderAttachment::Parse(const std::string &object_name, const rapidjson::Va
         }
         else if(attribname == "target") {
             if(attnode->value.IsString()) {
-                std::string format = MakeString(attnode->value);
+                std::string format = util::MakeString(attnode->value);
                 if(format == "color" || format == "RGBA") {
                     this->attachtarget = GL_COLOR_ATTACHMENT0;
                 }
@@ -331,6 +327,13 @@ void RenderAttachment::Generate(int width, int height, int samplecount) {
             break;
         }
     }
+    GLint tex_target = (multisample_texture ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D);
+    glBindTexture(tex_target, texture->GetID());
+    CheckGLError();
+    glTexParameteri(tex_target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(tex_target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    CheckGLError();
+    glBindTexture(tex_target, 0);
 }
 
 void RenderAttachment::Destroy() {
@@ -350,7 +353,7 @@ void RenderAttachment::BindTexture() {
 void RenderAttachment::AttachToFBO() {
     CheckGLError();
     if(renderbuf) {
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, this->attachtarget, GL_RENDERBUFFER, renderbuf);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, this->GetAttach(), GL_RENDERBUFFER, renderbuf);
         CheckGLError();
     }
     else {
@@ -358,7 +361,7 @@ void RenderAttachment::AttachToFBO() {
             if(texture) {
                 glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, texture->GetID());
                 CheckGLError();
-                glFramebufferTexture2D(GL_FRAMEBUFFER, this->attachtarget,
+                glFramebufferTexture2D(GL_FRAMEBUFFER, this->GetAttach(),
                         GL_TEXTURE_2D_MULTISAMPLE, this->texture->GetID(), 0);
                 CheckGLError();
                 glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
@@ -369,7 +372,7 @@ void RenderAttachment::AttachToFBO() {
             if(texture) {
                 glBindTexture(GL_TEXTURE_2D, texture->GetID());
                 CheckGLError();
-                glFramebufferTexture2D(GL_FRAMEBUFFER, this->attachtarget,
+                glFramebufferTexture2D(GL_FRAMEBUFFER, this->GetAttach(),
                         GL_TEXTURE_2D, this->texture->GetID(), 0);
                 CheckGLError();
                 glBindTexture(GL_TEXTURE_2D, 0);
@@ -519,8 +522,8 @@ void RenderLayer::BindToRender() const {
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo_id); CheckGLError();
     if(clearany) {
         GLuint attachcount = this->attachments.size();
-        int k, i, primaryindex = 0;
-        for(k = this->attachments.size(),i = 0; i < k; i++) {
+        int i, primaryindex = 0;
+        for(i = 0; i < attachcount; i++) {
             auto& attitr = this->attachments[i];
             if(attitr) {
                 if(attitr->GetAttach() != GL_COLOR_ATTACHMENT0) {
@@ -540,6 +543,21 @@ void RenderLayer::BindToRender() const {
     }
 }
 
+void RenderLayer::BindToRead() const {
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo_id); CheckGLError();
+}
+
+void RenderLayer::BindTextures() const {
+    GLuint attachcount = this->attachments.size();
+    for(int i = 0; i < attachcount; i++) {
+        auto& attitr = this->attachments[i];
+        if(attitr) {
+            glActiveTexture(GL_TEXTURE0 + i);
+            attitr->BindTexture();
+        }
+    }
+}
+
 void RenderLayer::UnbindFromRead() {
     glBindFramebuffer(GL_READ_FRAMEBUFFER, 0); CheckGLError();
 }
@@ -549,11 +567,6 @@ void RenderLayer::UnbindFromWrite() {
 void RenderLayer::UnbindFromAll() {
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); CheckGLError();
     glBindFramebuffer(GL_READ_FRAMEBUFFER, 0); CheckGLError();
-    //glDrawBuffer(GL_BACK);
-}
-
-void RenderLayer::BindToRead() const {
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo_id); CheckGLError();
 }
 
 bool RenderLayer::Parse(const std::string &object_name, const rapidjson::Value& node) {
@@ -563,12 +576,12 @@ bool RenderLayer::Parse(const std::string &object_name, const rapidjson::Value& 
         return false;
     }
     for(auto attnode = node.MemberBegin(); attnode != node.MemberEnd(); attnode++) {
-        std::string attribname = MakeString(attnode->name);
+        std::string attribname = util::MakeString(attnode->name);
         if(attribname == "attach") {
             if(attnode->value.IsArray()) {
                 for(auto attach = attnode->value.Begin(); attach != attnode->value.End(); attach++) {
                     if(attach->IsString()) {
-                        this->attachmentnames.push_back(MakeString(*attach));
+                        this->attachmentnames.push_back(util::MakeString(*attach));
                     }
                     else {
                         // TODO use logger

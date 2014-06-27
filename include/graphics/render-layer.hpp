@@ -115,12 +115,13 @@ public:
     void Generate();
     void Destroy();
 
-    void BindToRender() const;
     static void UnbindFromRead();
     static void UnbindFromWrite();
     static void UnbindFromAll();
+    void BindToRender() const;
     void BindToRead() const;
     void BindToWrite() const;
+    void BindTextures() const;
 
     void GetRect(ViewRect& vr) {
         vr.x = 0;

@@ -9,7 +9,6 @@
 #include "resources/mesh.hpp"
 #include "graphics/shader.hpp"
 #include "graphics/material.hpp"
-#include "graphics/render-layer.hpp"
 #include "graphics/renderable.hpp"
 #include "graphics/six-dof-camera.hpp"
 #include "graphics/animation.hpp"
@@ -44,7 +43,34 @@ const int* RenderSystem::Start(const unsigned int width, const unsigned int heig
         this->view_matrix = this->camera->GetViewMatrix();
     }
 
+    float quaddata[] = {
+        -1,  1, 0, 1,
+         1,  1, 1, 1,
+        -1, -1, 0, 0,
+         1, -1, 1, 0
+    };
+    uint16_t quadindicies[] = { 0, 2, 1, 1, 2, 3 };
+    const unsigned QUADVERTSIZE = sizeof(float) * 4;
+    glGenVertexArrays(1, &screenquad.vao); // Generate the VAO
+    glGenBuffers(1, &screenquad.vbo); // Generate the vertex buffer.
+    glGenBuffers(1, &screenquad.ibo); // Generate the element buffer.
+
+    glBindVertexArray(screenquad.vao); CheckGLError(); // Bind the VAO
+
+    glBindBuffer(GL_ARRAY_BUFFER, screenquad.vbo); CheckGLError(); // Bind the vertex buffer.
+
+    // Store the verts in the buffer.
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quaddata), quaddata, GL_STATIC_DRAW); CheckGLError();
+
+    // Set the layout for the shaders
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, QUADVERTSIZE, (GLvoid*)0);
+    glEnableVertexAttribArray(0); CheckGLError();
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, screenquad.ibo); // Bind the element buffer.
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(quadindicies), quadindicies, GL_STATIC_DRAW);
     CheckGLError();
+
+    glBindVertexArray(0); CheckGLError(); // unbind VAO when done
 
     std::list<Property> settings;
     settings.push_back(Property("version", gl_version[0] * 100 + gl_version[1] * 10));
@@ -54,8 +80,8 @@ const int* RenderSystem::Start(const unsigned int width, const unsigned int heig
     settings.push_back(Property("samples", (int)8));
 
     for(unsigned int p = 0; p < 3; p++) {
-        for(auto ginstance : this->graphics_instances) {
-            for(auto gobject : ginstance.second) {
+        for(auto& ginstance : this->graphics_instances) {
+            for(auto& gobject : ginstance.second) {
                 if(gobject.second && gobject.second->initialize_priority == p) {
                     gobject.second->SystemStart(settings);
                 }
@@ -97,7 +123,7 @@ bool RenderSystem::Parse(rapidjson::Value& node) {
 }
 
 void RenderSystem::RegisterListResolvers() {
-    static std::map<std::string, GLuint> fbo_copytype_map;
+    std::map<std::string, GLuint> fbo_copytype_map;
     fbo_copytype_map["all"] = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT;
     fbo_copytype_map["color"] = GL_COLOR_BUFFER_BIT;
     fbo_copytype_map["colour"] = GL_COLOR_BUFFER_BIT; // just because
@@ -159,6 +185,7 @@ void RenderSystem::RegisterListResolvers() {
     list_resolvers[RenderCmd::READ_LAYER] = layerresolver;
     list_resolvers[RenderCmd::WRITE_LAYER] = layerresolver;
     list_resolvers[RenderCmd::SET_RENDER_LAYER] = layerresolver;
+    list_resolvers[RenderCmd::BIND_LAYER_TEXTURES] = layerresolver;
     list_resolvers[RenderCmd::COPY_LAYER] = [fbo_copytype_map, &rensys] (RenderCommandItem &rlist) -> bool {
         if(rlist.cmdvalue.IsEmpty()) {
             rlist.run_values.push_back(Container(false));
@@ -341,6 +368,20 @@ void RenderSystem::RenderScene() const {
                 }
             }
                 break;
+            case RenderCmd::BIND_LAYER_TEXTURES:
+            {
+                auto run_op = cmditem.run_values.begin();
+                if(run_op->Get<bool>()) {
+                    run_op++;
+                    auto layer = run_op->Get<std::shared_ptr<RenderLayer>>();
+                    if(layer) {
+                        layer->BindTextures();
+                    }
+                }
+                else {
+                }
+            }
+                break;
             case RenderCmd::COPY_LAYER:
             {
                 ViewRect src, dest;
@@ -434,14 +475,31 @@ void RenderSystem::RenderDepthOnlyPass(const float *view_matrix, const float *pr
 }
 
 void RenderSystem::RenderLightingPass(const float *inv_viewproj_matrix) const {
-    for (auto clight : this->alllights) {
+    glBindVertexArray(screenquad.vao); CheckGLError(); // Bind the VAO
+    GLuint l_pos_loc = 0;
+    GLuint l_dir_loc = 0;
+    if(lightingshader) {
+        lightingshader->Use();
+        l_pos_loc = lightingshader->Uniform("light_pos");
+        l_dir_loc = lightingshader->Uniform("light_dir");
+        glUniform1i(lightingshader->Uniform("layer0"), 0);
+        glUniform1i(lightingshader->Uniform("layer1"), 1);
+        glUniform1i(lightingshader->Uniform("layer2"), 2);
+        glUniform1i(lightingshader->Uniform("layer3"), 3);
+    }
+    for (auto& clight : this->alllights) {
         if(clight.second && clight.second->enabled) {
             LightBase *activelight = clight.second.get();
             const glm::mat4& lightmat = this->model_matrices.at(clight.first);
             glm::vec3 lightpos = glm::vec3(lightmat[3][0], lightmat[3][1], lightmat[3][2]);
-
+            glm::vec4 lightdir = glm::mat3x4(lightmat) * glm::vec3(0.f, 0.f, -1.f);
+            if(l_pos_loc) glUniform3f(l_pos_loc, lightpos.x, lightpos.y, lightpos.z);
+            if(l_dir_loc) glUniform3f(l_dir_loc, lightdir.x, lightdir.y, lightdir.z);
+            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0); // render quad for each light
         }
     }
+    glUseProgram(0);
+    glBindVertexArray(0); CheckGLError(); // unbind when done
 }
 
 void RenderSystem::RenderPostPass() const {
@@ -451,12 +509,21 @@ void RenderSystem::RenderPostPass() const {
 void RenderSystem::RegisterStaticParsers() {
     RenderSystem &rensys = *this;
     auto aglambda =  [&rensys] (const rapidjson::Value& node) -> bool {
-        if(node.IsString()) {
-            rensys.activerender = rensys.Get<RenderList>(std::string(node.GetString(), node.GetStringLength()));
+        for(auto settingitr = node.MemberBegin(); settingitr != node.MemberEnd(); settingitr++) {
+            std::string settingname = util::MakeString(settingitr->name);
+            if(settingitr->value.IsString()) {
+                std::string settingval = util::MakeString(settingitr->value);
+                if(settingname == "active-graph") {
+                    rensys.activerender = rensys.Get<RenderList>(settingval);
+                }
+                else if(settingname == "lighting-shader") {
+                    rensys.lightingshader = rensys.Get<Shader>(settingval);
+                }
+            }
         }
         return true;
     };
-    parser_functions["active-graph"] = aglambda;
+    parser_functions["settings"] = aglambda;
 }
 
 void RenderSystem::Notify(const unsigned int entity_id, const Transform* transform) {

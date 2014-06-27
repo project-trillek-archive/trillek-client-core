@@ -9,6 +9,10 @@
 namespace trillek {
 namespace util {
 
+std::string MakeString(const rapidjson::Value& v) {
+    return std::string(v.GetString(), v.GetStringLength());
+}
+
 JSONPasrser::JSONPasrser() {
     static std::once_flag only_one;
 
