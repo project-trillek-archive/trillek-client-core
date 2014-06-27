@@ -9,9 +9,7 @@ namespace trillek {
  * \brief A class to contain an arbitrary value.
  *
  * This class is used to carry dynamic typed values.
- * The value is stored in a value_holder and is accessed
- * by calling Get() with the appropriate type.
- * The type contained can be determined with GetType()
+ * The type contained can be determined with GetType() or Is<T>()
  * which returns an enum value matching the type (if known).
  */
 class Container {
@@ -23,38 +21,34 @@ public:
     ~Container() {
         if(value_holder != nullptr) delete value_holder;
     }
+
     // Copy is not allowed
-    Container(const Container &other) = delete;
-    Container& operator=(const Container &other) = delete;
+    Container(const Container &that) = delete;
+    Container& operator=(const Container &that) = delete;
 
     // Move
-    Container(Container&& other) : value_holder(other.value_holder) {
-        other.value_holder = nullptr;
+    Container(Container&& that) : value_holder(that.value_holder) {
+        that.value_holder = nullptr;
     }
-    Container& operator=(Container&& other) {
-        value_holder = other.value_holder;
-        other.value_holder = nullptr;
+    Container& operator=(Container&& that) {
+        value_holder = that.value_holder;
+        that.value_holder = nullptr;
         return *this;
     }
 
     /**
      * \brief Sets the value of the container.
-     *
-     * \param[in] t value The value of the property. typename is inferred on usage.
      */
-    template <typename t>
-    Container(t value) : value_holder(new ValueHolder<t>(value)) { }
+    template <typename T>
+    Container(T value) : value_holder(new ValueHolder<T>(value)) { }
 
     /**
      * \brief Retrieves the container value.
-     *
-     * Calls the Get() method of ValueHolder with the given template type.
-     * \returns t The value with the given template type.
      */
-    template <class t>
-    t Get() const {
+    template <class T>
+    T Get() const {
         if(this->value_holder != nullptr) {
-            return static_cast<ValueHolder<t>*>(this->value_holder)->Get();
+            return static_cast<ValueHolder<T>*>(this->value_holder)->Get();
         }
     }
 
@@ -63,16 +57,13 @@ public:
     }
 
     /**
-     * \brief Compares the type ID of contained value to the template type.
-     *
-     * Calls the GetType() method of ValueHolder.
-     * \returns bool true if the IDs match and are non-zero
+     * \brief Compares the type of contained value.
      */
-    template <class CT>
+    template <class T>
     bool Is() const {
         unsigned type_id = GetType();
         if(type_id) {
-            return reflection::GetTypeID<CT>() == type_id;
+            return reflection::GetTypeID<T>() == type_id;
         }
         else {
             return false;
@@ -81,9 +72,6 @@ public:
 
     /**
      * \brief Retrieves the type ID of contained value.
-     *
-     * Calls the GetType() method of ValueHolder.
-     * \returns unsigned int the type ID.
      */
     unsigned GetType() const {
         if(this->value_holder == nullptr) {
@@ -94,9 +82,6 @@ public:
 
     /**
      * \brief Retrieves the size of the contained value.
-     *
-     * Calls the GetSize() method of ValueHolder.
-     * \returns size_t The size of the value in the container.
      */
     std::size_t GetSize() const {
         if(this->value_holder == nullptr) {
@@ -107,10 +92,7 @@ public:
 
 private:
     /**
-     * \brief ValueHolderBase is a common base type class
-     *
-     * it can be used to hold a pointer to a specialized
-     * templated version of ValueHolder.
+     * \brief ValueHolderBase - a common type class
      */
     class ValueHolderBase {
     public:
@@ -122,18 +104,18 @@ private:
     /**
      * \brief A generic value holder type.
      */
-    template <typename t>
+    template <typename T>
     class ValueHolder : public ValueHolderBase {
     public:
-        ValueHolder(t value) : value(value) { }
-        t Get() { return this->value; }
-        virtual unsigned GetType() const { return reflection::GetTypeID<t>(); }
-        virtual std::size_t GetSize() const { return sizeof(t); }
+        ValueHolder(T value) : value(value) { }
+        T Get() { return this->value; }
+        virtual unsigned GetType() const { return reflection::GetTypeID<T>(); }
+        virtual std::size_t GetSize() const { return sizeof(T); }
     private:
-        t value;
+        T value;
     };
 
-    ValueHolderBase* value_holder; // The value held by this property.
+    ValueHolderBase* value_holder; // The value held.
 };
 
 } // namespace trillek
