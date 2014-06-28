@@ -260,7 +260,9 @@ void RenderSystem::RunBatch() const {
 
 void RenderSystem::RenderScene() const {
 
-    glm::mat4x4 inv_viewproj = glm::inverse(this->projection_matrix * this->view_matrix);
+    //glm::mat4x4 inv_viewproj = glm::inverse(this->projection_matrix * this->view_matrix);
+    //glm::mat4x4 inv_view = glm::inverse(this->view_matrix);
+    glm::mat4x4 inv_proj = glm::inverse(this->projection_matrix);
     // Clear the backbuffer and primary depth/stencil buffer
     glViewport(0, 0, this->window_width, this->window_height); // Set the viewport size to fill the window
 
@@ -308,7 +310,7 @@ void RenderSystem::RenderScene() const {
                     glDisable(GL_MULTISAMPLE);
                     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
                     glDisable(GL_DEPTH_TEST);
-                    RenderLightingPass(&inv_viewproj[0][0]);
+                    RenderLightingPass(this->view_matrix, &inv_proj[0][0]);
                     break;
                 case 3:
                     glDisable(GL_MULTISAMPLE);
@@ -474,30 +476,37 @@ void RenderSystem::RenderDepthOnlyPass(const float *view_matrix, const float *pr
     // This is intended for shadow map passes or the like
 }
 
-void RenderSystem::RenderLightingPass(const float *inv_viewproj_matrix) const {
+void RenderSystem::RenderLightingPass(const glm::mat4x4 &view_matrix, const float *inv_proj_matrix) const {
     glBindVertexArray(screenquad.vao); CheckGLError(); // Bind the VAO
     GLuint l_pos_loc = 0;
     GLuint l_dir_loc = 0;
+    GLuint l_col_loc = 0;
     if(lightingshader) {
         lightingshader->Use();
         l_pos_loc = lightingshader->Uniform("light_pos");
+        l_col_loc = lightingshader->Uniform("light_color");
         l_dir_loc = lightingshader->Uniform("light_dir");
         glUniform1i(lightingshader->Uniform("layer0"), 0);
         glUniform1i(lightingshader->Uniform("layer1"), 1);
         glUniform1i(lightingshader->Uniform("layer2"), 2);
         glUniform1i(lightingshader->Uniform("layer3"), 3);
+        glUniformMatrix4fv(lightingshader->Uniform("inv_proj"), 1, GL_FALSE, inv_proj_matrix);
     }
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ONE);
     for (auto& clight : this->alllights) {
         if(clight.second && clight.second->enabled) {
             LightBase *activelight = clight.second.get();
             const glm::mat4& lightmat = this->model_matrices.at(clight.first);
-            glm::vec3 lightpos = glm::vec3(lightmat[3][0], lightmat[3][1], lightmat[3][2]);
+            glm::vec4 lightpos = view_matrix * glm::vec4(lightmat[3][0], lightmat[3][1], lightmat[3][2], 1);
             glm::vec4 lightdir = glm::mat3x4(lightmat) * glm::vec3(0.f, 0.f, -1.f);
             if(l_pos_loc) glUniform3f(l_pos_loc, lightpos.x, lightpos.y, lightpos.z);
             if(l_dir_loc) glUniform3f(l_dir_loc, lightdir.x, lightdir.y, lightdir.z);
+            if(l_pos_loc) glUniform3f(l_col_loc, 1.0f, 1.0f, 1.0f);
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0); // render quad for each light
         }
     }
+    glDisable(GL_BLEND);
     glUseProgram(0);
     glBindVertexArray(0); CheckGLError(); // unbind when done
 }

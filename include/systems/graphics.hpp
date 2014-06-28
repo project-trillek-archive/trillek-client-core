@@ -93,7 +93,7 @@ public:
     /**
      * \brief Renders all deferred lighting passes for the scene.
      */
-    void RenderLightingPass(const float *inv_viewproj_matrix) const;
+    void RenderLightingPass(const glm::mat4x4 &view_matrix, const float *inv_proj_matrix) const;
 
     /**
      * \brief Renders post processing passes for the scene.
