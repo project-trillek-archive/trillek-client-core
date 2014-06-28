@@ -1,4 +1,3 @@
-#include "trillek-game.hpp"
 #include "transform.hpp"
 #include "type-id.hpp"
 #include "systems/graphics.hpp"
@@ -12,6 +11,8 @@
 #include "graphics/renderable.hpp"
 #include "graphics/six-dof-camera.hpp"
 #include "graphics/animation.hpp"
+#include "graphics/light.hpp"
+#include "graphics/render-list.hpp"
 
 namespace trillek {
 namespace graphics {
@@ -260,11 +261,8 @@ void RenderSystem::RunBatch() const {
 
 void RenderSystem::RenderScene() const {
 
-    //glm::mat4x4 inv_viewproj = glm::inverse(this->projection_matrix * this->view_matrix);
-    //glm::mat4x4 inv_view = glm::inverse(this->view_matrix);
     glm::mat4x4 inv_proj = glm::inverse(this->projection_matrix);
-    // Clear the backbuffer and primary depth/stencil buffer
-    glViewport(0, 0, this->window_width, this->window_height); // Set the viewport size to fill the window
+    glViewport(0, 0, this->window_width, this->window_height);
 
     if(activerender) {
         for(auto& cmditem : activerender->render_commands) {
@@ -477,7 +475,7 @@ void RenderSystem::RenderDepthOnlyPass(const float *view_matrix, const float *pr
 }
 
 void RenderSystem::RenderLightingPass(const glm::mat4x4 &view_matrix, const float *inv_proj_matrix) const {
-    glBindVertexArray(screenquad.vao); CheckGLError(); // Bind the VAO
+    glBindVertexArray(screenquad.vao); CheckGLError();
     GLuint l_pos_loc = 0;
     GLuint l_dir_loc = 0;
     GLuint l_col_loc = 0;
@@ -507,8 +505,9 @@ void RenderSystem::RenderLightingPass(const glm::mat4x4 &view_matrix, const floa
         }
     }
     glDisable(GL_BLEND);
+    // unbind when done
     glUseProgram(0);
-    glBindVertexArray(0); CheckGLError(); // unbind when done
+    glBindVertexArray(0); CheckGLError();
 }
 
 void RenderSystem::RenderPostPass() const {

@@ -1,4 +1,5 @@
 #include "systems/resource-system.hpp"
+#include "systems/graphics.hpp"
 #include "trillek-game.hpp"
 
 #include "resources/mesh.hpp"

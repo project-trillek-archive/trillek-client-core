@@ -12,13 +12,13 @@
 #include "trillek.hpp"
 #include "trillek-game.hpp"
 #include "trillek-scheduler.hpp"
+#include "component-factory.hpp"
 #include "systems/system-base.hpp"
 #include "util/json-parser.hpp"
 #include "graphics/graphics-base.hpp"
 #include "graphics/material.hpp"
-#include "graphics/light.hpp"
 #include "graphics/render-layer.hpp"
-#include "graphics/render-list.hpp"
+#include "graphics/texture.hpp"
 #include <map>
 
 #include "dispatcher.hpp"
@@ -28,9 +28,13 @@ class Transform;
 
 namespace graphics {
 
+enum class RenderCmd : unsigned int;
+class RenderCommandItem;
 class Renderable;
 class CameraBase;
 class Animation;
+class LightBase;
+class RenderList;
 
 struct MaterialGroup {
     Material material;

@@ -10,7 +10,6 @@ namespace trillek {
  *
  * This class is used to carry dynamic typed values.
  * The type contained can be determined with GetType() or Is<T>()
- * which returns an enum value matching the type (if known).
  */
 class Container {
 public:
@@ -57,7 +56,7 @@ public:
     }
 
     /**
-     * \brief Compares the type of contained value.
+     * \brief Compares the type of contained value (if known).
      */
     template <class T>
     bool Is() const {
@@ -92,7 +91,7 @@ public:
 
 private:
     /**
-     * \brief ValueHolderBase - a common type class
+     * \brief ValueHolderBase - common class
      */
     class ValueHolderBase {
     public:
@@ -102,7 +101,7 @@ private:
     };
 
     /**
-     * \brief A generic value holder type.
+     * \brief The generic value holder.
      */
     template <typename T>
     class ValueHolder : public ValueHolderBase {
@@ -115,7 +114,7 @@ private:
         T value;
     };
 
-    ValueHolderBase* value_holder; // The value held.
+    ValueHolderBase* value_holder;
 };
 
 } // namespace trillek

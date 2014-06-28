@@ -5,12 +5,13 @@
 #include "trillek.hpp"
 #include "graphics-base.hpp"
 #include <rapidjson/document.h>
-#include "texture.hpp"
 #include <vector>
 #include <memory>
 
 namespace trillek {
 namespace graphics {
+
+class Texture;
 
 struct ViewRect{
     ViewRect() {}

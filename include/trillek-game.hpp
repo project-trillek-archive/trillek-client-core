@@ -4,9 +4,13 @@
 #include "trillek-scheduler.hpp"
 #include "systems/fake-system.hpp"
 #include "os.hpp"
-#include "systems/graphics.hpp"
 
 namespace trillek {
+
+namespace graphics {
+class RenderSystem;
+}
+
 class TrillekGame {
 public:
 

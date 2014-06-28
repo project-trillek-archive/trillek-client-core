@@ -1,4 +1,5 @@
 #include "trillek-game.hpp"
+#include "systems/graphics.hpp"
 
 namespace trillek {
 

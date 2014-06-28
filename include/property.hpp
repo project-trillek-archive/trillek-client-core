@@ -9,9 +9,8 @@ namespace trillek {
  * \brief A class to contain a generic property.
  *
  * This class is used to pass around generic properties.
- * Properties have a name and a value. The value is stored in
- * value_holder and is accessed by calling Get() with the
- * appropriate type.
+ * Properties have a name and a value. The value is
+ * accessed by calling Get() with the appropriate type.
  */
 class Property {
 private:
@@ -37,21 +36,18 @@ public:
      * \brief Sets the name and value of the property.
      *
      * \param[in] std::string name The name of the property
-     * \param[in] T value The value of the property. typename is inferred.
+     * \param[in] T value The value of the property.
      */
     template <typename T>
     Property(std::string name, T value) : name(name), value_holder(new ValueHolder<T>(value)) { }
 
     ~Property() { delete this->value_holder; }
 
-    /**
-     * \brief Retrieves the value in value_holder.
-     */
     template <typename T>
     T Get() const { return static_cast<ValueHolder<T>*>(this->value_holder)->Get(); }
 
     /**
-     * \brief Gets the name of this property.
+     * \brief Gets the property name.
      */
     std::string GetName() const { return this->name; }
 
@@ -110,8 +106,8 @@ private:
         T value;
     };
 
-    std::string name; // Name of this property.
-    ValueHolderBase* value_holder; // The value held.
+    std::string name;
+    ValueHolderBase* value_holder;
 };
 
 } // namespace trillek
