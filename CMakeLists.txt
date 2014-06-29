@@ -76,6 +76,8 @@ FIND_PACKAGE(OpenGL REQUIRED)
 FIND_PACKAGE(GLFW3 REQUIRED)
 FIND_PACKAGE(RapidJSON REQUIRED)
 FIND_PACKAGE(Bullet REQUIRED)
+FIND_PACKAGE(ALURE REQUIRED)
+FIND_PACKAGE(OpenAL REQUIRED)
 
 # Give these some dummy values and if the platform is LINUX or OSX they will be set accordingly.
 SET(X11_LIBRARIES "")
@@ -130,6 +132,8 @@ set(TCC_ALL_LIBS
 	${BULLET_LINEARMATH_LIBRARIES}
 	${BULLET_COLLISION_LIBRARIES}
 	${BULLET_DYNAMICS_LIBRARIES}
+	${ALURE_LIBRARIES}
+	${OpenAL_LIBRARIES}
   )
 
 # if just building an exe use all the source and libraries

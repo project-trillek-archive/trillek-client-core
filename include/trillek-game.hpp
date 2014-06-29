@@ -6,6 +6,7 @@
 #include "os.hpp"
 #include "systems/graphics.hpp"
 #include "systems/physics.hpp"
+#include "systems/sound-system.hpp"
 
 namespace trillek {
 class TrillekGame {
@@ -40,6 +41,13 @@ public:
     * \return physics::PhysicsSystem& the instance
     */
     static physics::PhysicsSystem& GetPhysicsSystem() { return phys_sys; };
+
+    /** \brief Return the sound system instance
+     *
+     * \return sound::System&
+     *
+     */
+    static sound::System& GetSoundSystem() { return *sound::System::GetInstance(); };
 
     /** \brief Get the FakeSystem
      *

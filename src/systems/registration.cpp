@@ -10,6 +10,7 @@
 #include "systems/resource-system.hpp"
 #include "systems/transform-system.hpp"
 #include "systems/component-factory.hpp"
+#include "systems/sound-system.hpp"
 #include "util/json-parser.hpp"
 
 namespace trillek {
@@ -19,12 +20,14 @@ void ComponentFactory::RegisterTypes() {
     RegisterComponentType<physics::Collidable>();
     RegisterSystem<graphics::Renderable>(&TrillekGame::GetGraphicSystem());
     RegisterSystem<physics::Collidable>(&TrillekGame::GetPhysicsSystem());
+    RegisterSystem<graphics::Renderable>(&TrillekGame::GetGraphicSystem());
 }
 
 void util::JSONPasrser::RegisterTypes() {
     RegisterParser(resource::ResourceMap::GetInstance());
     RegisterParser(TransformMap::GetInstance());
     RegisterParser(ComponentFactory::GetInstance());
+    RegisterParser(sound::System::GetInstance());
 }
 
 void resource::ResourceMap::RegisterTypes() {
