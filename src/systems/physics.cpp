@@ -85,5 +85,17 @@ void PhysicsSystem::RemoveForce(const unsigned int entity_id) {
         this->forces.erase(entity_id);
     }
 }
+
+void PhysicsSystem::SetGravity(const unsigned int entity_id, const Force* f) {
+    if (this->bodies.find(entity_id) != this->bodies.end()) {
+        if (f != nullptr) {
+            this->bodies.at(entity_id)->GetRigidBody()->setGravity(btVector3(f->x, f->y, f->z));
+        }
+        else {
+            this->bodies.at(entity_id)->GetRigidBody()->setGravity(this->dynamicsWorld->getGravity());
+        }
+    }
+}
+
 } // End of physics
 } // End of trillek

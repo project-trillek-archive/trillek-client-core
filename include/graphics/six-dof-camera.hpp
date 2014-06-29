@@ -40,6 +40,8 @@ public:
         }
 
         static glm::vec3 direction_vector;
+        static const physics::Force zero_gravity = { 0.0, 0.0, 0.0 };
+        static bool gravity_disabled;
 
         switch (key_event->action) {
         case KeyboardEvent::KEY_DOWN:
@@ -97,6 +99,16 @@ public:
             break;
             case GLFW_KEY_RIGHT:
                 this->camera_transform->OrientedRotate(glm::radians(-5.0f) * UP_VECTOR);
+            break;
+            case GLFW_KEY_GRAVE_ACCENT:
+                if (gravity_disabled) {
+                    gravity_disabled = false;
+                    TrillekGame::GetPhysicsSystem().SetGravity(this->entity_id, nullptr);
+                }
+                else {
+                    gravity_disabled = true;
+                    TrillekGame::GetPhysicsSystem().SetGravity(this->entity_id, &zero_gravity);
+                }
             break;
             default:
             break;

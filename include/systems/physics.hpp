@@ -86,8 +86,13 @@ public:
     */
     void RemoveForce(const unsigned int entity_id);
 
+    /** \brief Set a rigid body's gravity.
     *
+    * \param const unsigned int entity_id The entity ID of the rigid body.
+    * \param const Force* f The rigid body's new gravity (world gravity if nullptr).
+    * \return void
     */
+    void SetGravity(const unsigned int entity_id, const Force* f = nullptr);
 private:
     btBroadphaseInterface* broadphase;
     btDefaultCollisionConfiguration* collisionConfiguration;
