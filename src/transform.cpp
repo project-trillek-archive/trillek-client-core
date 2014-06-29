@@ -63,6 +63,12 @@ void Transform::SetRotation(const glm::vec3 new_rotaiton) {
     event::Dispatcher<Transform>::GetInstance()->NotifySubscribers(this->entity_id, this);
 }
 
+void Transform::SetOrientation(const glm::quat new_orientation) {
+    this->orientation = new_orientation;
+    this->rotation = glm::eulerAngles(this->orientation);
+    event::Dispatcher<Transform>::GetInstance()->NotifySubscribers(this->entity_id, this);
+}
+
 void Transform::SetScale(const glm::vec3 new_scale) {
     this->scale = new_scale;
     event::Dispatcher<Transform>::GetInstance()->NotifySubscribers(this->entity_id, this);

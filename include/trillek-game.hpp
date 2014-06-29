@@ -5,6 +5,7 @@
 #include "systems/fake-system.hpp"
 #include "os.hpp"
 #include "systems/graphics.hpp"
+#include "systems/physics.hpp"
 
 namespace trillek {
 class TrillekGame {
@@ -33,6 +34,12 @@ public:
      *
      */
     static graphics::RenderSystem& GetGraphicSystem() { return gl_sys; };
+
+    /** \brief Return the physics system instance
+    *
+    * \return physics::PhysicsSystem& the instance
+    */
+    static physics::PhysicsSystem& GetPhysicsSystem() { return phys_sys; };
 
     /** \brief Get the FakeSystem
      *
@@ -65,6 +72,7 @@ private:
     static FakeSystem fake_system;
     static OS glfw_os;
     static graphics::RenderSystem gl_sys;
+    static physics::PhysicsSystem phys_sys;
     static bool close_window;
 };
 }
