@@ -30,7 +30,7 @@ install:
     # GLEW, GLM
     - sudo apt-get -q -y install libglew-dev libglm-dev
     # OpenAL, Vorbis and OGG
-    #- sudo apt-get -q -y install libogg-dev libvorbis-dev libopenal-dev
+    - sudo apt-get -q -y install libogg-dev libvorbis-dev libopenal-dev libalure-dev
     # Bullet
     - sudo apt-get -q -y install libbullet-dev
     # install and build gtest
