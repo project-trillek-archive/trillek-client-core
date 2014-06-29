@@ -2,7 +2,7 @@
 #define SHADER_HPP_INCLUDED
 
 #include "opengl.hpp"
-
+#include "type-id.hpp"
 #include <map>
 #include <string>
 #include <vector>
@@ -92,11 +92,9 @@ private:
 } // End of graphics
 
 namespace reflection {
-
-template <> inline const char* GetTypeName<graphics::Shader>() { return "shaders"; }
-template <> inline const unsigned int GetTypeID<graphics::Shader>() { return 401; }
-
+TRILLEK_MAKE_IDTYPE_NAME(graphics::Shader, "shaders", 401)
 } // namespace reflection
+
 } // End of trillek
 
 #endif

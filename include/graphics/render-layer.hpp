@@ -3,6 +3,7 @@
 
 #include "opengl.hpp"
 #include "trillek.hpp"
+#include "type-id.hpp"
 #include "graphics-base.hpp"
 #include <rapidjson/document.h>
 #include <vector>
@@ -148,13 +149,10 @@ private:
 } // namespace graphics
 
 namespace reflection {
-
-template <> inline const char* GetTypeName<graphics::RenderAttachment>() { return "attachment"; }
-template <> inline const unsigned int GetTypeID<graphics::RenderAttachment>() { return 402; }
-template <> inline const char* GetTypeName<graphics::RenderLayer>() { return "layer"; }
-template <> inline const unsigned int GetTypeID<graphics::RenderLayer>() { return 403; }
-
+TRILLEK_MAKE_IDTYPE_NAME(graphics::RenderAttachment, "attachment", 402)
+TRILLEK_MAKE_IDTYPE_NAME(graphics::RenderLayer, "layer", 403)
 } // namespace reflection
+
 } // namespace trillek
 
 #endif

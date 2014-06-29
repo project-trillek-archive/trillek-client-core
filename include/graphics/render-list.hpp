@@ -2,6 +2,7 @@
 #define RENDER_LIST_HPP_INCLUDED
 
 #include "trillek.hpp"
+#include "type-id.hpp"
 #include "graphics-base.hpp"
 #include "property.hpp"
 #include "container.hpp"
@@ -71,11 +72,9 @@ public:
 } // namespace graphics
 
 namespace reflection {
-
-template <> inline const char* GetTypeName<graphics::RenderList>() { return "render-list"; }
-template <> inline const unsigned int GetTypeID<graphics::RenderList>() { return 404; }
-
+TRILLEK_MAKE_IDTYPE_NAME(graphics::RenderList, "render-list", 404)
 } // namespace reflection
+
 } // namespace trillek
 
 #endif

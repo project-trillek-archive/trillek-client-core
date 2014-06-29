@@ -1,6 +1,7 @@
 #ifndef TEXTURE_HPP_INCLUDED
 #define TEXTURE_HPP_INCLUDED
 
+#include "type-id.hpp"
 #include "resources/pixel-buffer.hpp"
 #include "opengl.hpp"
 #include "graphics-base.hpp"
@@ -91,11 +92,9 @@ protected:
 } // graphics
 
 namespace reflection {
-
-template <> inline const char* GetTypeName<graphics::Texture>() { return "texture"; }
-template <> inline const unsigned int GetTypeID<graphics::Texture>() { return 400; }
-
+TRILLEK_MAKE_IDTYPE_NAME(graphics::Texture,"texture",400)
 } // End of reflection
+
 } // trillek
 
 #endif

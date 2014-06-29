@@ -2,7 +2,7 @@
 #define RENDERABLE_HPP_INCLUDED
 
 #include "opengl.hpp"
-
+#include "type-id.hpp"
 #include <memory>
 #include <vector>
 #include "systems/component-factory.hpp"
@@ -132,11 +132,9 @@ private:
 } // End of graphics
 
 namespace reflection {
-
-template <> inline const char* GetTypeName<graphics::Renderable>() { return "renderable"; }
-template <> inline const unsigned int GetTypeID<graphics::Renderable>() { return 2000; }
-
+TRILLEK_MAKE_IDTYPE_NAME(graphics::Renderable, "renderable", 2000)
 } // End of reflection
+
 } // End of trillek
 
 #endif

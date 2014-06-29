@@ -2,7 +2,7 @@
 #define LIGHT_HPP_INCLUDED
 
 #include "opengl.hpp"
-
+#include "type-id.hpp"
 #include <memory>
 #include <vector>
 #include "systems/component-factory.hpp"
@@ -37,11 +37,9 @@ public:
 } // namespace graphics
 
 namespace reflection {
-
-template <> inline const char* GetTypeName<graphics::LightBase>() { return "light"; }
-template <> inline const unsigned int GetTypeID<graphics::LightBase>() { return 2001; }
-
+TRILLEK_MAKE_IDTYPE_NAME(graphics::LightBase, "light", 2001)
 } // End of reflection
+
 } // namespace trillek
 
 #endif
