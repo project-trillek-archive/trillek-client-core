@@ -1,4 +1,5 @@
 #include "systems/component-factory.hpp"
+#include "type-id.hpp"
 
 namespace trillek {
 
@@ -69,7 +70,7 @@ bool ComponentFactory::Parse(rapidjson::Value& node) {
                                     props.push_back(p);
                                 }
                                 else if (component_property_itr->value.IsInt()) {
-                                    int property_value = component_property_itr->value.GetInt();
+                                    long property_value = component_property_itr->value.GetInt();
                                     Property p(component_property_name, property_value);
                                     props.push_back(p);
                                 }
@@ -77,6 +78,34 @@ bool ComponentFactory::Parse(rapidjson::Value& node) {
                                     unsigned int property_value = component_property_itr->value.GetUint();
                                     Property p(component_property_name, property_value);
                                     props.push_back(p);
+                                }
+                                else if (component_property_itr->value.IsArray()) {
+                                    auto array_itr = component_property_itr->value.Begin();
+                                    if(array_itr != component_property_itr->value.End()) {
+                                        if(array_itr->IsNumber()) {
+                                            std::vector<double> values;
+                                            for( ; array_itr != component_property_itr->value.End(); array_itr++) {
+                                                if(array_itr->IsNumber()) {
+                                                    values.push_back(array_itr->GetDouble());
+                                                }
+                                            }
+                                            if(values.size() == 2) {
+                                                Property p(component_property_name,
+                                                    glm::vec2(values[0], values[1]));
+                                                props.push_back(p);
+                                            }
+                                            else if(values.size() == 3) {
+                                                Property p(component_property_name,
+                                                    glm::vec3(values[0], values[1], values[2]));
+                                                props.push_back(p);
+                                            }
+                                            else if(values.size() == 4) {
+                                                Property p(component_property_name,
+                                                    glm::vec4(values[0], values[1], values[2], values[3]));
+                                                props.push_back(p);
+                                            }
+                                        }
+                                    }
                                 }
                             }
 

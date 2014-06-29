@@ -2,6 +2,7 @@
 #define CONTAINER_HPP_INCLUDED
 
 #include "trillek.hpp"
+#include "type-id.hpp"
 
 namespace trillek {
 
@@ -61,7 +62,7 @@ public:
     template <class T>
     bool Is() const {
         unsigned type_id = GetType();
-        if(type_id) {
+        if(type_id && type_id != ~0) {
             return reflection::GetTypeID<T>() == type_id;
         }
         else {
@@ -106,11 +107,12 @@ private:
     template <typename T>
     class ValueHolder : public ValueHolderBase {
     public:
-        ValueHolder(T value) : value(value) { }
+        ValueHolder(T value) : value(value), type_id(reflection::GetTypeID<T>()) { }
         T Get() { return this->value; }
-        virtual unsigned GetType() const { return reflection::GetTypeID<T>(); }
+        virtual unsigned GetType() const { return type_id; }
         virtual std::size_t GetSize() const { return sizeof(T); }
     private:
+        unsigned type_id;
         T value;
     };
 

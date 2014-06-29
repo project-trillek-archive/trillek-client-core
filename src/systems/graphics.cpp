@@ -146,16 +146,16 @@ void RenderSystem::RegisterListResolvers() {
         if(rlist.cmdvalue.Is<std::string>()) {
             const std::string &rentype = rlist.cmdvalue.Get<std::string>();
             if(rentype == "all-geometry") {
-                rlist.run_values.push_back(Container((int)0));
+                rlist.run_values.push_back(Container((long)0));
             }
             else if(rentype == "depth-geometry") {
-                rlist.run_values.push_back(Container((int)1));
+                rlist.run_values.push_back(Container((long)1));
             }
             else if(rentype == "lighting") {
-                rlist.run_values.push_back(Container((int)2));
+                rlist.run_values.push_back(Container((long)2));
             }
             else if(rentype == "post") {
-                rlist.run_values.push_back(Container((int)3));
+                rlist.run_values.push_back(Container((long)3));
             }
             else {
                 return false;
@@ -293,7 +293,7 @@ void RenderSystem::RenderScene() const {
                 break;
             case RenderCmd::RENDER:
             {
-                switch(cmditem.run_values.front().Get<int>()) {
+                switch(cmditem.run_values.front().Get<long>()) {
                 case 0:
                     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
                     glEnable(GL_DEPTH_TEST);
@@ -476,9 +476,9 @@ void RenderSystem::RenderDepthOnlyPass(const float *view_matrix, const float *pr
 
 void RenderSystem::RenderLightingPass(const glm::mat4x4 &view_matrix, const float *inv_proj_matrix) const {
     glBindVertexArray(screenquad.vao); CheckGLError();
-    GLuint l_pos_loc = 0;
-    GLuint l_dir_loc = 0;
-    GLuint l_col_loc = 0;
+    GLint l_pos_loc = 0;
+    GLint l_dir_loc = 0;
+    GLint l_col_loc = 0;
     if(lightingshader) {
         lightingshader->Use();
         l_pos_loc = lightingshader->Uniform("light_pos");
@@ -498,9 +498,30 @@ void RenderSystem::RenderLightingPass(const glm::mat4x4 &view_matrix, const floa
             const glm::mat4& lightmat = this->model_matrices.at(clight.first);
             glm::vec4 lightpos = view_matrix * glm::vec4(lightmat[3][0], lightmat[3][1], lightmat[3][2], 1);
             glm::vec4 lightdir = glm::mat3x4(lightmat) * glm::vec3(0.f, 0.f, -1.f);
-            if(l_pos_loc) glUniform3f(l_pos_loc, lightpos.x, lightpos.y, lightpos.z);
-            if(l_dir_loc) glUniform3f(l_dir_loc, lightdir.x, lightdir.y, lightdir.z);
-            if(l_pos_loc) glUniform3f(l_col_loc, 1.0f, 1.0f, 1.0f);
+            if(l_pos_loc > 0) glUniform3f(l_pos_loc, lightpos.x, lightpos.y, lightpos.z);
+            if(l_dir_loc > 0) glUniform3f(l_dir_loc, lightdir.x, lightdir.y, lightdir.z);
+            if(l_col_loc > 0) glUniform3fv(l_col_loc, 1, (float*)&activelight->color);
+            auto lp_itr = activelight->light_props.begin();
+            for(;lp_itr != activelight->light_props.end(); lp_itr++) {
+                GLint uniformloc = lightingshader->Uniform(lp_itr->GetName().c_str());
+                if(uniformloc > 0) {
+                    if(lp_itr->Is<float>()) {
+                        glUniform1f(uniformloc, lp_itr->Get<float>());
+                    }
+                    else if(lp_itr->Is<glm::vec3>()) {
+                        glm::vec3 val = lp_itr->Get<glm::vec3>();
+                        glUniform3f(uniformloc, val.x, val.y, val.z);
+                    }
+                    else if(lp_itr->Is<glm::vec4>()) {
+                        glm::vec4 val = lp_itr->Get<glm::vec4>();
+                        glUniform4f(uniformloc, val.x, val.y, val.z, val.w);
+                    }
+                    else if(lp_itr->Is<glm::vec2>()) {
+                        glm::vec2 val = lp_itr->Get<glm::vec2>();
+                        glUniform2f(uniformloc, val.x, val.y);
+                    }
+                }
+            }
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0); // render quad for each light
         }
     }

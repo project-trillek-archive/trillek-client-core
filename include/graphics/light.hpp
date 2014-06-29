@@ -28,10 +28,12 @@ public:
      * \param[in] const std::vector<Property>& properties The creation properties for the component.
      * \return bool True if initialization finished with no errors.
      */
-    bool Initialize(const std::vector<Property> &properties);
+    virtual bool Initialize(const std::vector<Property> &properties);
 
     bool enabled;
     GLuint lighttype;
+    glm::vec3 color;
+    std::vector<Property> light_props;
 };
 
 } // namespace graphics

@@ -67,11 +67,11 @@ public:
 
     // ISSUE: This is a bit questionable as it violates the principle of least surprise
     //An indexer that returns the location of the attribute/uniform
-    GLuint operator[](const std::string & attribute);
-    GLuint operator()(const std::string & uniform);
+    GLint operator[](const std::string & attribute);
+    GLint operator()(const std::string & uniform);
 
-    GLuint Attribute(const std::string & attribute);
-    GLuint Uniform(const std::string & uniform);
+    GLint Attribute(const std::string & attribute);
+    GLint Uniform(const std::string & uniform);
 
     //Program deletion
     void DeleteProgram();
@@ -82,8 +82,8 @@ private:
     GLuint program;
     std::vector<GLuint> shaders;
     std::vector<std::pair<std::string, GLuint>> output_bindings;
-    std::map<std::string, GLuint> attributes_list;
-    std::map<std::string, GLuint> uniforms_list;
+    std::map<std::string, GLint> attributes_list;
+    std::map<std::string, GLint> uniforms_list;
 
     static std::once_flag types_once;
     static std::map<std::string, ShaderType> shaderclass;
