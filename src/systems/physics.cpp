@@ -31,20 +31,30 @@ void PhysicsSystem::AddComponent(const unsigned int entity_id, std::shared_ptr<C
 
     if (this->dynamicsWorld) {
         this->dynamicsWorld->addRigidBody(shape->GetRigidBody());
-        entity_bodies[shape->GetRigidBody()] = shape;
+        this->bodies[entity_id] = shape;
+    }
+}
+void PhysicsSystem::RunBatch() const {
+    if (this->dynamicsWorld) {
+        dynamicsWorld->stepSimulation(delta.count(), 10);
+    }
+
+    // Set out transform updates.
+    for (auto shape : this->bodies) {
+        shape.second->UpdateTransform();
     }
 }
 
 void PhysicsSystem::HandleEvents(const frame_tp& timepoint) {
     static frame_tp last_tp;
-    std::chrono::duration<double> delta = timepoint - last_tp;
+    this->delta = timepoint - last_tp;
     last_tp = timepoint;
-    if (this->dynamicsWorld) {
-        dynamicsWorld->stepSimulation(delta.count(), 10);
-    }
 
-    for (auto shape : this->entity_bodies) {
-        shape.second->UpdateTransform();
+    // Set the rigid bodies linear velocity. Must be done each frame otherwise,
+    // other forces will stop the linear velocity.
+    for (auto force : this->forces) {
+        auto body = this->bodies[force.first]->GetRigidBody();
+        body->setLinearVelocity(force.second + body->getGravity());
     }
 }
 
@@ -66,5 +76,14 @@ void PhysicsSystem::Terminate() {
     }
 }
 
+void PhysicsSystem::SetForce(const unsigned int entity_id, const Force f) {
+    this->forces[entity_id] = btVector3(f.x, f.y, f.z);
+}
+
+void PhysicsSystem::RemoveForce(const unsigned int entity_id) {
+    if (this->forces.find(entity_id) != this->forces.end()) {
+        this->forces.erase(entity_id);
+    }
+}
 } // End of physics
 } // End of trillek

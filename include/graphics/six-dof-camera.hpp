@@ -12,6 +12,11 @@ namespace graphics {
 class SixDOFCamera :
     public CameraBase {
 public:
+    /**
+    * \brief Computes the view matrix for a 6 DOF camera using the provided transform.
+    *
+    * \return void
+    */
     glm::mat4 GetViewMatrix() {
         if (!this->camera_transform) {
             return glm::mat4(1.0f);
@@ -23,26 +28,64 @@ public:
             camera_orientation * UP_VECTOR);
     }
 
+    /**
+    * \brief Handles keyboard events.
+    *
+    * This method calls the physics system SetForce method after each event.
+    * \return void
+    */
     void Notify(const KeyboardEvent* key_event) {
         if (!this->camera_transform) {
             return;
         }
+
+        static glm::vec3 direction_vector;
+
         switch (key_event->action) {
-        case KeyboardEvent::KEY_REPEAT:
         case KeyboardEvent::KEY_DOWN:
             switch (key_event->key) {
             case GLFW_KEY_W:
-                this->camera_transform->OrientedTranslate(1.0f * FORWARD_VECTOR);
+                direction_vector += entity_speed * (FORWARD_VECTOR);
             break;
             case GLFW_KEY_S:
-                this->camera_transform->OrientedTranslate(-1.0f * FORWARD_VECTOR);
+                direction_vector += -entity_speed * (FORWARD_VECTOR);
             break;
             case GLFW_KEY_A:
-                this->camera_transform->OrientedTranslate(-1.0f * RIGHT_VECTOR);
+                direction_vector += -entity_speed * (RIGHT_VECTOR);
             break;
             case GLFW_KEY_D:
-                this->camera_transform->OrientedTranslate(1.0f * RIGHT_VECTOR);
+                direction_vector += entity_speed * (RIGHT_VECTOR);
             break;
+            case GLFW_KEY_UP:
+                this->camera_transform->OrientedRotate(glm::radians(5.0f) * RIGHT_VECTOR);
+            break;
+            case GLFW_KEY_DOWN:
+                this->camera_transform->OrientedRotate(glm::radians(-5.0f) * RIGHT_VECTOR);
+            break;
+            case GLFW_KEY_LEFT:
+                this->camera_transform->OrientedRotate(glm::radians(5.0f) * UP_VECTOR);
+            break;
+            case GLFW_KEY_RIGHT:
+                this->camera_transform->OrientedRotate(glm::radians(-5.0f) * UP_VECTOR);
+            break;
+            default:
+            break;
+            }
+        break;
+        case KeyboardEvent::KEY_UP:
+            switch (key_event->key) {
+            case GLFW_KEY_W:
+                direction_vector -= entity_speed * (FORWARD_VECTOR);
+                break;
+            case GLFW_KEY_S:
+                direction_vector -= -entity_speed * (FORWARD_VECTOR);
+                break;
+            case GLFW_KEY_A:
+                direction_vector -= -entity_speed * (RIGHT_VECTOR);
+                break;
+            case GLFW_KEY_D:
+                direction_vector -= entity_speed * (RIGHT_VECTOR);
+                break;
             case GLFW_KEY_UP:
                 this->camera_transform->OrientedRotate(glm::radians(5.0f) * RIGHT_VECTOR);
             break;
@@ -62,6 +105,10 @@ public:
         default:
         break;
         }
+
+        glm::vec3 move_vector = this->camera_transform->GetOrientation() * direction_vector;
+        physics::Force force = { move_vector.x, move_vector.y, move_vector.z };
+        TrillekGame::GetPhysicsSystem().SetForce(this->entity_id, force);
     }
 private:
 };

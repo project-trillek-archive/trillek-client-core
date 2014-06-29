@@ -25,7 +25,7 @@ class Collidable :
     public ComponentBase,
     public event::Subscriber<Transform> {
 public:
-    Collidable() { }
+    Collidable() : motion_state(nullptr) { }
     ~Collidable() {
         if (this->motion_state) {
             delete this->motion_state;

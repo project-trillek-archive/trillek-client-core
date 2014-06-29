@@ -34,16 +34,20 @@ std::unique_ptr<btTriangleMesh> GenerateTriangleMesh(std::shared_ptr<resource::M
 bool Collidable::Initialize(const std::vector<Property> &properties) {
     std::string shape = "sphere";
     std::string mesh_name;
-    this->radius = 1.0f;
-    this->height = 1.0f;
+    this->radius = 1.0;
+    this->height = 1.0;
+    this->mass = 1.0;
     unsigned int entity_id;
     for (const Property& p : properties) {
         std::string name = p.GetName();
         if (name == "radius") {
             this->radius = p.Get<double>();
         }
-        if (name == "disable_decativation") {
+        else if (name == "disable_decativation") {
             this->disable_deactivation = p.Get<bool>();
+        }
+        else if (name == "mass") {
+            this->mass = p.Get<double>();
         }
         else if (name == "height") {
             this->height = p.Get<double>();
@@ -66,11 +70,9 @@ bool Collidable::Initialize(const std::vector<Property> &properties) {
 
     if (shape == "capsule") {
         this->shape = std::move(std::unique_ptr<btCollisionShape>(new btCapsuleShape(this->radius, this->height)));
-        this->mass = 1;
     }
     else if (shape == "sphere") {
         this->shape = std::move(std::unique_ptr<btCollisionShape>(new btSphereShape(this->radius)));
-        this->mass = 1;
     }
     else if (shape == "static_mesh") {
         this->mesh_file = resource::ResourceMap::Get<resource::Mesh>(mesh_name);
@@ -81,8 +83,11 @@ bool Collidable::Initialize(const std::vector<Property> &properties) {
 
         auto scale = this->entity_transform->GetScale();
         auto mesh_shape = std::unique_ptr<btScaledBvhTriangleMeshShape>(
-            new btScaledBvhTriangleMeshShape(new btBvhTriangleMeshShape(this->mesh.get(), true), btVector3(scale.x, scale.y, scale.z)));
+            new btScaledBvhTriangleMeshShape(
+            new btBvhTriangleMeshShape(this->mesh.get(), true), btVector3(scale.x, scale.y, scale.z)));
         this->shape = std::move(mesh_shape);
+
+        // Static BvhTriangleMehes must have a mass of 0.
         this->mass = 0;
     }
     else if (shape == "dynamic_mesh") {
@@ -96,10 +101,8 @@ bool Collidable::Initialize(const std::vector<Property> &properties) {
         
         auto mesh_shape = std::unique_ptr<btGImpactMeshShape>(new btGImpactMeshShape(this->mesh.get()));
         mesh_shape->setLocalScaling(btVector3(scale.x, scale.y, scale.z));
-        mesh_shape->setMargin(0.04f);
         mesh_shape->updateBound();
         this->shape = std::move(mesh_shape);
-        this->mass = 1;
     }
 
     if (!this->shape) {
@@ -122,7 +125,8 @@ bool Collidable::InitializeRigidBody() {
     if (this->mass) {
         this->shape->calculateLocalInertia(mass, fallInertia);
     }
-    btRigidBody::btRigidBodyConstructionInfo fallRigidBodyCI(this->mass, this->motion_state, this->shape.get(), fallInertia);
+    btRigidBody::btRigidBodyConstructionInfo fallRigidBodyCI(this->mass,
+        this->motion_state, this->shape.get(), fallInertia);
     this->body = std::move(std::unique_ptr<btRigidBody>(new btRigidBody(fallRigidBodyCI)));
 
     if (!this->body) {
