@@ -1,19 +1,26 @@
-# - Find ALURE
-# Find ALURE includes and library
+# FindAlure.cmake
 #
-#  ALURE_INCLUDE_DIR - where to find alure.h
-#  ALURE_LIBRARIES   - List of libraries when using dumb
-#  ALURE_FOUND       - True if include and lib was found
+# Copyright (c) 2013, Meisaka Yukara, Luis Panadero Guardeño
 
-FIND_PATH(ALURE_INCLUDE_DIR AL/alure.h
-		  PATHS "${ALURE_DIR}"
-		  PATH_SUFFIXES include
-		  )
-		  
-FIND_LIBRARY(ALURE_LIBRARIES NAMES ALURE ALURE32
-		  PATHS "${ALURE_DIR}"
-		  PATH_SUFFIXES lib
-		  )
+include(FindPackageHandleStandardArgs)
 
-INCLUDE(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(ALURE DEFAULT_MSG ALURE_LIBRARIES ALURE_INCLUDE_DIR)		
+find_path(ALURE_INCLUDE_DIR
+    NAMES alure.h
+    PATH_SUFFIXES AL
+    )
+
+if (NOT ALURE_INCLUDE_DIR)
+    message(FATAL_ERROR "Could not find the Alure headers" )
+endif (NOT ALURE_INCLUDE_DIR)
+
+FIND_LIBRARY(ALURE_LIBRARY
+    NAMES ALURE ALURE32 Alure alure libalure libalure.so
+    PATH_SUFFIXES x86 lib64 x64
+    )
+
+if (NOT ALURE_LIBRARY)
+    message(FATAL_ERROR "Could not find the Alure library" )
+endif (NOT ALURE_LIBRARY)
+
+find_package_handle_standard_args(ALURE DEFAULT_MSG ALURE_INCLUDE_DIR ALURE_LIBRARY)
+mark_as_advanced(ALURE_INCLUDE_DIR ALURE_LIBRARY)
