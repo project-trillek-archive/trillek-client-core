@@ -112,6 +112,7 @@ file(GLOB TCCExtra_SRC
 "${TCCSRC}/graphics/animation.cpp"
 "${TCCSRC}/transform.cpp"
 "${TCCSRC}/trillek-game.cpp"
+"${TCCSRC}/logging.cpp"
 "${TCCSRC}/os.cpp"
 "${TCCSRC}/opengl.cpp"
 )
