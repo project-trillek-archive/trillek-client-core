@@ -145,9 +145,9 @@ public:
     /**
      * \brief Adds a component to the system.
      *
-     * A static_pointer_case is applied to the component shared_ptr to cast it to
-     * a the component based off the type_id. If the cast results in a nullptr the
-     * method returns without adding the component.
+     * A static_pointer_cast is applied to the component shared_ptr to cast it to
+     * a the component based off the type_id. If the type is not found or cast
+     * results in a nullptr the method returns without adding the component.
      * \param const unsigned int The entity ID the component belongs to.
      * \param std::shared_ptr<ComponentBase> component The component to add.
      * \return void
@@ -270,12 +270,12 @@ private:
         }
     }
 
-    int gl_version[2];
+    int gl_version[3];
     ViewMatrixSet vp_center;
     ViewMatrixSet vp_left;
     ViewMatrixSet vp_right;
-    glm::mat4 projection_matrix;
-    glm::mat4 view_matrix;
+    //glm::mat4 projection_matrix;
+    //glm::mat4 view_matrix;
     BufferTri screenquad; /// the full screen quad, used for much graphics effects
 
     std::shared_ptr<CameraBase> camera;

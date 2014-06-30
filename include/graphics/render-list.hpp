@@ -34,6 +34,7 @@ public:
     RenderCommandItem(RenderCmd c, Container &&cv, std::list<Property> &&prop) {
         cmd = c;
         resolved = false;
+        resolve_error = false;
         cmdvalue = std::move(cv);
         load_properties = std::move(prop);
     }
@@ -48,6 +49,7 @@ public:
     RenderCmd cmd;
     Container cmdvalue;
     bool resolved;
+    bool resolve_error;
     std::list<Container> run_values;
     std::list<Property> load_properties;
 };

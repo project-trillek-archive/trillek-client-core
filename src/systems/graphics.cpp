@@ -26,10 +26,17 @@ const int* RenderSystem::Start(const unsigned int width, const unsigned int heig
     // Use the GL3 way to get the version number
     glGetIntegerv(GL_MAJOR_VERSION, &this->gl_version[0]);
     glGetIntegerv(GL_MINOR_VERSION, &this->gl_version[1]);
+    glGetIntegerv(GL_SHADING_LANGUAGE_VERSION, &this->gl_version[3]);
     CheckGLError();
+    int opengl_version = gl_version[0] * 100 + gl_version[1] * 10;
 
-    // Sanity check to make sure we are at least in a good major version number.
-    assert((this->gl_version[0] > 1) && (this->gl_version[0] < 5));
+    if(opengl_version < 300) {
+        std::cerr << "[FATAL-GRAPHICS] OpenGL version (" << opengl_version << ") less than required minimum (300)\n";
+        assert(opengl_version >= 300);
+    }
+    if(opengl_version < 330) {
+        std::cerr << "[WARNING-GRAPHICS] OpenGL version (" << opengl_version << ") less than recommended (330)\n";
+    }
 
     SetViewportSize(width, height);
 
@@ -41,7 +48,7 @@ const int* RenderSystem::Start(const unsigned int width, const unsigned int heig
     this->camera = std::make_shared<SixDOFCamera>();
     if (this->camera) {
         this->camera->Activate(0);
-        this->view_matrix = this->camera->GetViewMatrix();
+        this->vp_center.view_matrix = this->camera->GetViewMatrix();
     }
 
     float quaddata[] = {
@@ -74,7 +81,7 @@ const int* RenderSystem::Start(const unsigned int width, const unsigned int heig
     glBindVertexArray(0); CheckGLError(); // unbind VAO when done
 
     std::list<Property> settings;
-    settings.push_back(Property("version", gl_version[0] * 100 + gl_version[1] * 10));
+    settings.push_back(Property("version", opengl_version));
     settings.push_back(Property("screen-width", width));
     settings.push_back(Property("screen-height", height));
     settings.push_back(Property("multisample", this->multisample));
@@ -158,6 +165,8 @@ void RenderSystem::RegisterListResolvers() {
                 rlist.run_values.push_back(Container((long)3));
             }
             else {
+                // TODO use logger
+                std::cerr << "[ERROR-GRAPHICS] Invalid render method\n";
                 return false;
             }
         }
@@ -177,6 +186,8 @@ void RenderSystem::RegisterListResolvers() {
             rlist.run_values.push_back(Container(true));
             auto layerptr = rensys.Get<RenderLayer>(rlist.cmdvalue.Get<std::string>());
             if(!layerptr) {
+                // TODO use logger
+                std::cerr << "[ERROR-GRAPHICS] Layer not found: " << rlist.cmdvalue.Get<std::string>() << '\n';
                 return false;
             }
             rlist.run_values.push_back(Container(layerptr));
@@ -195,6 +206,8 @@ void RenderSystem::RegisterListResolvers() {
             rlist.run_values.push_back(Container(true));
             auto layerptr = rensys.Get<RenderLayer>(rlist.cmdvalue.Get<std::string>());
             if(!layerptr) {
+                // TODO use logger
+                std::cerr << "[ERROR-GRAPHICS] Layer not found: " << rlist.cmdvalue.Get<std::string>() << '\n';
                 return false;
             }
             rlist.run_values.push_back(Container(layerptr));
@@ -221,6 +234,8 @@ void RenderSystem::RegisterListResolvers() {
                 if(prop.Is<std::string>()) {
                     target = rensys.Get<RenderLayer>(prop.Get<std::string>());
                     if(!target) {
+                        // TODO use logger
+                        std::cerr << "[ERROR-GRAPHICS] Layer not found: " << prop.Get<std::string>() << '\n';
                         return false;
                     }
                 }
@@ -261,18 +276,23 @@ void RenderSystem::RunBatch() const {
 
 void RenderSystem::RenderScene() const {
 
-    glm::mat4x4 inv_proj = glm::inverse(this->projection_matrix);
-    glViewport(0, 0, this->window_width, this->window_height);
+    const ViewMatrixSet *c_view;
+    c_view = &vp_center;
+    glm::mat4x4 inv_proj = glm::inverse(c_view->projection_matrix);
+    glViewport(c_view->viewport.x, c_view->viewport.y, c_view->viewport.z, c_view->viewport.w);
 
     if(activerender) {
         for(auto& cmditem : activerender->render_commands) {
-            if(!cmditem.resolved) {
+            if(!cmditem.resolved && !cmditem.resolve_error) {
                 auto resolve = list_resolvers.find(cmditem.cmd);
                 if(resolve != list_resolvers.end()) {
                     cmditem.run_values.clear();
                     if(!resolve->second(cmditem)) {
+                        cmditem.resolve_error = true;
                         // should probably log some warning/error
                         // since this item may not be able to render
+                        // TODO use logging system instead
+                        std::cerr << "[ERROR-GRAPHICS] Parsing render command failed\n";
                         break;
                     }
                     cmditem.resolved = true;
@@ -297,18 +317,18 @@ void RenderSystem::RenderScene() const {
                 case 0:
                     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
                     glEnable(GL_DEPTH_TEST);
-                    RenderColorPass(&this->view_matrix[0][0], &this->projection_matrix[0][0]);
+                    RenderColorPass(&c_view->view_matrix[0][0], &c_view->projection_matrix[0][0]);
                     break;
                 case 1:
                     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
                     glEnable(GL_DEPTH_TEST);
-                    RenderDepthOnlyPass(&this->view_matrix[0][0], &this->projection_matrix[0][0]);
+                    RenderDepthOnlyPass(&c_view->view_matrix[0][0], &c_view->projection_matrix[0][0]);
                     break;
                 case 2:
                     glDisable(GL_MULTISAMPLE);
                     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
                     glDisable(GL_DEPTH_TEST);
-                    RenderLightingPass(this->view_matrix, &inv_proj[0][0]);
+                    RenderLightingPass(c_view->view_matrix, &inv_proj[0][0]);
                     break;
                 case 3:
                     glDisable(GL_MULTISAMPLE);
@@ -396,7 +416,7 @@ void RenderSystem::RenderScene() const {
                 }
                 else {
                     RenderLayer::UnbindFromRead();
-                    src = ViewRect(0, 0, window_width, window_height);
+                    src = c_view->viewport;
                 }
                 run_op++;
                 if(run_op->Get<bool>()) {
@@ -409,7 +429,7 @@ void RenderSystem::RenderScene() const {
                 }
                 else {
                     RenderLayer::UnbindFromWrite();
-                    dest = ViewRect(0, 0, window_width, window_height);
+                    dest = c_view->viewport;
                 }
                 run_op++;
                 GLuint typebits = run_op->Get<GLuint>();
@@ -479,11 +499,13 @@ void RenderSystem::RenderLightingPass(const glm::mat4x4 &view_matrix, const floa
     GLint l_pos_loc = 0;
     GLint l_dir_loc = 0;
     GLint l_col_loc = 0;
+    GLint l_type_loc = 0;
     if(lightingshader) {
         lightingshader->Use();
         l_pos_loc = lightingshader->Uniform("light_pos");
         l_col_loc = lightingshader->Uniform("light_color");
         l_dir_loc = lightingshader->Uniform("light_dir");
+        l_type_loc = lightingshader->Uniform("light_type");
         glUniform1i(lightingshader->Uniform("layer0"), 0);
         glUniform1i(lightingshader->Uniform("layer1"), 1);
         glUniform1i(lightingshader->Uniform("layer2"), 2);
@@ -501,6 +523,7 @@ void RenderSystem::RenderLightingPass(const glm::mat4x4 &view_matrix, const floa
             if(l_pos_loc > 0) glUniform3f(l_pos_loc, lightpos.x, lightpos.y, lightpos.z);
             if(l_dir_loc > 0) glUniform3f(l_dir_loc, lightdir.x, lightdir.y, lightdir.z);
             if(l_col_loc > 0) glUniform3fv(l_col_loc, 1, (float*)&activelight->color);
+            if(l_type_loc > 0) glUniform1ui(l_type_loc, activelight->lighttype);
             auto lp_itr = activelight->light_props.begin();
             for(;lp_itr != activelight->light_props.end(); lp_itr++) {
                 GLint uniformloc = lightingshader->Uniform(lp_itr->GetName().c_str());
@@ -558,7 +581,7 @@ void RenderSystem::RegisterStaticParsers() {
 void RenderSystem::Notify(const unsigned int entity_id, const Transform* transform) {
     if (this->camera) {
         if (entity_id == this->camera->GetEntityID()) {
-            this->view_matrix = this->camera->GetViewMatrix();
+            this->vp_center.view_matrix = this->camera->GetViewMatrix();
             return;
         }
     }
@@ -579,7 +602,7 @@ void RenderSystem::SetViewportSize(const unsigned int width, const unsigned int 
     }
 
     // update projection matrix based on new aspect ratio
-    this->projection_matrix = glm::perspective(
+    this->vp_center.projection_matrix = glm::perspective(
         glm::radians(45.0f),
         aspect_ratio,
         0.1f,

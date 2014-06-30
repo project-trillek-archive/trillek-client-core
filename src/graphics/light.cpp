@@ -21,6 +21,9 @@ bool LightBase::Initialize(const std::vector<Property> &properties) {
             else if(vec_itr->Is<int>()) {
                 radius = static_cast<float>(vec_itr->Get<int>());
             }
+            else if(vec_itr->Is<long>()) {
+                radius = static_cast<float>(vec_itr->Get<long>());
+            }
             else if(vec_itr->Is<float>()) {
                 radius = vec_itr->Get<float>();
             }

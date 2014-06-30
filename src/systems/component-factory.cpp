@@ -70,7 +70,7 @@ bool ComponentFactory::Parse(rapidjson::Value& node) {
                                     props.push_back(p);
                                 }
                                 else if (component_property_itr->value.IsInt()) {
-                                    long property_value = component_property_itr->value.GetInt();
+                                    int property_value = component_property_itr->value.GetInt();
                                     Property p(component_property_name, property_value);
                                     props.push_back(p);
                                 }
