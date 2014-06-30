@@ -187,8 +187,8 @@ void RenderSystem::AddComponent(const unsigned int entity_id, std::shared_ptr<Co
                 break;
             }
             // Loop through and see if all the texture indicies line up.
-            for (size_t i = 0; i < tex_grp_itr.texture_indicies.size(),
-                i < buffer_group->textures.size(); ++i) {
+            for (size_t i = 0; (i < tex_grp_itr.texture_indicies.size()) &&
+                (i < buffer_group->textures.size()); ++i) {
                 if (tex_grp_itr.texture_indicies[i] != matgrp->material.GetTextureIndex(buffer_group->textures[i])) {
                     break;
                 }
