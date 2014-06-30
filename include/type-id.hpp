@@ -5,9 +5,8 @@
 #include <glm/glm.hpp>
 #include <string>
 
-class Property;
-
 namespace trillek {
+class Property;
 class Container;
 
 namespace reflection {
@@ -31,6 +30,7 @@ TRILLEK_MAKE_IDTYPE(void, 0)
 TRILLEK_MAKE_IDTYPE(void*, 1)
 TRILLEK_MAKE_IDTYPE(char, 2)
 TRILLEK_MAKE_IDTYPE(short, 3)
+TRILLEK_MAKE_IDTYPE(int, 4)
 TRILLEK_MAKE_IDTYPE(long, 5)
 TRILLEK_MAKE_IDTYPE(long long, 6)
 TRILLEK_MAKE_IDTYPE(unsigned char, 7)
@@ -68,7 +68,7 @@ TRILLEK_MAKE_IDTYPE_NS(glm, dvec4, 35)
 TRILLEK_MAKE_IDTYPE_NS(glm, dmat2x2, 36)
 TRILLEK_MAKE_IDTYPE_NS(glm, dmat3x3, 37)
 TRILLEK_MAKE_IDTYPE_NS(glm, dmat4x4, 38)
-TRILLEK_MAKE_IDTYPE_NS(glm, dquat, 29)
+TRILLEK_MAKE_IDTYPE_NS(glm, dquat, 39)
 
 }// namespace reflection
 } // namespace trillek
