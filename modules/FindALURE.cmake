@@ -6,7 +6,8 @@ include(FindPackageHandleStandardArgs)
 
 find_path(ALURE_INCLUDE_DIR
     NAMES alure.h
-    PATH_SUFFIXES AL
+    PATHS /usr/include /usr/local/include /sw/include /opt/local/include
+    PATH_SUFFIXES AL OpenAL
     )
 
 if (NOT ALURE_INCLUDE_DIR)
