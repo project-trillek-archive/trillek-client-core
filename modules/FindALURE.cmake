@@ -1,6 +1,6 @@
 # FindAlure.cmake
 #
-# Copyright (c) 2013, Meisaka Yukara, Luis Panadero Guardeño
+# Copyright (c) 2013, Meisaka Yukara, Luis Panadero GuardeÃ±o
 
 include(FindPackageHandleStandardArgs)
 

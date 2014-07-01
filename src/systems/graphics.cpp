@@ -26,7 +26,7 @@ const int* RenderSystem::Start(const unsigned int width, const unsigned int heig
     // Use the GL3 way to get the version number
     glGetIntegerv(GL_MAJOR_VERSION, &this->gl_version[0]);
     glGetIntegerv(GL_MINOR_VERSION, &this->gl_version[1]);
-    glGetIntegerv(GL_SHADING_LANGUAGE_VERSION, &this->gl_version[3]);
+    //glGetIntegerv(GL_SHADING_LANGUAGE_VERSION, &this->gl_version[3]);
     CheckGLError();
     int opengl_version = gl_version[0] * 100 + gl_version[1] * 10;
 
@@ -596,6 +596,8 @@ void RenderSystem::Notify(const unsigned int entity_id, const Transform* transfo
 void RenderSystem::SetViewportSize(const unsigned int width, const unsigned int height) {
     this->window_height = height;
     this->window_width = width;
+
+    this->vp_center.viewport = ViewRect(0,0,width,height);
 
     // Determine the aspect ratio and sanity check it to a safe ratio
     float aspect_ratio = static_cast<float>(this->window_width) / static_cast<float>(this->window_height);
