@@ -4,6 +4,8 @@
 #include "trillek-scheduler.hpp"
 #include "systems/fake-system.hpp"
 #include "os.hpp"
+#include "systems/physics.hpp"
+#include "systems/sound-system.hpp"
 
 namespace trillek {
 
@@ -45,6 +47,19 @@ public:
      */
     static std::shared_ptr<graphics::RenderSystem> GetGraphicsInstance();
 
+    /** \brief Return the physics system instance
+     *
+     * \return physics::PhysicsSystem& the instance
+     */
+    static physics::PhysicsSystem& GetPhysicsSystem() { return phys_sys; };
+
+    /** \brief Return the sound system instance
+     *
+     * \return sound::System&
+     *
+     */
+    static sound::System& GetSoundSystem() { return *sound::System::GetInstance(); };
+
     /** \brief Get the FakeSystem
      *
      * \return FakeSystem& the fake system
@@ -77,6 +92,7 @@ private:
     static OS glfw_os;
     static std::once_flag once_graphics;
     static std::shared_ptr<graphics::RenderSystem> gl_sys_ptr;
+    static physics::PhysicsSystem phys_sys;
     static bool close_window;
 };
 }

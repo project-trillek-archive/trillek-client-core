@@ -6,6 +6,8 @@
 #include "graphics/render-layer.hpp"
 #include "graphics/render-list.hpp"
 
+#include "physics/collidable.hpp"
+
 #include "resources/md5mesh.hpp"
 #include "resources/md5anim.hpp"
 #include "resources/pixel-buffer.hpp"
@@ -15,7 +17,7 @@
 #include "systems/graphics.hpp"
 #include "systems/transform-system.hpp"
 #include "systems/component-factory.hpp"
-
+#include "systems/sound-system.hpp"
 #include "util/json-parser.hpp"
 
 namespace trillek {
@@ -34,7 +36,9 @@ void graphics::RenderSystem::RegisterTypes() {
 void ComponentFactory::RegisterTypes() {
     RegisterComponentType<graphics::Renderable>();
     RegisterComponentType<graphics::LightBase>();
+    RegisterComponentType<physics::Collidable>();
     RegisterSystem<graphics::Renderable>(&TrillekGame::GetGraphicSystem());
+    RegisterSystem<physics::Collidable>(&TrillekGame::GetPhysicsSystem());
     RegisterSystem<graphics::LightBase>(&TrillekGame::GetGraphicSystem());
 }
 
@@ -43,6 +47,7 @@ void util::JSONPasrser::RegisterTypes() {
     RegisterParser(resource::ResourceMap::GetInstance());
     RegisterParser(TransformMap::GetInstance());
     RegisterParser(ComponentFactory::GetInstance());
+    RegisterParser(sound::System::GetInstance());
 }
 
 void resource::ResourceMap::RegisterTypes() {

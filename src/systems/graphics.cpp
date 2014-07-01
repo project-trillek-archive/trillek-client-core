@@ -486,6 +486,8 @@ void RenderSystem::RenderColorPass(const float *view_matrix, const float *proj_m
                 matgrp.material.DeactivateTexture(tex_index);
             }
         }
+
+        shader->UnUse();
     }
 }
 

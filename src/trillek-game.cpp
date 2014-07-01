@@ -8,6 +8,7 @@ FakeSystem TrillekGame::fake_system;
 OS TrillekGame::glfw_os;
 std::once_flag TrillekGame::once_graphics;
 std::shared_ptr<graphics::RenderSystem> TrillekGame::gl_sys_ptr;
+physics::PhysicsSystem TrillekGame::phys_sys;
 bool TrillekGame::close_window = false;
 
 graphics::RenderSystem& TrillekGame::GetGraphicSystem() {

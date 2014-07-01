@@ -89,7 +89,9 @@ file(GLOB_RECURSE TCCTests_SRC "tests/*.h" "main.cpp" "src/*.cpp")
 
 file(GLOB TCCExtra_SRC
 "${TCCSRC}/systems/resource-system.cpp"
+"${TCCSRC}/systems/sound-system.cpp"
 "${TCCSRC}/systems/graphics.cpp"
+"${TCCSRC}/systems/physics.cpp"
 "${TCCSRC}/systems/registration.cpp"
 "${TCCSRC}/systems/component-factory.cpp"
 "${TCCSRC}/systems/transform-system.cpp"
@@ -110,6 +112,7 @@ file(GLOB TCCExtra_SRC
 "${TCCSRC}/graphics/material.cpp"
 "${TCCSRC}/graphics/texture.cpp"
 "${TCCSRC}/graphics/animation.cpp"
+"${TCCSRC}/physics/collidable.cpp"
 "${TCCSRC}/transform.cpp"
 "${TCCSRC}/trillek-game.cpp"
 "${TCCSRC}/os.cpp"
@@ -119,6 +122,9 @@ file(GLOB TCCExtra_SRC
 # For certain files we need the OpenGL symbols.
 FIND_PACKAGE(OpenGL REQUIRED)
 FIND_PACKAGE(GLFW3 REQUIRED)
+FIND_PACKAGE(Bullet REQUIRED)
+FIND_PACKAGE(ALURE REQUIRED)
+FIND_PACKAGE(OpenAL REQUIRED)
 SET(X11_LIBRARIES "")
 IF (NOT APPLE) # X11 and GLEW are not needed on OSX.
 	FIND_PACKAGE(X11)
@@ -143,6 +149,11 @@ TARGET_LINK_LIBRARIES (
     ${GLFW3_LIBRARIES}
     ${X11_LIBRARIES}
     ${GLEW_LIBRARIES}
+    ${BULLET_LINEARMATH_LIBRARIES}
+    ${BULLET_COLLISION_LIBRARIES}
+    ${BULLET_DYNAMICS_LIBRARIES}
+    ${ALURE_LIBRARIES}
+    ${OpenAL_LIBRARIES}
 )
 
 MESSAGE("Tests' Cmake configured.")
