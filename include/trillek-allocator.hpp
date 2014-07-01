@@ -2,6 +2,7 @@
 #define TRILLEKALLOCATOR_HPP_INCLUDED
 
 #include <cstddef>
+#include <stdlib.h>
 
 extern size_t gAllocatedSize;
 

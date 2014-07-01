@@ -4,7 +4,11 @@
 #include <memory>
 #include <string>
 #include <mutex>
+#if __APPLE__
+#include "OpenAL/alure.h"
+#else
 #include "AL/alure.h"
+#endif
 #include "glm/glm.hpp"
 #include <iostream>
 #include <unordered_map>
