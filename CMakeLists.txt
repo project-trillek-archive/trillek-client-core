@@ -133,7 +133,7 @@ set(TCC_ALL_LIBS
 	${BULLET_COLLISION_LIBRARIES}
 	${BULLET_DYNAMICS_LIBRARIES}
 	${ALURE_LIBRARIES}
-	${OpenAL_LIBRARIES}
+	${OPENAL_LIBRARIES}
   )
 
 # if just building an exe use all the source and libraries

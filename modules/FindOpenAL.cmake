@@ -12,14 +12,14 @@ if (NOT OPENAL_INCLUDE_DIR)
     message(FATAL_ERROR "Could not find the OpenAL headers" )
 endif (NOT OPENAL_INCLUDE_DIR)
 
-FIND_LIBRARY(OPENAL_LIBRARY 
+FIND_LIBRARY(OPENAL_LIBRARIES 
 	NAMES OpenAL32 openal libopenal libopenal.so
     PATH_SUFFIXES x86 lib64 x64
 	)
-if (NOT OPENAL_LIBRARY)
+if (NOT OPENAL_LIBRARIES)
     message(FATAL_ERROR "Could not find the OpenAL library" )
-endif (NOT OPENAL_LIBRARY)
+endif (NOT OPENAL_LIBRARIES)
 
 
-find_package_handle_standard_args(OPENAL DEFAULT_MSG OPENAL_INCLUDE_DIR OPENAL_LIBRARY)
-mark_as_advanced(OPENAL_INCLUDE_DIR OPENAL_LIBRARY)
+find_package_handle_standard_args(OPENAL DEFAULT_MSG OPENAL_INCLUDE_DIR OPENAL_LIBRARIES)
+mark_as_advanced(OPENAL_INCLUDE_DIR OPENAL_LIBRARIES)
