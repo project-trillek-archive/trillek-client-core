@@ -43,7 +43,7 @@ bool Collidable::Initialize(const std::vector<Property> &properties) {
         if (name == "radius") {
             this->radius = p.Get<double>();
         }
-        else if (name == "disable_decativation") {
+        else if (name == "disable_deactivation") {
             this->disable_deactivation = p.Get<bool>();
         }
         else if (name == "mass") {
@@ -98,7 +98,7 @@ bool Collidable::Initialize(const std::vector<Property> &properties) {
         }
 
         auto scale = this->entity_transform->GetScale();
-        
+
         auto mesh_shape = std::unique_ptr<btGImpactMeshShape>(new btGImpactMeshShape(this->mesh.get()));
         mesh_shape->setLocalScaling(btVector3(scale.x, scale.y, scale.z));
         mesh_shape->updateBound();

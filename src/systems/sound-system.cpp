@@ -140,9 +140,7 @@ bool System::Serialize(rapidjson::Document& document) {
 
 bool System::Parse(rapidjson::Value& node) {
     if(node.IsArray()) {
-
         for(auto sound_itr = node.Begin(); sound_itr != node.End(); sound_itr ++) {
-
             if(sound_itr->IsObject()) {
                 auto& element = (*sound_itr);
 
@@ -151,30 +149,22 @@ bool System::Parse(rapidjson::Value& node) {
                 if(element.HasMember("id") && element["id"].IsString()) {
                     sinfo->id = element["id"].GetString();
                 }
-
                 if(element.HasMember("src") && element["src"].IsString()) {
                     sinfo->src = element["src"].GetString();
                 }
-
                 if(element.HasMember("loop") && element["loop"].IsBool()) {
                     sinfo->loop = element["loop"].GetBool();
                 }
-
                 if(element.HasMember("volume") && element["volume"].IsNumber()) {
                     sinfo->volume = element["volume"].GetDouble();
                 }
-
                 if(element.HasMember("spatial") && element["spatial"].IsBool()) {
                     sinfo->spatial = element["spatial"].GetBool();
                 }
-
                 // store sound info
                 sounds[sinfo->id] = sinfo;
-
             }
-
         }
-
     }
 
     return true;
