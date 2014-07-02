@@ -43,8 +43,23 @@ public:
     RenderCommandItem(const RenderCommandItem&) = delete;
     RenderCommandItem& operator=(const RenderCommandItem&) = delete;
 
-    RenderCommandItem(RenderCommandItem&&) = default;
-    RenderCommandItem& operator=(RenderCommandItem&&) = default;
+    RenderCommandItem(RenderCommandItem&& other) {
+        this->cmd = std::move(other.cmd);
+        this->cmdvalue = std::move(other.cmdvalue);
+        this->resolved = other.resolved;
+        this->resolve_error = other.resolve_error;
+        this->run_values = std::move(other.run_values);
+        this->load_properties = std::move(other.load_properties);
+    }
+
+    RenderCommandItem& operator=(RenderCommandItem&& other) {
+        this->cmd = std::move(other.cmd);
+        this->cmdvalue = std::move(other.cmdvalue);
+        this->resolved = other.resolved;
+        this->resolve_error = other.resolve_error;
+        this->run_values = std::move(other.run_values);
+        this->load_properties = std::move(other.load_properties);
+    }
 
     RenderCmd cmd;
     Container cmdvalue;

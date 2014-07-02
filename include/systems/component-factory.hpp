@@ -67,7 +67,7 @@ public:
             auto comp = instance->Create<T>(entity_id, properties);
 
             unsigned int type_id = reflection::GetTypeID<T>();
-            if (instance->systems.find(type_id) != instance->systems.end()) {
+            if (comp && (instance->systems.find(type_id) != instance->systems.end())) {
                 instance->systems.at(type_id)->AddComponent(entity_id, comp);
             }
 
