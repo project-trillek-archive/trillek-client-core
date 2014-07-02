@@ -14,8 +14,6 @@ class SixDOFCamera :
 public:
     /**
      * \brief Computes the view matrix for a 6 DOF camera using the provided transform.
-     *
-     * \return void
      */
     glm::mat4 GetViewMatrix() {
         if (!this->camera_transform) {
@@ -32,7 +30,6 @@ public:
      * \brief Handles keyboard events.
      *
      * This method calls the physics system SetForce method after each event.
-     * \return void
      */
     void Notify(const KeyboardEvent* key_event) {
         if (!this->camera_transform) {
@@ -125,7 +122,11 @@ public:
 private:
 };
 
-
 } // End of graphics
+
+namespace reflection {
+TRILLEK_MAKE_IDTYPE_NAME(graphics::SixDOFCamera, "camera", 2002)
+} // namespace reflection
+
 } // End of trillek
 #endif

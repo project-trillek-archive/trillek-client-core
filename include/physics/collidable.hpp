@@ -6,7 +6,8 @@
 
 #include <memory>
 
-#include "systems/component-factory.hpp"
+#include "type-id.hpp"
+#include "component.hpp"
 #include "systems/dispatcher.hpp"
 
 namespace trillek {

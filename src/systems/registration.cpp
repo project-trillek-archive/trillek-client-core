@@ -1,6 +1,8 @@
 #include "trillek-game.hpp"
 
 #include "graphics/renderable.hpp"
+#include "graphics/camera.hpp"
+#include "graphics/six-dof-camera.hpp"
 #include "graphics/shader.hpp"
 #include "graphics/light.hpp"
 #include "graphics/render-layer.hpp"
@@ -36,10 +38,12 @@ void graphics::RenderSystem::RegisterTypes() {
 void ComponentFactory::RegisterTypes() {
     RegisterComponentType<graphics::Renderable>();
     RegisterComponentType<graphics::LightBase>();
+    RegisterComponentType<graphics::SixDOFCamera>();
     RegisterComponentType<physics::Collidable>();
     RegisterSystem<graphics::Renderable>(&TrillekGame::GetGraphicSystem());
     RegisterSystem<physics::Collidable>(&TrillekGame::GetPhysicsSystem());
     RegisterSystem<graphics::LightBase>(&TrillekGame::GetGraphicSystem());
+    RegisterSystem<graphics::CameraBase>(&TrillekGame::GetGraphicSystem());
 }
 
 void util::JSONPasrser::RegisterTypes() {

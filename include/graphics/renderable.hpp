@@ -5,7 +5,7 @@
 #include "type-id.hpp"
 #include <memory>
 #include <vector>
-#include "systems/component-factory.hpp"
+#include "component.hpp"
 
 namespace trillek {
 namespace resource {

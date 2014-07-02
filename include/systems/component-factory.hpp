@@ -8,26 +8,11 @@
 #include <vector>
 #include "property.hpp"
 #include "trillek.hpp"
+#include "component.hpp"
 #include "systems/system-base.hpp"
 #include "util/json-parser.hpp"
 
 namespace trillek {
-
-class ComponentBase {
-public:
-    ComponentBase() : component_type_id(0) { }
-    ~ComponentBase() { }
-
-    /**
-     * \brief Returns a component with the specified name.
-     *
-     * \param[in] const std::vector<Property> &properties The creation properties for the component.
-     * \return bool True if initialization finished with no errors.
-     */
-    virtual bool Initialize(const std::vector<Property> &properties) = 0;
-
-    unsigned int component_type_id;
-};
 
 // Singleton approach derived from http://silviuardelean.ro/2012/06/05/few-singleton-approaches/ .
 class ComponentFactory : public util::Parser {

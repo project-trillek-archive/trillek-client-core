@@ -19,6 +19,7 @@ namespace graphics {
 
 RenderSystem::RenderSystem() : Parser("graphics") {
     multisample = false;
+    this->frame_drop = false;
     Shader::InitializeTypes();
 }
 
@@ -40,14 +41,31 @@ const int* RenderSystem::Start(const unsigned int width, const unsigned int heig
 
     SetViewportSize(width, height);
 
-    // Retrieve the default camera transform, and subscribe to changes to it.
-    event::Dispatcher<Transform>::GetInstance()->Subscribe(0, this);
-
-    // Activate the camera and get the initial view matrix.
-    // TODO: Make camera into a component that is added to an entity.
-    this->camera = std::make_shared<SixDOFCamera>();
+    // Activate the lowest ID or first camera and get the initial view matrix.
+    id_t cam_idnum = 0;
+    std::weak_ptr<CameraBase> cam_ptr;
+    auto cam_itr = cameras.begin();
+    if(cam_itr != cameras.end()) {
+        cam_idnum = cam_itr->first;
+        cam_ptr = cam_itr->second;
+        for(cam_itr++ ; cam_itr != cameras.end(); cam_itr++) {
+            if(cam_itr->first < cam_idnum) {
+                cam_idnum = cam_itr->first;
+                cam_ptr = cam_itr->second;
+            }
+        }
+        this->camera_id = cam_idnum;
+        this->camera = cam_ptr.lock(); // get the ptr to it
+    }
+    else {
+        // make one if none found
+        this->camera_id = 0;
+        this->camera = std::make_shared<SixDOFCamera>();
+    }
     if (this->camera) {
-        this->camera->Activate(0);
+        // subscribe to changes on the camera transform
+        event::Dispatcher<Transform>::GetInstance()->Subscribe(cam_idnum, this);
+        this->camera->Activate(cam_idnum);
         this->vp_center.view_matrix = this->camera->GetViewMatrix();
     }
 
@@ -265,9 +283,11 @@ void RenderSystem::ThreadInit() {
 
 void RenderSystem::RunBatch() const {
 
-    RenderScene();
+    if(!this->frame_drop) {
+        RenderScene();
 
-    TrillekGame::GetOS().SwapBuffers();
+        TrillekGame::GetOS().SwapBuffers();
+    }
     // If the user closes the window, we notify all the systems
     if (TrillekGame::GetOS().Closing()) {
         TrillekGame::NotifyCloseWindow();
@@ -466,7 +486,7 @@ void RenderSystem::RenderColorPass(const float *view_matrix, const float *proj_m
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufgrp->ibo);
 
                 static GLint temp;
-                for (unsigned int entity_id : rengrp.instances) {
+                for (id_t entity_id : rengrp.instances) {
                     glUniformMatrix4fv((*shader)("model"), 1, GL_FALSE, &this->model_matrices.at(entity_id)[0][0]);
                     auto renanim = rengrp.animations.find(entity_id);
                     if (renanim != rengrp.animations.end()) {
@@ -580,11 +600,11 @@ void RenderSystem::RegisterStaticParsers() {
     parser_functions["settings"] = aglambda;
 }
 
-void RenderSystem::Notify(const unsigned int entity_id, const Transform* transform) {
+void RenderSystem::Notify(const id_t entity_id, const Transform* transform) {
     if (this->camera) {
         if (entity_id == this->camera->GetEntityID()) {
             this->vp_center.view_matrix = this->camera->GetViewMatrix();
-            return;
+            //return;
         }
     }
     glm::mat4 model_matrix = glm::translate(transform->GetTranslation()) *
@@ -615,7 +635,7 @@ void RenderSystem::SetViewportSize(const unsigned int width, const unsigned int 
 }
 
 template<>
-bool RenderSystem::AddEntityComponent(const unsigned int entity_id, std::shared_ptr<LightBase> light) {
+bool RenderSystem::AddEntityComponent(const id_t entity_id, std::shared_ptr<LightBase> light) {
 
     // Loop through all the lights and see if one exists for the given entity.
     for (auto& r : this->alllights) {
@@ -632,7 +652,18 @@ bool RenderSystem::AddEntityComponent(const unsigned int entity_id, std::shared_
 }
 
 template<>
-bool RenderSystem::AddEntityComponent(const unsigned int entity_id, std::shared_ptr<Renderable> ren) {
+bool RenderSystem::AddEntityComponent(const id_t entity_id, std::shared_ptr<CameraBase> cam) {
+    auto cam_itr = this->cameras.find(entity_id);
+    if(cam_itr != this->cameras.end()) {
+        this->cameras[entity_id] = cam; // replace existing
+        return false;
+    }
+    this->cameras[entity_id] = cam;
+    return true;
+}
+
+template<>
+bool RenderSystem::AddEntityComponent(const id_t entity_id, std::shared_ptr<Renderable> ren) {
 
     // Loop through all the renderables and see if one exists for the given entity_id.
     for (auto& r : this->renderables) {
@@ -726,7 +757,7 @@ bool RenderSystem::AddEntityComponent(const unsigned int entity_id, std::shared_
     return true;
 }
 
-void RenderSystem::AddComponent(const unsigned int entity_id, std::shared_ptr<ComponentBase> component) {
+void RenderSystem::AddComponent(const id_t entity_id, std::shared_ptr<ComponentBase> component) {
 
     int r;
     if(0 != (r = TryAddComponent<Renderable>(entity_id, component))) {
@@ -735,15 +766,21 @@ void RenderSystem::AddComponent(const unsigned int entity_id, std::shared_ptr<Co
     else if(0 != (r = TryAddComponent<LightBase>(entity_id, component))) {
         if(r < 0) return;
     }
+    else if(0 != (r = TryAddComponent<CameraBase>(entity_id, component))) {
+        if(r < 0) return;
+    }
 
     // Subscribe to transform change events for this entity ID.
     event::Dispatcher<Transform>::GetInstance()->Subscribe(entity_id, this);
 
     // We will use the notify method to force the initial model matrix creation.
-    Notify(entity_id, TransformMap::GetTransform(entity_id).get());
+    auto trans_ptr = TransformMap::GetTransform(entity_id);
+    if(trans_ptr) {
+        Notify(entity_id, trans_ptr.get());
+    }
 }
 
-void RenderSystem::RemoveRenderable(const unsigned int entity_id) {
+void RenderSystem::RemoveRenderable(const id_t entity_id) {
     // Loop through all the renderables and see if one exists for the given entityID.
     for (auto& r : this->renderables) {
         if (r.first == entity_id) {
@@ -789,6 +826,22 @@ void RenderSystem::RemoveRenderable(const unsigned int entity_id) {
 void RenderSystem::HandleEvents(const frame_tp& timepoint) {
     static frame_tp last_tp;
     std::chrono::duration<float> delta = timepoint - last_tp;
+    std::chrono::duration<float> ctdiff = frame_tp(TrillekGame::GetOS().GetTime()) - timepoint;
+    if(ctdiff > std::chrono::duration<float>(1)) {
+        if(!this->frame_drop) {
+            std::cerr << "[GRAPHICS] Time lag " << ctdiff.count() << " > 1 seconds\n";
+            this->frame_drop_count = 0;
+        }
+        this->frame_drop = true;
+        this->frame_drop_count++;
+    }
+    else {
+        if(this->frame_drop) {
+            std::cerr << "[GRAPHICS] Dropped frames " << this->frame_drop_count << "\n";
+            this->frame_drop_count = 0;
+        }
+        this->frame_drop = false;
+    }
     last_tp = timepoint;
     for (auto ren : this->renderables) {
         if (ren.second->GetAnimation()) {

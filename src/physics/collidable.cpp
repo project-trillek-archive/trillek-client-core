@@ -113,6 +113,9 @@ bool Collidable::Initialize(const std::vector<Property> &properties) {
 
 void Collidable::SetEntity(unsigned int entity_id) {
     this->entity_transform = TransformMap::GetTransform(entity_id);
+    if(!this->entity_transform) {
+        return;
+    }
     event::Dispatcher<Transform>::GetInstance()->Subscribe(entity_id, this);
     auto pos = this->entity_transform->GetTranslation();
     auto orientation = this->entity_transform->GetOrientation();

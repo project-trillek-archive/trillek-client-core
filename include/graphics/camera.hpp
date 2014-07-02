@@ -3,6 +3,8 @@
 
 #include "systems/dispatcher.hpp"
 #include "systems/transform-system.hpp"
+#include "component.hpp"
+#include "type-id.hpp"
 #include "transform.hpp"
 #include <memory>
 #include "os.hpp"
@@ -11,6 +13,7 @@ namespace trillek {
 namespace graphics {
 
 class CameraBase :
+    public ComponentBase,
     public event::Subscriber<KeyboardEvent> {
 public:
     /**
@@ -35,6 +38,10 @@ public:
         this->active = false;
         event::Dispatcher<KeyboardEvent>::GetInstance()->Unsubscribe(this);
         this->camera_transform = nullptr;
+    }
+
+    virtual bool Initialize(const std::vector<Property> &properties) {
+        return true;
     }
 
     /**
@@ -65,5 +72,10 @@ protected:
 };
 
 } // End of graphics
+
+namespace reflection {
+TRILLEK_MAKE_IDTYPE_NS(graphics, CameraBase, 2002)
+} // namespace reflection
+
 } // End of trillek
 #endif
