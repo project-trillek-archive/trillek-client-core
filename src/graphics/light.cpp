@@ -18,11 +18,11 @@ bool LightBase::Initialize(const std::vector<Property> &properties) {
             if(vec_itr->Is<double>()) {
                 radius = vec_itr->Get<double>();
             }
-            else if(vec_itr->Is<int>()) {
-                radius = static_cast<float>(vec_itr->Get<int>());
+            else if(vec_itr->Is<int32_t>()) {
+                radius = static_cast<float>(vec_itr->Get<int32_t>());
             }
-            else if(vec_itr->Is<long>()) {
-                radius = static_cast<float>(vec_itr->Get<long>());
+            else if(vec_itr->Is<int64_t>()) {
+                radius = static_cast<float>(vec_itr->Get<int64_t>());
             }
             else if(vec_itr->Is<float>()) {
                 radius = vec_itr->Get<float>();
