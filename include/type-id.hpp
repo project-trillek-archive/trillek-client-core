@@ -3,6 +3,7 @@
 
 #include "trillek.hpp"
 #include <glm/glm.hpp>
+#include <glm/ext.hpp>
 #include <string>
 
 namespace trillek {

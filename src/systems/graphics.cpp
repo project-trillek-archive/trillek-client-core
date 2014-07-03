@@ -485,25 +485,22 @@ void RenderSystem::RenderColorPass(const float *view_matrix, const float *proj_m
                 glBindVertexArray(bufgrp->vao);
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufgrp->ibo);
 
-                static GLint temp;
                 for (id_t entity_id : rengrp.instances) {
                     glUniformMatrix4fv((*shader)("model"), 1, GL_FALSE, &this->model_matrices.at(entity_id)[0][0]);
                     auto renanim = rengrp.animations.find(entity_id);
                     if (renanim != rengrp.animations.end()) {
-                        temp = 1;
-                        glUniform1iv((*shader)("animated"), 1, &temp);
+                        glUniform1i((*shader)("animated"), 1);
                         auto &animmatricies = renanim->second->animation_matricies;
                         glUniformMatrix4fv((*shader)("animation_matrix"), animmatricies.size(), GL_FALSE, &animmatricies[0][0][0]);
                     }
                     else {
-                        temp = 0;
-                        glUniform1iv((*shader)("animated"), 1, &temp);
+                        glUniform1i((*shader)("animated"), 0);
                     }
                     glDrawElements(GL_TRIANGLES, bufgrp->ibo_count, GL_UNSIGNED_INT, 0);
                 }
             }
             for (size_t tex_index = 0; tex_index < texgrp.texture_indicies.size(); ++tex_index) {
-                matgrp.material.DeactivateTexture(tex_index);
+                Material::DeactivateTexture(tex_index);
             }
         }
 
@@ -514,6 +511,41 @@ void RenderSystem::RenderColorPass(const float *view_matrix, const float *proj_m
 void RenderSystem::RenderDepthOnlyPass(const float *view_matrix, const float *proj_matrix) const {
     // TODO Similar to color pass but without textures and everything uses a depth shader
     // This is intended for shadow map passes or the like
+    if(!depthpassshader) {
+        return;
+    }
+    depthpassshader->Use();
+    glUniformMatrix4fv(depthpassshader->Uniform("view"), 1, GL_FALSE, view_matrix);
+    glUniformMatrix4fv(depthpassshader->Uniform("projection"), 1, GL_FALSE, proj_matrix);
+    glUniform1i(lightingshader->Uniform("layer0"), 0);
+    glUniform1i(lightingshader->Uniform("layer1"), 1);
+    glUniform1i(lightingshader->Uniform("layer2"), 2);
+    glUniform1i(lightingshader->Uniform("layer3"), 3);
+    for (auto matgrp : this->material_groups) {
+        for (const auto& texgrp : matgrp.texture_groups) {
+            // Loop through each renderable group.
+            for (const auto& rengrp : texgrp.renderable_groups) {
+                const auto& bufgrp = rengrp.renderable->GetBufferGroup(rengrp.buffer_group_index);
+                glBindVertexArray(bufgrp->vao);
+                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufgrp->ibo);
+
+                for (id_t entity_id : rengrp.instances) {
+                    glUniformMatrix4fv((*depthpassshader)("model"), 1, GL_FALSE, &this->model_matrices.at(entity_id)[0][0]);
+                    auto renanim = rengrp.animations.find(entity_id);
+                    if (renanim != rengrp.animations.end()) {
+                        glUniform1i((*depthpassshader)("animated"), 1);
+                        auto &animmatricies = renanim->second->animation_matricies;
+                        glUniformMatrix4fv((*depthpassshader)("animation_matrix"), animmatricies.size(), GL_FALSE, &animmatricies[0][0][0]);
+                    }
+                    else {
+                        glUniform1i((*depthpassshader)("animated"), 0);
+                    }
+                    glDrawElements(GL_TRIANGLES, bufgrp->ibo_count, GL_UNSIGNED_INT, 0);
+                }
+            }
+        }
+    }
+    Shader::UnUse();
 }
 
 void RenderSystem::RenderLightingPass(const glm::mat4x4 &view_matrix, const float *inv_proj_matrix) const {
@@ -592,6 +624,9 @@ void RenderSystem::RegisterStaticParsers() {
                 }
                 else if(settingname == "lighting-shader") {
                     rensys.lightingshader = rensys.Get<Shader>(settingval);
+                }
+                else if(settingname == "depth-shader") {
+                    rensys.depthpassshader = rensys.Get<Shader>(settingval);
                 }
             }
         }
