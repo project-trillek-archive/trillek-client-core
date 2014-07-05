@@ -120,6 +120,12 @@ public:
     * \return glm::vec3 The current scale.
     */
     glm::vec3 GetScale() const;
+
+    /** \brief Mark the transform as modified during the current frame
+     *
+     */
+    void MarkAsModified();
+
 private:
     glm::vec3 translation;
     glm::vec3 rotation;

@@ -7,7 +7,6 @@
 #include <memory>
 
 #include "systems/component-factory.hpp"
-#include "systems/dispatcher.hpp"
 
 namespace trillek {
 
@@ -22,8 +21,7 @@ class Transform;
 namespace physics {
 
 class Collidable :
-    public ComponentBase,
-    public event::Subscriber<Transform> {
+    public ComponentBase {
 public:
     Collidable() : motion_state(nullptr) { }
     ~Collidable() {
@@ -70,7 +68,6 @@ public:
     */
     void UpdateTransform();
 
-    void Notify(const unsigned int entity_id, const Transform* transforum);
 private:
     double radius; // Used for sphere and capsule shape collidable.
     double height; // Used for capsule shape collidable.

@@ -10,12 +10,12 @@
 #include <list>
 #include <memory>
 #include <vector>
+#include <future>
 #include "trillek-scheduler.hpp"
 #include "systems/system-base.hpp"
 #include "graphics/material.hpp"
 #include <map>
 
-#include "dispatcher.hpp"
 namespace trillek {
 
 class Transform;
@@ -41,8 +41,7 @@ struct MaterialGroup {
     std::list<TextureGroup> texture_groups;
 };
 
-class RenderSystem : public SystemBase, 
-    public event::Subscriber<Transform> {
+class RenderSystem : public SystemBase {
 public:
     /**
     * \brief Starts the OpenGL rendering system.
@@ -67,15 +66,6 @@ public:
     */
     // TODO: This is a niave update render method. Please replace me.
     void RunBatch() const override;
-
-    /**
-    * \brief Notification that a transform has changed.
-    *
-    * \param const unsigned int entity_id ID of the entity to update.
-    * \param const Transform* transform The entity's transform.
-    * \return void
-    */
-    void Notify(const unsigned int entity_id, const Transform* transform);
 
     /**
     * \brief Sets the viewport width and height.
@@ -126,6 +116,8 @@ public:
     void Terminate() override;
 
 private:
+    void UpdateModelMatrices();
+
     int gl_version[2];
     glm::mat4 projection_matrix;
     glm::mat4 view_matrix;
@@ -139,6 +131,7 @@ private:
     std::list<std::pair<unsigned int, std::shared_ptr<Renderable>>> renderables;
     std::map<unsigned int, glm::mat4> model_matrices;
     std::list<MaterialGroup> material_groups;
+    std::shared_future<const std::map<unsigned int,const Transform*>> updated_transforms;
 };
 
 } // End of graphics

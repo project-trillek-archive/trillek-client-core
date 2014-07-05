@@ -1,5 +1,6 @@
 #include "systems/physics.hpp"
 #include "physics/collidable.hpp"
+#include "systems/transform-system.hpp"
 #include <bullet/BulletCollision/Gimpact/btGImpactShape.h>
 #include <bullet/BulletCollision/Gimpact/btGImpactCollisionAlgorithm.h>
 
@@ -36,6 +37,8 @@ void PhysicsSystem::AddComponent(const unsigned int entity_id, std::shared_ptr<C
 }
 
 void PhysicsSystem::HandleEvents(const frame_tp& timepoint) {
+    // Remove access to old updated transforms
+    TransformMap::GetAsyncUpdatedTransforms().Unpublish();
     static frame_tp last_tp;
     this->delta = timepoint - last_tp;
     last_tp = timepoint;
@@ -46,15 +49,15 @@ void PhysicsSystem::HandleEvents(const frame_tp& timepoint) {
         auto body = this->bodies[force.first]->GetRigidBody();
         body->setLinearVelocity(force.second + body->getGravity());
     }
-
     if (this->dynamicsWorld) {
         dynamicsWorld->stepSimulation(delta.count() * 1.0E-9, 10);
     }
-
     // Set out transform updates.
     for (auto shape : this->bodies) {
         shape.second->UpdateTransform();
     }
+    // Publish the new updated transforms map
+    TransformMap::GetAsyncUpdatedTransforms().Publish(TransformMap::GetUpdatedTransforms().Poll(), timepoint);
 }
 
 void PhysicsSystem::Terminate() {

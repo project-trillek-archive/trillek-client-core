@@ -25,7 +25,7 @@ const int* RenderSystem::Start(const unsigned int width, const unsigned int heig
     SetViewportSize(width, height);
 
     // Retrieve the default camera transform, and subscribe to changes to it.
-    event::Dispatcher<Transform>::GetInstance()->Subscribe(0, this);
+    //event::Dispatcher<Transform>::GetInstance()->Subscribe(0, this);
 
     // Activate the camera and get the initial view matrix.
     // TODO: Make camera into a component that is added to an entity.
@@ -100,17 +100,28 @@ void RenderSystem::RunBatch() const {
     }
 }
 
-void RenderSystem::Notify(const unsigned int entity_id, const Transform* transform) {
-    if (this->camera) {
-        if (entity_id == this->camera->GetEntityID()) {
-            this->view_matrix = this->camera->GetViewMatrix();
-            return;
-        }
+void RenderSystem::UpdateModelMatrices() {
+    std::map<unsigned int,const Transform*> transforms;
+    try {
+        transforms = updated_transforms.get();
     }
-    glm::mat4 model_matrix = glm::translate(transform->GetTranslation()) *
-        glm::mat4_cast(transform->GetOrientation()) *
-        glm::scale(transform->GetScale());
-    this->model_matrices[entity_id] = model_matrix;
+    catch(std::future_error& e) {
+        std::cerr << "Render system missed a frame" << std::endl;
+    }
+    for (auto it = transforms.cbegin(); it != transforms.cend(); ++it) {
+        const auto id = it->first;
+        const auto transform = it->second;
+        if (this->camera) {
+            if (id == this->camera->GetEntityID()) {
+                this->view_matrix = this->camera->GetViewMatrix();
+                continue;
+            }
+        }
+        glm::mat4 model_matrix = glm::translate(transform->GetTranslation()) *
+            glm::mat4_cast(transform->GetOrientation()) *
+            glm::scale(transform->GetScale());
+        this->model_matrices[id] = model_matrix;
+    }
 }
 
 void RenderSystem::SetViewportSize(const unsigned int width, const unsigned int height) {
@@ -235,10 +246,10 @@ void RenderSystem::AddComponent(const unsigned int entity_id, std::shared_ptr<Co
     }
 
     // Subscribe to transform change events for this entity ID.
-    event::Dispatcher<Transform>::GetInstance()->Subscribe(entity_id, this);
+    //event::Dispatcher<Transform>::GetInstance()->Subscribe(entity_id, this);
 
-    // We will use the notify method to force the initial model matrix creation.
-    Notify(entity_id, TransformMap::GetTransform(entity_id).get());
+    // We mark the transform to force the initial model matrix creation.
+    TransformMap::GetTransform(entity_id)->MarkAsModified();
 }
 
 void RenderSystem::RemoveRenderable(const unsigned int entity_id) {
@@ -292,6 +303,13 @@ void RenderSystem::HandleEvents(const frame_tp& timepoint) {
         if (ren.second->GetAnimation()) {
             ren.second->GetAnimation()->UpdateAnimation(delta.count());
         }
+    }
+    updated_transforms = TransformMap::GetAsyncUpdatedTransforms().GetFuture(timepoint);
+    if(updated_transforms.valid()) {
+        UpdateModelMatrices();
+    }
+    else {
+        std::cerr << "transforms not valid" << std::endl;
     }
 };
 

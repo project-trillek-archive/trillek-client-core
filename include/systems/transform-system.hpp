@@ -6,10 +6,15 @@
 #include <mutex>
 
 #include "util/json-parser.hpp"
+#include "systems/async-data.hpp"
+#include "atomic-map.hpp"
 
 namespace trillek {
 
 class Transform;
+namespace physics {
+class PhysicsSystem;
+}
 
 // Stores a mapping of entity ID to transform that can
 // be accessed via static methods anywhere.
@@ -64,13 +69,28 @@ public:
     */
     static void RemoveTransform(const unsigned int entity_id);
 
+    static AsyncData<std::map<id_t,const Transform*>>& GetAsyncUpdatedTransforms() {
+        return instance->async_updated_transforms;
+    }
+
     // Inherited from Parse
     virtual bool Serialize(rapidjson::Document& document);
 
     // Inherited from Parse
     virtual bool Parse(rapidjson::Value& node);
 private:
+
+    friend class Transform;
+    friend class physics::PhysicsSystem;
+
+    static AtomicMap<id_t,const Transform*>& GetUpdatedTransforms() {
+        return instance->updated_transforms;
+    };
+
     std::map<unsigned int, std::shared_ptr<Transform>> transforms;
+
+    AtomicMap<id_t,const Transform*> updated_transforms;
+    AsyncData<std::map<id_t,const Transform*>> async_updated_transforms;
 };
 
 } // End of trillek

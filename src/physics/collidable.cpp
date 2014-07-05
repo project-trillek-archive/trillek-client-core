@@ -98,7 +98,7 @@ bool Collidable::Initialize(const std::vector<Property> &properties) {
         }
 
         auto scale = this->entity_transform->GetScale();
-        
+
         auto mesh_shape = std::unique_ptr<btGImpactMeshShape>(new btGImpactMeshShape(this->mesh.get()));
         mesh_shape->setLocalScaling(btVector3(scale.x, scale.y, scale.z));
         mesh_shape->updateBound();
@@ -155,14 +155,16 @@ void Collidable::UpdateTransform() {
     auto rot = transform.getRotation();
     this->entity_transform->SetTranslation(glm::vec3(pos.x(), pos.y(), pos.z()));
     this->entity_transform->SetOrientation(glm::quat(rot.w(), rot.x(), rot.y(), rot.z()));
+    this->entity_transform->MarkAsModified();
 }
 
+/* Removed since we don't have to push transforms into the simulation but to apply forces
 void Collidable::Notify(const unsigned int entity_id, const Transform* transforum) {
     auto pos = this->entity_transform->GetTranslation();
     auto orientation = this->entity_transform->GetOrientation();
     this->body->setWorldTransform(btTransform(
         btQuaternion(orientation.x, orientation.y, orientation.z, orientation.w), btVector3(pos.x, pos.y, pos.z)));
 }
-
+*/
 } // End of physics
 } // End of trillek
