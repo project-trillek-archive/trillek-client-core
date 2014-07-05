@@ -37,7 +37,7 @@ public:
      * Updates the state of the system based off how much time has elapsed since the last update.
      * \return void
      */
-    void RunBatch() const override;
+    void RunBatch() const override {};
 
     /**
      * \brief Adds a Shape component to the system.
@@ -108,7 +108,7 @@ private:
     btDefaultMotionState* groundMotionState;
     btRigidBody* groundRigidBody;
 
-    std::chrono::duration<double> delta; // The time since the last HandleEvents was called.
+    frame_unit delta; // The time since the last HandleEvents was called.
 };
 
 } // End of physcics

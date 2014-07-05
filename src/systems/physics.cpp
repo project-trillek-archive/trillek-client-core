@@ -34,16 +34,6 @@ void PhysicsSystem::AddComponent(const unsigned int entity_id, std::shared_ptr<C
         this->bodies[entity_id] = shape;
     }
 }
-void PhysicsSystem::RunBatch() const {
-    if (this->dynamicsWorld) {
-        dynamicsWorld->stepSimulation(delta.count(), 10);
-    }
-
-    // Set out transform updates.
-    for (auto shape : this->bodies) {
-        shape.second->UpdateTransform();
-    }
-}
 
 void PhysicsSystem::HandleEvents(const frame_tp& timepoint) {
     static frame_tp last_tp;
@@ -55,6 +45,15 @@ void PhysicsSystem::HandleEvents(const frame_tp& timepoint) {
     for (auto force : this->forces) {
         auto body = this->bodies[force.first]->GetRigidBody();
         body->setLinearVelocity(force.second + body->getGravity());
+    }
+
+    if (this->dynamicsWorld) {
+        dynamicsWorld->stepSimulation(delta.count() * 1.0E-9, 10);
+    }
+
+    // Set out transform updates.
+    for (auto shape : this->bodies) {
+        shape.second->UpdateTransform();
     }
 }
 
