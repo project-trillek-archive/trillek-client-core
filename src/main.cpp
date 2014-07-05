@@ -44,7 +44,7 @@ int main(int argCount, char **argValues) {
     std::queue<trillek::SystemBase*> systems;
 
     // register the fake system. Comment this to cancel
-    systems.push(&trillek::TrillekGame::GetFakeSystem());
+//    systems.push(&trillek::TrillekGame::GetFakeSystem());
 
     // register the engine system, i.e graphics + physics
     systems.push(&trillek::TrillekGame::GetEngineSystem());
