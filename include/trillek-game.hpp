@@ -6,6 +6,7 @@
 #include "os.hpp"
 #include "systems/graphics.hpp"
 #include "systems/physics.hpp"
+#include "systems/meta-engine-system.hpp"
 #include "systems/sound-system.hpp"
 
 namespace trillek {
@@ -41,6 +42,14 @@ public:
     * \return physics::PhysicsSystem& the instance
     */
     static physics::PhysicsSystem& GetPhysicsSystem() { return phys_sys; };
+
+    /** \brief Return the meta engine system instance
+    *
+    * This sytem wraps together some function calls of graphic and physics systems
+    *
+    * \return MetaEngineSystem& the instance
+    */
+    static MetaEngineSystem& GetEngineSystem() { return engine_sys; };
 
     /** \brief Return the sound system instance
      *
@@ -81,6 +90,7 @@ private:
     static OS glfw_os;
     static graphics::RenderSystem gl_sys;
     static physics::PhysicsSystem phys_sys;
+    static MetaEngineSystem engine_sys;
     static bool close_window;
 };
 }

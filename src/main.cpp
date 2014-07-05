@@ -6,7 +6,7 @@
 #include "util/json-parser.hpp"
 #include "systems/transform-system.hpp"
 #include "systems/resource-system.hpp"
-#include "systems/graphics.hpp"
+#include "systems/meta-engine-system.hpp"
 #include "systems/sound-system.hpp"
 #include <cstddef>
 
@@ -46,11 +46,9 @@ int main(int argCount, char **argValues) {
     // register the fake system. Comment this to cancel
     systems.push(&trillek::TrillekGame::GetFakeSystem());
 
-    // register the graphic system
-    systems.push(&trillek::TrillekGame::GetGraphicSystem());
+    // register the engine system, i.e graphics + physics
+    systems.push(&trillek::TrillekGame::GetEngineSystem());
 
-    // register the physics system
-    systems.push(&trillek::TrillekGame::GetPhysicsSystem());
     // register the sound system
     systems.push(&trillek::TrillekGame::GetSoundSystem());
 
