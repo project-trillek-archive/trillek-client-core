@@ -38,7 +38,7 @@ void PhysicsSystem::AddComponent(const unsigned int entity_id, std::shared_ptr<C
 
 void PhysicsSystem::HandleEvents(const frame_tp& timepoint) {
     // Remove access to old updated transforms
-    TransformMap::GetAsyncUpdatedTransforms().Unpublish();
+    TransformMap::GetAsyncUpdatedTransforms().Unpublish(timepoint);
     static frame_tp last_tp;
     this->delta = timepoint - last_tp;
     last_tp = timepoint;
@@ -58,7 +58,7 @@ void PhysicsSystem::HandleEvents(const frame_tp& timepoint) {
     }
     // Publish the new updated transforms map
     auto ntm = std::make_shared<std::map<id_t,const Transform*>>(TransformMap::GetUpdatedTransforms().Poll());
-    TransformMap::GetAsyncUpdatedTransforms().Publish(std::move(ntm), timepoint);
+    TransformMap::GetAsyncUpdatedTransforms().Publish(std::move(ntm));
 }
 
 void PhysicsSystem::Terminate() {

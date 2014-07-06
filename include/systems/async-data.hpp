@@ -11,8 +11,13 @@ template<class T>
 class AsyncData {
 public:
     AsyncData() {
-        Unpublish();
+        Unpublish(frame_tp{});
     };
+
+    ~AsyncData() {
+        // unblocks threads by declaring a frame far behind
+        Unpublish(frame_tp{} - std::chrono::seconds(100));
+    }
 
     /** \brief Request a future for the data
      *
@@ -27,7 +32,16 @@ public:
      */
     std::shared_future<std::shared_ptr<const T>> GetFuture(const frame_tp& frame_requested) const {
         std::unique_lock<std::mutex> locker(m_current);
-        return (frame_requested <= current_frame) ? current_future : std::shared_future<std::shared_ptr<const T>>();
+        if (frame_requested < current_frame) {
+            // the call is too late
+            return {};
+        }
+        while (frame_requested > current_frame) {
+            // the call is too early
+            // we block until the frame time
+            ahead_request.wait(locker, [&](){ return frame_requested <= current_frame; });
+        }
+        return current_future;
     };
 
     /** \brief Make the data available to all threads
@@ -35,28 +49,28 @@ public:
      * The futures are made ready
      *
      * \param data const T the data to broadcast
-     * \param frame const frame_tp& the current frame
      *
      */
     template<class U=std::shared_ptr<const T>>
-    void Publish(U&& data, frame_tp frame) {
+    void Publish(U&& data) {
         // unblock threads waiting the data
         current_promise.set_value(std::forward<U>(data));
-        // update the frame timepoint
-        std::unique_lock<std::mutex> locker(m_current);
-        current_frame = std::move(frame);
     };
 
     /** \brief Remove access to current data
      *
-     * After the call, the futures distributed will be ready only at the next Publish() call
+     * This also declares what frame we will honour next time
      *
+     * \param frame const frame_tp the current frame
      */
-    void Unpublish() {
+    void Unpublish(frame_tp frame) {
         std::unique_lock<std::mutex> locker(m_current);
         // set the promise
         current_promise = std::promise<std::shared_ptr<const T>>();
         current_future = current_promise.get_future().share();
+        // update the frame timepoint
+        current_frame = std::move(frame);
+        ahead_request.notify_all();
     }
 
 private:
@@ -64,6 +78,7 @@ private:
     std::shared_future<std::shared_ptr<const T>> current_future;
     frame_tp current_frame;
     mutable std::mutex m_current;
+    mutable std::condition_variable ahead_request;
 };
 } // namespace trillek
 
