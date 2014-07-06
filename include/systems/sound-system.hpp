@@ -90,7 +90,7 @@ public:
 }; // end of class Sound
 
 
-class System : public util::Parser, public SystemBase, public event::Subscriber<Transform> {
+class System : public util::Parser, public SystemBase {
 private:
     System() : Parser("sounds") { }
     System(const System& right) : Parser("sounds")  {
@@ -114,10 +114,6 @@ public:
             if(alureInitDevice(NULL, NULL) == false) {
                 std::cout << "Failed to open OpenAL device: " << alureGetErrorString() << std::endl;
             }
-
-            // get transform from entity id 0 (camera)
-            event::Dispatcher<Transform>::GetInstance()->Subscribe(0, &(*System::instance));
-
         });
 
         return System::instance;
@@ -129,10 +125,6 @@ public:
     virtual void HandleEvents(const frame_tp& timepoint);
     virtual void RunBatch() const;
     virtual void Terminate();
-
-    /** \brief handles listener position and orientation when entity with id 0 is updated (camera)
-     */
-    virtual void Notify(const unsigned int entity_id, const Transform* data);
 
     /** \brief Creates and returns a Sound if successful
      *

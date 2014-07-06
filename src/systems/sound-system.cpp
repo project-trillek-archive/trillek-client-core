@@ -1,4 +1,5 @@
 #include "systems/sound-system.hpp"
+#include "systems/transform-system.hpp"
 
 namespace trillek {
 namespace sound {
@@ -98,7 +99,24 @@ std::shared_ptr<Sound> System::GetSound(const std::string& id) {
 }
 
 void System::HandleEvents(const frame_tp& timepoint) {
-
+    auto transformfut = TransformMap::GetAsyncUpdatedTransforms().GetFuture(timepoint);
+    if (transformfut.valid()) {
+        // wait for the list to be published
+        auto transformmap = transformfut.get();
+        // assume this is the camera entity id
+        if(transformmap->count(0)) {
+            auto data = transformmap->at(0);
+            const glm::vec3& position = data->GetTranslation();
+            alListener3f(AL_POSITION, position.x, position.y, position.z);
+            const glm::vec3& up = data->GetOrientation() * UP_VECTOR;
+            const glm::vec3& at = data->GetOrientation() * FORWARD_VECTOR;
+            ALfloat orientation[] = {at.x, at.y, at.z, up.x, up.y, up.z};
+            alListenerfv(AL_ORIENTATION, orientation);
+        }
+    }
+    else {
+        std::cerr << "Sound system missed the updated transform map publication" << std::endl;
+    }
 }
 
 void System::RunBatch() const {
@@ -107,18 +125,6 @@ void System::RunBatch() const {
 
 void System::Terminate() {
 
-}
-
-void System::Notify(const unsigned int entity_id, const Transform* data) {
-    // assume this is the camera entity id
-    if(entity_id == 0) {
-        const glm::vec3& position = data->GetTranslation();
-        alListener3f(AL_POSITION, position.x, position.y, position.z);
-        const glm::vec3& up = data->GetOrientation() * UP_VECTOR;
-        const glm::vec3& at = data->GetOrientation() * FORWARD_VECTOR;
-        ALfloat orientation[] = {at.x, at.y, at.z, up.x, up.y, up.z};
-        alListenerfv(AL_ORIENTATION, orientation);
-    }
 }
 
 void System::SetListenerPosition(const glm::vec3& position) {
