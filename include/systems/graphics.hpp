@@ -131,7 +131,7 @@ private:
     std::list<std::pair<unsigned int, std::shared_ptr<Renderable>>> renderables;
     std::map<unsigned int, glm::mat4> model_matrices;
     std::list<MaterialGroup> material_groups;
-    std::shared_future<const std::map<unsigned int,const Transform*>> updated_transforms;
+    std::shared_future<std::shared_ptr<const std::map<unsigned int,const Transform*>>> updated_transforms;
 };
 
 } // End of graphics

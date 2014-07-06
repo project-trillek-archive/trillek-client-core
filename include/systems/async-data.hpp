@@ -22,12 +22,12 @@ public:
      * Callers must catch exceptions thrown through the future.
      *
      * \param frame_requested const frame_tp& the current frame of the caller
-     * \return std::shared_future<constT> the future
+     * \return std::shared_future<<std::shared_ptr<const T>>> the future
      *
      */
-    std::shared_future<const T> GetFuture(const frame_tp& frame_requested) const {
+    std::shared_future<std::shared_ptr<const T>> GetFuture(const frame_tp& frame_requested) const {
         std::unique_lock<std::mutex> locker(m_current);
-        return (frame_requested <= current_frame) ? current_future : std::shared_future<const T>();
+        return (frame_requested <= current_frame) ? current_future : std::shared_future<std::shared_ptr<const T>>();
     };
 
     /** \brief Make the data available to all threads
@@ -38,12 +38,13 @@ public:
      * \param frame const frame_tp& the current frame
      *
      */
-    void Publish(const T& data, const frame_tp& frame) {
+    template<class U=std::shared_ptr<const T>>
+    void Publish(U&& data, frame_tp frame) {
         // unblock threads waiting the data
-        current_promise.set_value(data);
+        current_promise.set_value(std::forward<U>(data));
         // update the frame timepoint
         std::unique_lock<std::mutex> locker(m_current);
-        current_frame = frame;
+        current_frame = std::move(frame);
     };
 
     /** \brief Remove access to current data
@@ -54,13 +55,13 @@ public:
     void Unpublish() {
         std::unique_lock<std::mutex> locker(m_current);
         // set the promise
-        current_promise = std::promise<const T>();
+        current_promise = std::promise<std::shared_ptr<const T>>();
         current_future = current_promise.get_future().share();
     }
 
 private:
-    std::promise<const T> current_promise;
-    std::shared_future<const T> current_future;
+    std::promise<std::shared_ptr<const T>> current_promise;
+    std::shared_future<std::shared_ptr<const T>> current_future;
     frame_tp current_frame;
     mutable std::mutex m_current;
 };

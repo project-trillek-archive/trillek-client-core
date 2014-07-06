@@ -100,7 +100,7 @@ void RenderSystem::RunBatch() const {
 void RenderSystem::UpdateModelMatrices() {
     std::map<unsigned int,const Transform*> transforms;
     try {
-        transforms = updated_transforms.get();
+        transforms = *updated_transforms.get();
     }
     catch(std::future_error& e) {
         std::cerr << "Render system missed a frame" << std::endl;
@@ -303,7 +303,7 @@ void RenderSystem::HandleEvents(const frame_tp& timepoint) {
         UpdateModelMatrices();
     }
     else {
-        std::cerr << "transforms not valid" << std::endl;
+        std::cerr << "RenderSystem::HandleEvents() missed the publication of updated transforms" << std::endl;
     }
 };
 

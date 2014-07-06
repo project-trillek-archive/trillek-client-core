@@ -57,7 +57,8 @@ void PhysicsSystem::HandleEvents(const frame_tp& timepoint) {
         shape.second->UpdateTransform();
     }
     // Publish the new updated transforms map
-    TransformMap::GetAsyncUpdatedTransforms().Publish(TransformMap::GetUpdatedTransforms().Poll(), timepoint);
+    auto ntm = std::make_shared<std::map<id_t,const Transform*>>(TransformMap::GetUpdatedTransforms().Poll());
+    TransformMap::GetAsyncUpdatedTransforms().Publish(std::move(ntm), timepoint);
 }
 
 void PhysicsSystem::Terminate() {
