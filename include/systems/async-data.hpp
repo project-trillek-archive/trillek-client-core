@@ -4,6 +4,7 @@
 #include <future>
 #include <mutex>
 #include "trillek-scheduler.hpp"
+#include "trillek-game.hpp"
 
 namespace trillek {
 
@@ -14,15 +15,10 @@ public:
         Unpublish(frame_tp{});
     };
 
-    ~AsyncData() {
-        // unblocks threads by declaring a frame far behind
-        Unpublish(frame_tp{} - std::chrono::seconds(100));
-    }
-
     /** \brief Request a future for the data
      *
-     * The future returned is not valid if the frame requested does not match
-     * the current frame relative to the publisher
+     * The future returned is not valid if the frame requested is behind
+     * the current frame for the publisher
      *
      * Callers must catch exceptions thrown through the future.
      *
@@ -36,10 +32,10 @@ public:
             // the call is too late
             return {};
         }
-        while (frame_requested > current_frame) {
+        while (frame_requested > current_frame && ! TrillekGame::GetTerminateFlag()) {
             // the call is too early
             // we block until the frame time
-            ahead_request.wait(locker, [&](){ return frame_requested <= current_frame; });
+            ahead_request.wait_for(locker, std::chrono::milliseconds(500), [&](){ return frame_requested <= current_frame; });
         }
         return current_future;
     };
