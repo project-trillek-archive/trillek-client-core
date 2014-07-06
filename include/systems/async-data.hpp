@@ -4,7 +4,6 @@
 #include <future>
 #include <mutex>
 #include "trillek-scheduler.hpp"
-#include "trillek-game.hpp"
 
 namespace trillek {
 
@@ -32,10 +31,10 @@ public:
             // the call is too late
             return {};
         }
-        while (frame_requested > current_frame && ! TrillekGame::GetTerminateFlag()) {
-            // the call is too early
-            // we block until the frame time
-            ahead_request.wait_for(locker, std::chrono::milliseconds(500), [&](){ return frame_requested <= current_frame; });
+        // we block until the frame time or after 500 ms
+        if (! ahead_request.wait_for(locker, std::chrono::milliseconds(500), [&](){ return frame_requested <= current_frame; })) {
+            // 500 ms have passed, let return a invalid future
+            return {};
         }
         return current_future;
     };
