@@ -38,18 +38,20 @@ public:
      * \param frame const frame_tp& the current frame
      *
      */
-    void Publish(const T& data, const frame_tp& frame) const {
+    void Publish(const T& data, const frame_tp& frame) {
+        // unblock threads waiting the data
+        current_promise.set_value(data);
+        // update the frame timepoint
         std::unique_lock<std::mutex> locker(m_current);
         current_frame = frame;
-        current_promise.set_value(data);
     };
 
     /** \brief Remove access to current data
      *
-     * The futures distributed will be ready at the next Publish() call
+     * After the call, the futures distributed will be ready only at the next Publish() call
      *
      */
-    void Unpublish() const {
+    void Unpublish() {
         std::unique_lock<std::mutex> locker(m_current);
         // set the promise
         current_promise = std::promise<const T>();
@@ -57,9 +59,9 @@ public:
     }
 
 private:
-    mutable std::promise<const T> current_promise;
-    mutable std::shared_future<const T> current_future;
-    mutable frame_tp current_frame;
+    std::promise<const T> current_promise;
+    std::shared_future<const T> current_future;
+    frame_tp current_frame;
     mutable std::mutex m_current;
 };
 } // namespace trillek
