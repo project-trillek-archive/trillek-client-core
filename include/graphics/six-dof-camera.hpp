@@ -40,6 +40,7 @@ public:
         }
 
         static glm::vec3 direction_vector;
+        static glm::vec3 rotation_vector;
         static const physics::Force zero_gravity = { 0.0, 0.0, 0.0 };
         static bool gravity_disabled;
 
@@ -50,25 +51,25 @@ public:
                 direction_vector += entity_speed * (FORWARD_VECTOR);
             break;
             case GLFW_KEY_S:
-                direction_vector += -entity_speed * (FORWARD_VECTOR);
+                direction_vector -= entity_speed * (FORWARD_VECTOR);
             break;
             case GLFW_KEY_A:
-                direction_vector += -entity_speed * (RIGHT_VECTOR);
+                direction_vector -= entity_speed * (RIGHT_VECTOR);
             break;
             case GLFW_KEY_D:
                 direction_vector += entity_speed * (RIGHT_VECTOR);
             break;
             case GLFW_KEY_UP:
-                this->camera_transform->OrientedRotate(glm::radians(5.0f) * RIGHT_VECTOR);
+                rotation_vector += entity_rotation_speed * (RIGHT_VECTOR);
             break;
             case GLFW_KEY_DOWN:
-                this->camera_transform->OrientedRotate(glm::radians(-5.0f) * RIGHT_VECTOR);
+                rotation_vector -= entity_rotation_speed * (RIGHT_VECTOR);
             break;
             case GLFW_KEY_LEFT:
-                this->camera_transform->OrientedRotate(glm::radians(5.0f) * UP_VECTOR);
+                rotation_vector += entity_rotation_speed * (UP_VECTOR);
             break;
             case GLFW_KEY_RIGHT:
-                this->camera_transform->OrientedRotate(glm::radians(-5.0f) * UP_VECTOR);
+                rotation_vector -= entity_rotation_speed * (UP_VECTOR);
             break;
             default:
             break;
@@ -89,16 +90,16 @@ public:
                 direction_vector -= entity_speed * (RIGHT_VECTOR);
                 break;
             case GLFW_KEY_UP:
-                this->camera_transform->OrientedRotate(glm::radians(5.0f) * RIGHT_VECTOR);
+                rotation_vector -= entity_rotation_speed * (RIGHT_VECTOR);
             break;
             case GLFW_KEY_DOWN:
-                this->camera_transform->OrientedRotate(glm::radians(-5.0f) * RIGHT_VECTOR);
+                rotation_vector += entity_rotation_speed * (RIGHT_VECTOR);
             break;
             case GLFW_KEY_LEFT:
-                this->camera_transform->OrientedRotate(glm::radians(5.0f) * UP_VECTOR);
+                rotation_vector -= entity_rotation_speed * (UP_VECTOR);
             break;
             case GLFW_KEY_RIGHT:
-                this->camera_transform->OrientedRotate(glm::radians(-5.0f) * UP_VECTOR);
+                rotation_vector += entity_rotation_speed * (UP_VECTOR);
             break;
             case GLFW_KEY_GRAVE_ACCENT:
                 if (gravity_disabled) {
@@ -121,6 +122,9 @@ public:
         glm::vec3 move_vector = this->camera_transform->GetOrientation() * direction_vector;
         physics::Force force = { move_vector.x, move_vector.y, move_vector.z };
         TrillekGame::GetPhysicsSystem().SetForce(this->entity_id, force);
+        glm::vec3 rotate_vector = this->camera_transform->GetOrientation() * rotation_vector;
+        physics::Torque torque = { rotate_vector.x, rotate_vector.y, rotate_vector.z };
+        TrillekGame::GetPhysicsSystem().SetTorque(this->entity_id, torque);
     }
 private:
 };

@@ -18,6 +18,8 @@ struct Force {
     double x, y, z;
 };
 
+typedef Force Torque;
+
 class PhysicsSystem : public SystemBase {
 public:
     PhysicsSystem();
@@ -79,12 +81,27 @@ public:
      */
     void SetForce(const unsigned int entity_id, const Force f);
 
+    /** \brief Set a rigid body's current torque.
+     *
+     * \param const unsigned int entity_id The entity ID of the rigid body.
+     * \param Force f The rigid body's new torque.
+     * \return void
+     */
+    void SetTorque(const unsigned int entity_id, const Torque t);
+
     /** \brief Remove a rigid body's current linear force.
     *
     * \param const unsigned int entity_id The entity ID of the rigid body.
      * \return void
     */
     void RemoveForce(const unsigned int entity_id);
+
+    /** \brief Remove a rigid body's current torque.
+    *
+    * \param const unsigned int entity_id The entity ID of the rigid body.
+     * \return void
+    */
+    void RemoveTorque(const unsigned int entity_id);
 
     /** \brief Set a rigid body's gravity.
     *
@@ -103,6 +120,7 @@ private:
     std::map<unsigned int, std::shared_ptr<Collidable>> bodies;
 
     std::map<unsigned int, btVector3> forces;
+    std::map<unsigned int, btVector3> torques;
 
     btCollisionShape* groundShape;
     btDefaultMotionState* groundMotionState;

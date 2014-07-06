@@ -24,6 +24,7 @@ public:
         this->active = true;
         this->entity_id = entity_id;
         this->entity_speed = 10.0f;
+        this->entity_rotation_speed = 5.0f;
         event::Dispatcher<KeyboardEvent>::GetInstance()->Subscribe(this);
         this->camera_transform = TransformMap::GetTransform(entity_id);
     }
@@ -64,6 +65,7 @@ protected:
     std::shared_ptr<Transform> camera_transform;
     unsigned int entity_id;
     float entity_speed;
+    float entity_rotation_speed;
     bool active;
 };
 

@@ -49,6 +49,12 @@ void PhysicsSystem::HandleEvents(const frame_tp& timepoint) {
         auto body = this->bodies[force.first]->GetRigidBody();
         body->setLinearVelocity(force.second + body->getGravity());
     }
+    // Set the rigid bodies angular velocity. Must be done each frame otherwise,
+    // other forces will stop the angular velocity.
+    for (auto& torque : this->torques) {
+        auto body = this->bodies[torque.first]->GetRigidBody();
+        body->setAngularVelocity(torque.second);
+    }
     if (this->dynamicsWorld) {
         dynamicsWorld->stepSimulation(delta.count() * 1.0E-9, 10);
     }
@@ -86,6 +92,16 @@ void PhysicsSystem::SetForce(const unsigned int entity_id, const Force f) {
 void PhysicsSystem::RemoveForce(const unsigned int entity_id) {
     if (this->forces.find(entity_id) != this->forces.end()) {
         this->forces.erase(entity_id);
+    }
+}
+
+void PhysicsSystem::SetTorque(const unsigned int entity_id, const Torque t) {
+    this->torques[entity_id] = btVector3(t.x, t.y, t.z);
+}
+
+void PhysicsSystem::RemoveTorque(const unsigned int entity_id) {
+    if (this->torques.find(entity_id) != this->torques.end()) {
+        this->torques.erase(entity_id);
     }
 }
 
