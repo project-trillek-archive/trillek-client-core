@@ -6,6 +6,7 @@
 #include <memory>
 #include <map>
 
+#include "async-data.hpp"
 #include "trillek-scheduler.hpp"
 #include "atomic-map.hpp"
 #include "systems/system-base.hpp"
@@ -111,6 +112,27 @@ public:
     * \return void
     */
     void SetGravity(const unsigned int entity_id, const Force* f = nullptr);
+
+    /** \brief Return a future of the forces
+     *
+     * \param timepoint const frame_tp& the current frame
+     * \return std::shared_future<std::shared_ptr<std::map<id_t,btVector3>>> the future
+     *
+     */
+    std::shared_future<std::shared_ptr<const std::map<id_t,btVector3>>> GetAsyncForces(const frame_tp& timepoint) const {
+        return async_forces.GetFuture(timepoint);
+    }
+
+    /** \brief Return a future of the torques
+     *
+     * \param timepoint const frame_tp& the current frame
+     * \return std::shared_future<std::shared_ptr<std::map<id_t,btVector3>>> the future
+     *
+     */
+    std::shared_future<std::shared_ptr<const std::map<id_t,btVector3>>> GetAsyncTorques(const frame_tp& timepoint) const {
+        return async_torques.GetFuture(timepoint);
+    }
+
 private:
     btBroadphaseInterface* broadphase;
     btDefaultCollisionConfiguration* collisionConfiguration;
@@ -122,6 +144,8 @@ private:
 
     AtomicMap<unsigned int, btVector3> forces;
     AtomicMap<unsigned int, btVector3> torques;
+    AsyncData<std::map<id_t,btVector3>> async_forces;
+    AsyncData<std::map<id_t,btVector3>> async_torques;
 
     btCollisionShape* groundShape;
     btDefaultMotionState* groundMotionState;
