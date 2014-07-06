@@ -43,15 +43,19 @@ void PhysicsSystem::HandleEvents(const frame_tp& timepoint) {
     this->delta = timepoint - last_tp;
     last_tp = timepoint;
 
+    //extract the forces of the current frame
+    const auto frame_forces = this->forces.Poll();
     // Set the rigid bodies linear velocity. Must be done each frame otherwise,
     // other forces will stop the linear velocity.
-    for (auto force : this->forces) {
+    for (auto& force : frame_forces) {
         auto body = this->bodies[force.first]->GetRigidBody();
         body->setLinearVelocity(force.second + body->getGravity());
     }
+    //extract the forces of the current frame
+    const auto frame_torques = this->torques.Poll();
     // Set the rigid bodies angular velocity. Must be done each frame otherwise,
     // other forces will stop the angular velocity.
-    for (auto& torque : this->torques) {
+    for (auto& torque : frame_torques) {
         auto body = this->bodies[torque.first]->GetRigidBody();
         body->setAngularVelocity(torque.second);
     }
@@ -59,7 +63,7 @@ void PhysicsSystem::HandleEvents(const frame_tp& timepoint) {
         dynamicsWorld->stepSimulation(delta.count() * 1.0E-9, 10);
     }
     // Set out transform updates.
-    for (auto shape : this->bodies) {
+    for (auto& shape : this->bodies) {
         shape.second->UpdateTransform();
     }
     // Publish the new updated transforms map
@@ -85,24 +89,20 @@ void PhysicsSystem::Terminate() {
     }
 }
 
-void PhysicsSystem::SetForce(const unsigned int entity_id, const Force f) {
-    this->forces[entity_id] = btVector3(f.x, f.y, f.z);
+void PhysicsSystem::SetForce(unsigned int entity_id, const Force f) const {
+    this->forces.Insert(entity_id, btVector3(f.x, f.y, f.z));
 }
 
-void PhysicsSystem::RemoveForce(const unsigned int entity_id) {
-    if (this->forces.find(entity_id) != this->forces.end()) {
-        this->forces.erase(entity_id);
-    }
+void PhysicsSystem::RemoveForce(const unsigned int entity_id) const {
+    this->forces.Erase(entity_id);
 }
 
-void PhysicsSystem::SetTorque(const unsigned int entity_id, const Torque t) {
-    this->torques[entity_id] = btVector3(t.x, t.y, t.z);
+void PhysicsSystem::SetTorque(unsigned int entity_id, const Torque t) const {
+    this->torques.Insert(entity_id, btVector3(t.x, t.y, t.z));
 }
 
-void PhysicsSystem::RemoveTorque(const unsigned int entity_id) {
-    if (this->torques.find(entity_id) != this->torques.end()) {
-        this->torques.erase(entity_id);
-    }
+void PhysicsSystem::RemoveTorque(const unsigned int entity_id) const {
+    this->torques.Erase(entity_id);
 }
 
 void PhysicsSystem::SetGravity(const unsigned int entity_id, const Force* f) {
