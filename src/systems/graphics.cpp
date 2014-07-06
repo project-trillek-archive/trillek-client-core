@@ -24,9 +24,6 @@ const int* RenderSystem::Start(const unsigned int width, const unsigned int heig
 
     SetViewportSize(width, height);
 
-    // Retrieve the default camera transform, and subscribe to changes to it.
-    //event::Dispatcher<Transform>::GetInstance()->Subscribe(0, this);
-
     // Activate the camera and get the initial view matrix.
     // TODO: Make camera into a component that is added to an entity.
     this->camera = std::make_shared<SixDOFCamera>();
@@ -244,9 +241,6 @@ void RenderSystem::AddComponent(const unsigned int entity_id, std::shared_ptr<Co
             texgrp->renderable_groups.push_back(std::move(temp));
         }
     }
-
-    // Subscribe to transform change events for this entity ID.
-    //event::Dispatcher<Transform>::GetInstance()->Subscribe(entity_id, this);
 
     // We mark the transform to force the initial model matrix creation.
     TransformMap::GetTransform(entity_id)->MarkAsModified();
