@@ -43,7 +43,7 @@ bool Collidable::Initialize(const std::vector<Property> &properties) {
         if (name == "radius") {
             this->radius = p.Get<double>();
         }
-        else if (name == "disable_decativation") {
+        else if (name == "disable_deactivation") {
             this->disable_deactivation = p.Get<bool>();
         }
         else if (name == "mass") {
@@ -113,6 +113,9 @@ bool Collidable::Initialize(const std::vector<Property> &properties) {
 
 void Collidable::SetEntity(unsigned int entity_id) {
     this->entity_transform = TransformMap::GetTransform(entity_id);
+    if(!this->entity_transform) {
+        return;
+    }
     auto pos = this->entity_transform->GetTranslation();
     auto orientation = this->entity_transform->GetOrientation();
     this->motion_state = new btDefaultMotionState(btTransform(

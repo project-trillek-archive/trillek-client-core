@@ -40,7 +40,6 @@ public:
      * \brief Causes an update in the system based on the change in time.
      *
      * Updates the state of the system based off how much time has elapsed since the last update.
-     * \return void
      */
     void RunBatch() const override {};
 
@@ -52,10 +51,8 @@ public:
      * without adding the Shape component.
      * \param const unsigned int entity_id The entity ID the compoennt belongs to.
      * \param std::shared_ptr<ComponentBase> component The component to add.
-     * \return void
      */
     void AddComponent(const unsigned int entity_id, std::shared_ptr<ComponentBase> component);
-
 
     /** \brief Handle incoming events to update data
      *
@@ -65,14 +62,12 @@ public:
      *
      * If event handling need some batch processing, a task list must be
      * prepared and stored temporarily to be retrieved by RunBatch().
-     *
      */
     void HandleEvents(const frame_tp& timepoint) override;
 
     /** \brief Save the data and terminate the system
      *
      * This function is called when the program is closing
-     *
      */
     void Terminate() override;
 
@@ -80,7 +75,6 @@ public:
      *
      * \param unsigned int entity_id The entity ID of the rigid body.
      * \param Force f The rigid body's new force.
-     * \return void
      */
     void SetForce(unsigned int entity_id, const Force f) const;
 
@@ -95,23 +89,20 @@ public:
     /** \brief Remove a rigid body's current linear force.
     *
     * \param const unsigned int entity_id The entity ID of the rigid body.
-     * \return void
     */
     void RemoveForce(const unsigned int entity_id) const ;
 
     /** \brief Remove a rigid body's current torque.
     *
     * \param const unsigned int entity_id The entity ID of the rigid body.
-     * \return void
     */
     void RemoveTorque(const unsigned int entity_id) const;
 
     /** \brief Set a rigid body's gravity.
-    *
-    * \param const unsigned int entity_id The entity ID of the rigid body.
-    * \param const Force* f The rigid body's new gravity (world gravity if nullptr).
-    * \return void
-    */
+     *
+     * \param const unsigned int entity_id The entity ID of the rigid body.
+     * \param const Force* f The rigid body's new gravity (world gravity if nullptr).
+     */
     void SetGravity(const unsigned int entity_id, const Force* f = nullptr);
 
     /** \brief Return a future of the forces

@@ -2,18 +2,20 @@
 #define PROPERTY_HPP
 
 #include <string>
+#include "trillek.hpp"
+#include "type-id.hpp"
 
+namespace trillek {
 /**
-  * \brief A class to contain a generic property.
-  *
-  * This class is used to pass around generic properties.
-  * Properties have a name and a value. The value is stored in
-  * value_holder and is accessed by calling Get() with the
-  * appropriate type.
-  */
+ * \brief A class to contain a generic property.
+ *
+ * This class is used to pass around generic properties.
+ * Properties have a name and a value. The value is
+ * accessed by calling Get() with the appropriate type.
+ */
 class Property {
 private:
-    Property() { }
+    Property() : value_holder(nullptr) { }
 public:
     // Copy
     Property(const Property &other) {
@@ -35,61 +37,81 @@ public:
      * \brief Sets the name and value of the property.
      *
      * \param[in] std::string name The name of the property
-     * \param[in] t value The value of the property. typename is inferred on usage.
+     * \param[in] T value The value of the property.
      */
-    template <typename t>
-    Property(std::string name, t value) : name(name), value_holder(new ValueHolder<t>(value)) { }
+    template <typename T>
+    Property(std::string name, T value) : name(name), value_holder(new ValueHolder<T>(value)) { }
 
     ~Property() { delete this->value_holder; }
 
-    /**
-     * \brief Retrieves the value in value_holder.
-     *
-     * Calls the Get() method of ValueHolder with the given template type.
-     * \returns t The value with the given template type.
-     */
-    template <typename t>
-    t Get() const { return static_cast<ValueHolder<t>*>(this->value_holder)->Get(); }
+    template <typename T>
+    T Get() const { return static_cast<ValueHolder<T>*>(this->value_holder)->Get(); }
 
     /**
-     * \brief Gets the name of this property.
-     *
-     * \returns std::string The name of this property.
+     * \brief Gets the property name.
      */
     std::string GetName() const { return this->name; }
-private:
+
     /**
-      * \brief ValueHolderBase is a common base type that can be used to holder a pointer to a specialized templated version of ValueHolder.
-      *
-      */
+     * \brief Compares the type contents.
+     * \returns true if match
+     */
+    template <class T>
+    bool Is() const {
+        unsigned type_id = GetType();
+        if(type_id && type_id != ~0) {
+            return reflection::GetTypeID<T>() == type_id;
+        }
+        else {
+            return false;
+        }
+    }
+
+    /**
+     * \brief Retrieves the type ID of contents.
+     */
+    unsigned GetType() const {
+        if(this->value_holder == nullptr) {
+            return 0;
+        }
+        return this->value_holder->GetType();
+    }
+
+    std::size_t GetSize() const {
+        if(this->value_holder == nullptr) {
+            return 0;
+        }
+        return this->value_holder->GetSize();
+    }
+private:
     class ValueHolderBase {
     public:
         virtual ~ValueHolderBase() { }
-        /**
-         * \brief Creates a clone of the held object.
-         *
-         * \returns ValueHolderBase* A clone of the held object.
-         */
         virtual ValueHolderBase* Clone() const = 0;
+        virtual unsigned GetType() const { return 0; }
+        virtual std::size_t GetSize() const { return 0; }
     };
-
 
     /**
-      * \brief A generic value holder type.
-      *
-      */
-    template <typename t>
+     * \brief A generic value holder type.
+     */
+    template <typename T>
     class ValueHolder : public ValueHolderBase {
     public:
-        ValueHolder(t value) : value(value) { }
+        ValueHolder(T value) : value(value), type_id(reflection::GetTypeID<T>()) { }
         virtual ValueHolder* Clone() const { return new ValueHolder(value); }
-        t Get() { return this->value; }
+        T Get() { return this->value; }
+        virtual unsigned GetType() const { return type_id; }
+        virtual std::size_t GetSize() const { return sizeof(T); }
     private:
-        t value;
+        unsigned type_id;
+        T value;
     };
 
-    std::string name; // Name of this property.
-    ValueHolderBase* value_holder; // The value held by this property.
+    std::string name;
+    ValueHolderBase* value_holder;
 };
+
+} // namespace trillek
 
 #endif

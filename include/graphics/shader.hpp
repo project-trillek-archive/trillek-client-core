@@ -1,61 +1,100 @@
-//A simple class for handling GLSL shader compilation
-//Auhtor: Movania Muhammad Mobeen
-// Original: February 2, 2011
-
 #ifndef SHADER_HPP_INCLUDED
 #define SHADER_HPP_INCLUDED
 
 #include "opengl.hpp"
-
+#include "type-id.hpp"
 #include <map>
 #include <string>
+#include <vector>
+#include <atomic>
 #include "systems/resource-system.hpp"
+#include "graphics-base.hpp"
 
 namespace trillek {
 namespace graphics {
 
-class Shader : public resource::ResourceBase {
+enum ShaderType : GLenum {
+    VERTEX_SHADER = GL_VERTEX_SHADER,
+    FRAGMENT_SHADER = GL_FRAGMENT_SHADER,
+    GEOMETRY_SHADER = GL_GEOMETRY_SHADER,
+    TESS_CONTROL_SHADER = GL_TESS_CONTROL_SHADER,
+    TESS_EVAL_SHADER = GL_TESS_EVALUATION_SHADER,
+    COMPUTE_SHADER = GL_COMPUTE_SHADER
+};
+
+enum class ShaderOutputType {
+    DEFAULT_TARGETS
+};
+
+class Shader : public GraphicsBase {
 public:
-    Shader(void);
-    ~Shader(void);
+    Shader();
+    virtual ~Shader();
 
-    virtual bool Initialize(const std::vector<Property> &properties);
+    virtual bool SystemStart(const std::list<Property> &);
+    virtual bool SystemReset(const std::list<Property> &);
 
-    void LoadFromString(GLenum whichShader, const std::string source);
-    void LoadFromFile(GLenum whichShader, const std::string filename);
-    void CreateAndLinkProgram();
+    /**
+     * \brief parse a shader from json
+     * \param[in] const std::string& shader_name the name of the new shader
+     * \param[in] rapidjson::Value& node The node to parse.
+     * \return false on errors, true for success
+     */
+    virtual bool Parse(const std::string &shader_name, const rapidjson::Value& node);
+
+    /**
+     * \brief Serialize this shader to the provided JSON node.
+     *
+     * \param[in] rapidjson::Document& document The document to serialize to.
+     * \return bool False if an error occured in serializing.
+     */
+    virtual bool Serialize(rapidjson::Document& document);
+
+    bool ParseDefines(std::string &defstring, const rapidjson::Value& node);
+    void LoadFromString(ShaderType whichShader, const std::string & source);
+    void LoadFromStrings(ShaderType whichShader, const std::vector<std::string> & source);
+    void LoadFromFile(ShaderType whichShader, const std::string & filename);
+    void SetOutputBinding(ShaderOutputType);
+
+    /**
+     * \brief Link the program from loaded shader source
+     * \return false on link errors, true for success
+     */
+    bool LinkProgram();
     void Use();
     void UnUse();
-    void AddAttribute(const std::string attribute);
-    void AddUniform(const std::string uniform);
-    GLuint GetProgram() const;
+    GLuint GetProgram();
 
     // ISSUE: This is a bit questionable as it violates the principle of least surprise
     //An indexer that returns the location of the attribute/uniform
-    GLuint operator[](const std::string attribute);
-    GLuint operator()(const std::string uniform);
+    GLint operator[](const std::string & attribute);
+    GLint operator()(const std::string & uniform);
+
+    GLint Attribute(const std::string & attribute);
+    GLint Uniform(const std::string & uniform);
 
     //Program deletion
-    void DeleteProgram() { glDeleteProgram(_program); _program = -1; }
-    bool isLoaded() { return _program != 0; }
-    enum ShaderType { VERTEX_SHADER = GL_VERTEX_SHADER, FRAGMENT_SHADER = GL_FRAGMENT_SHADER, GEOMETRY_SHADER };
+    void DeleteProgram();
+    bool isLoaded() { return program != 0; }
+
+    static void InitializeTypes();
 private:
-    enum ShaderIndex { VERTEX_SHADER_INDEX, FRAGMENT_SHADER_INDEX, GEOMETRY_SHADER_INDEX };
-    GLuint _program;
-    int _totalShaders;
-    GLuint _shaders[3];//0->vertexshader, 1->fragmentshader, 2->geometryshader
-    std::map<std::string, GLuint> _attributeList;
-    std::map<std::string, GLuint> _uniformLocationList;
+    GLuint program;
+    std::vector<GLuint> shaders;
+    std::vector<std::pair<std::string, GLuint>> output_bindings;
+    std::map<std::string, GLint> attributes_list;
+    std::map<std::string, GLint> uniforms_list;
+
+    static std::once_flag types_once;
+    static std::map<std::string, ShaderType> shaderclass;
 };
 
-} // End of resource
+} // End of graphics
 
 namespace reflection {
+TRILLEK_MAKE_IDTYPE_NAME(graphics::Shader, "shaders", 401)
+} // namespace reflection
 
-template <> inline const char* GetTypeName<graphics::Shader>() { return "Shader"; }
-template <> inline const unsigned int GetTypeID<graphics::Shader>() { return 1002; }
-
-} // End of reflection
 } // End of trillek
 
 #endif

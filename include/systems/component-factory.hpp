@@ -8,24 +8,11 @@
 #include <vector>
 #include "property.hpp"
 #include "trillek.hpp"
+#include "component.hpp"
 #include "systems/system-base.hpp"
 #include "util/json-parser.hpp"
 
 namespace trillek {
-
-class ComponentBase {
-public:
-    ComponentBase() { }
-    ~ComponentBase() { }
-
-    /**
-    * \brief Returns a component with the specified name.
-    *
-    * \param[in] const std::vector<Property> &properties The creation properties for the component.
-    * \return bool True if initialization finished with no errors.
-    */
-    virtual bool Initialize(const std::vector<Property> &properties) = 0;
-};
 
 // Singleton approach derived from http://silviuardelean.ro/2012/06/05/few-singleton-approaches/ .
 class ComponentFactory : public util::Parser {
@@ -65,10 +52,10 @@ public:
     ~ComponentFactory() { }
 
     /**
-    * \brief Register a type to be available for factory calls.
-    *
-    * \return void
-    */
+     * \brief Register a type to be available for factory calls.
+     *
+     * \return void
+     */
     template<class T>
     static void RegisterComponentType() {
         // Store the type ID associated with the type name.
@@ -80,7 +67,7 @@ public:
             auto comp = instance->Create<T>(entity_id, properties);
 
             unsigned int type_id = reflection::GetTypeID<T>();
-            if (instance->systems.find(type_id) != instance->systems.end()) {
+            if (comp && (instance->systems.find(type_id) != instance->systems.end())) {
                 instance->systems.at(type_id)->AddComponent(entity_id, comp);
             }
 
@@ -91,22 +78,22 @@ public:
     }
 
     /**
-    * \brief Register a system to be available for component registration.
-    *
-    * \param[in] SystemBase* system The system to add for the tempalte's type ID.
-    * \return void
-    */
+     * \brief Register a system to be available for component registration.
+     *
+     * \param[in] SystemBase* system The system to add for the template's type ID.
+     * \return void
+     */
     template<class T>
     static void RegisterSystem(SystemBase* system) {
         instance->systems[reflection::GetTypeID<T>()] = system;
     }
 
     /**
-    * \brief Returns a type ID associated with the given name.
-    *
-    * \param[in] const std::string & type_Name The name to look for a type ID.
-    * \return unsigned int Returns 0 if the name doesn't exist.
-    */
+     * \brief Returns a type ID associated with the given name.
+     *
+     * \param[in] const std::string & type_Name The name to look for a type ID.
+     * \return unsigned int Returns 0 if the name doesn't exist.
+     */
     static unsigned int GetTypeIDFromName(const std::string& type_Name) {
         if (component_type_id.find(type_Name) == component_type_id.end()) {
             return 0;
@@ -115,12 +102,12 @@ public:
     }
 
     /**
-    * \brief Gets a component for the given entity ID.
-    *
-    * The type of component to retrieve is determined by the tempalte's type ID.
-    * \param[in] const std::string& name Name of the component to retrieve.
-    * \return std::shared_ptr<T> Returns nullptr if the component hasn't been created yet, otherwise the requested component..
-    */
+     * \brief Gets a component for the given entity ID.
+     *
+     * The type of component to retrieve is determined by the template's type ID.
+     * \param[in] const std::string& name Name of the component to retrieve.
+     * \return std::shared_ptr<T> Returns nullptr if the component hasn't been created yet, otherwise the requested component..
+     */
     template<class T>
     static std::shared_ptr<T> Get(const unsigned int entity_id) {
         unsigned int type_id = reflection::GetTypeID<T>();
@@ -131,16 +118,16 @@ public:
     }
 
     /**
-    * \brief Used to create a component at runtime when type information isn't available, but the type ID is.
-    *
-    * This also differs with the compile time version in that it can't return the created component, but it can
-    * only return wether it was created successfully or not. This is because you can't template the retrun value
-    * if you don't have the type information.
-    * \param[in] const unsigned int type_id The ID of the type of component to create. This is used to select the correct factory.
-    * \param[in] const std::string & name What the created component will be named.
-    * \param[in] const std::vector<Property> & properties The creation properties for the component.
-    * \return bool True if the component loaded successfully. Get must be used, later, where the type information is known to retrieve the component if it was loaded correctly.
-    */
+     * \brief Used to create a component at runtime when type information isn't available, but the type ID is.
+     *
+     * This also differs with the compile time version in that it can't return the created component, but it can
+     * only return wether it was created successfully or not. This is because you can't template the retrun value
+     * if you don't have the type information.
+     * \param[in] const unsigned int type_id The ID of the type of component to create. This is used to select the correct factory.
+     * \param[in] const std::string & name What the created component will be named.
+     * \param[in] const std::vector<Property> & properties The creation properties for the component.
+     * \return bool True if the component loaded successfully. Get must be used, later, where the type information is known to retrieve the component if it was loaded correctly.
+     */
     static bool Create(const unsigned int type_id, const unsigned int entity_id, const std::vector<Property> &properties) {
         if (instance->factories.find(type_id) != instance->factories.end()) {
             return instance->factories[type_id](entity_id, properties) != nullptr;
@@ -149,32 +136,35 @@ public:
     }
 
     /**
-    * \brief Creates a component with the given name and initializes it. This is used at compile time when type information is known.
-    *
-    * \param[in] const std::string & name The name of the component to create.
-    * \param[in] const std::vector<Property> & properties The creation properties for the component.
-    * \return std::shared_ptr<T> Returns nullptr if it failed to be created, otherwise the created component.
-    */
+     * \brief Creates a component with the given name and initializes it. This is used at compile time when type information is known.
+     *
+     * \param[in] const std::string & name The name of the component to create.
+     * \param[in] const std::vector<Property> & properties The creation properties for the component.
+     * \return std::shared_ptr<T> Returns nullptr if it failed to be created, otherwise the created component.
+     */
     template<class T>
     static std::shared_ptr<T> Create(const unsigned int entity_id, const std::vector<Property> &properties) {
         unsigned int type_id = reflection::GetTypeID<T>();
         if (instance->components[type_id].find(entity_id) == instance->components[type_id].end()) {
-            instance->components[type_id][entity_id] = std::make_shared<T>();
-            if (!instance->components[type_id][entity_id]->Initialize(properties)) {
+            auto sharedcomp = std::make_shared<T>();
+            sharedcomp->component_type_id = type_id;
+            if (!sharedcomp->Initialize(properties)) {
                 instance->components[type_id].erase(entity_id);
                 return nullptr;
             }
+            instance->components[type_id][entity_id] = sharedcomp;
+            return sharedcomp;
         }
         return std::static_pointer_cast<T>(instance->components[type_id][entity_id]);
     }
 
     /**
-    * \brief Adds a component to be managed by the system.
-    *
-    * \param[in] const std::string & name The name of the component.
-    * \param[in] std::shared_ptr<T> r The component to add.
-    * \return void
-    */
+     * \brief Adds a component to be managed by the system.
+     *
+     * \param[in] const std::string & name The name of the component.
+     * \param[in] std::shared_ptr<T> r The component to add.
+     * \return void
+     */
     template<class T>
     static void Add(const unsigned int entity_id, std::shared_ptr<T> r) {
         unsigned int type_id = reflection::GetTypeID<T>();
@@ -182,14 +172,14 @@ public:
     }
 
     /**
-    * \brief Removes a components managed by the system.
-    *
-    * This doesn't invalidate any strong references to the component as it doesn't destroy the component.
-    * Any weak references to the component should be checked to make sure they are valid and haven't been
-    * removed.
-    * \param[in] const std::string & name Name of the component to remove.
-    * \return void
-    */
+     * \brief Removes a components managed by the system.
+     *
+     * This doesn't invalidate any strong references to the component as it doesn't destroy the component.
+     * Any weak references to the component should be checked to make sure they are valid and haven't been
+     * removed.
+     * \param[in] const std::string & name Name of the component to remove.
+     * \return void
+     */
     static void Remove(const unsigned int entity_id) {
         for (const auto& list : instance->components) {
             if (list.second.find(entity_id) != list.second.end()) {
@@ -200,11 +190,11 @@ public:
     }
 
     /**
-    * \brief Checks if a component exists with the given name.
-    *
-    * \param[in] const std::string& name Name of the component to check if it exists.
-    * \return bool True if the component exists.
-    */
+     * \brief Checks if a component exists with the given name.
+     *
+     * \param[in] const std::string& name Name of the component to check if it exists.
+     * \return bool True if the component exists.
+     */
     static bool Exists(const unsigned int entity_id) {
         for (const auto& list : instance->components) {
             if (list.second.find(entity_id) != list.second.end()) {
@@ -215,14 +205,14 @@ public:
     }
 
     /**
-    * \brief Registers all component types as defined in the function body.
-    *
-    * This function is defined in a separate source file to reduce compile times.
-    * This function is coupled to each component type, and all component types
-    * known at compile time should be registered via the function body.
-    * Interally it just calls the tempalte method Register().
-    * \return void
-    */
+     * \brief Registers all component types as defined in the function body.
+     *
+     * This function is defined in a separate source file to reduce compile times.
+     * This function is coupled to each component type, and all component types
+     * known at compile time should be registered via the function body.
+     * Interally it just calls the tempalte method Register().
+     * \return void
+     */
     static void RegisterTypes();
 
     // Inherited from Parse

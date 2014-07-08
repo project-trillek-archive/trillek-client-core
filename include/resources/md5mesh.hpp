@@ -9,7 +9,7 @@
 
 #include "resources/mesh.hpp"
 
-namespace trillek { 
+namespace trillek {
 namespace resource {
 
 class MD5Mesh : public Mesh {
@@ -24,10 +24,10 @@ public:
         Joint() : name(""), parent(-1), position(0.0f, 0.0f, 0.0f) { }
 
         /**
-        * \brief Compute the joint's quaternion W component.
-        *
-        * \return void
-        */
+         * \brief Compute the joint's quaternion W component.
+         *
+         * \return void
+         */
         void ComputeW();
 
         std::string name; // The name of the joint
@@ -70,55 +70,55 @@ public:
     };
 
     /**
-    * \brief Returns a resource with the specified name.
-    *
-    * The only used initialization property is "filename".
-    * \param[in] const std::vector<Property>& properties The creation properties for the resource.
-    * \return bool True if initialization finished with no errors.
-    */
+     * \brief Returns a resource with the specified name.
+     *
+     * The only used initialization property is "filename".
+     * \param[in] const std::vector<Property>& properties The creation properties for the resource.
+     * \return bool True if initialization finished with no errors.
+     */
     virtual bool Initialize(const std::vector<Property>& properties);
 
     /**
-    * \brief Loads the MD5Mesh file from disk and parses it.
-    *
-    * \return bool If the mesh was valid and loaded correctly.
-    */
+     * \brief Loads the MD5Mesh file from disk and parses it.
+     *
+     * \return bool If the mesh was valid and loaded correctly.
+     */
     bool Parse();
 
     /**
-    * \brief Calculates the final vertex positions based on the bind-pose skeleton.
-    *
-    * There isn't a return as the processing will just do nothing if the
-    * parse data was default objects.
-    * \return void
-    */
+     * \brief Calculates the final vertex positions based on the bind-pose skeleton.
+     *
+     * There isn't a return as the processing will just do nothing if the
+     * parse data was default objects.
+     * \return void
+     */
     void CalculateVertexPositions();
 
     /**
-    * \brief Calculates the vertex normals based on the bind-pose skeleton and mesh tris.
-    *
-    * There isn't a return as the processing will just do nothing if the
-    * parse data was default objects.
-    * \return void
-    */
+     * \brief Calculates the vertex normals based on the bind-pose skeleton and mesh tris.
+     *
+     * There isn't a return as the processing will just do nothing if the
+     * parse data was default objects.
+     * \return void
+     */
     void CalculateVertexNormals();
 
     /**
-    * \brief Updates the meshgroups index list based from the loaded mesh groups.
-    *
-    * There isn't a return as the processing will just do nothing if the
-    * parse data was default objects.
-    * \return void
-    */
+     * \brief Updates the meshgroups index list based from the loaded mesh groups.
+     *
+     * There isn't a return as the processing will just do nothing if the
+     * parse data was default objects.
+     * \return void
+     */
     void UpdateIndexList();
 
     /**
-    * \brief Sets the mesh filename.
-    *
-    * This is just a shorthand function that can be called directly via script API.
-    * \param[in] const std::string& fname The mesh filename.
-    * \return bool True if initialization finished with no errors.
-    */
+     * \brief Sets the mesh filename.
+     *
+     * This is just a shorthand function that can be called directly via script API.
+     * \param[in] const std::string& fname The mesh filename.
+     * \return bool True if initialization finished with no errors.
+     */
     void SetFileName(const std::string& fname) {
         this->fname = fname;
     }
@@ -136,7 +136,7 @@ private:
 namespace reflection {
 
 template <> inline const char* GetTypeName<resource::MD5Mesh>() { return "MD5Mesh"; }
-template <> inline const unsigned int GetTypeID<resource::MD5Mesh>() { return 1000; }
+template <> inline const unsigned int GetTypeID<resource::MD5Mesh>() { return 1001; }
 
 } // End of reflection
 } // End of trillek

@@ -1,10 +1,14 @@
-#include "graphics/renderable.hpp"
-#include "graphics/shader.hpp"
-#include "graphics/texture.hpp"
-#include "graphics/animation.hpp"
+#include "systems/resource-system.hpp"
+#include "systems/graphics.hpp"
+#include "trillek-game.hpp"
+
 #include "resources/mesh.hpp"
 #include "resources/md5anim.hpp"
-#include "systems/resource-system.hpp"
+
+#include "graphics/renderable.hpp"
+#include "graphics/texture.hpp"
+#include "graphics/shader.hpp"
+#include "graphics/animation.hpp"
 
 namespace trillek {
 namespace graphics {
@@ -13,6 +17,7 @@ Renderable::Renderable() { }
 Renderable::~Renderable() { }
 
 void Renderable::UpdateBufferGroups() {
+    CheckGLError();
     // Check if the mesh is valid and assign an empty one if it isn't.
     if (!this->mesh) {
         return;
@@ -28,24 +33,26 @@ void Renderable::UpdateBufferGroups() {
             glGenVertexArrays(1, &buffer_group->vao); // Generate the VAO
             glGenBuffers(1, &buffer_group->vbo); 	// Generate the vertex buffer.
             glGenBuffers(1, &buffer_group->ibo); // Generate the element buffer.
+            CheckGLError();
             this->buffer_groups.push_back(buffer_group);
         }
 
         std::weak_ptr<resource::MeshGroup> mesh_group = this->mesh->GetMeshGroup(i);
         glBindVertexArray(buffer_group->vao); // Bind the VAO
+        CheckGLError();
 
         auto temp_meshgroup = mesh_group.lock();
 
         // TODO: Loop through all the texture names in the mesh group and add the textures to the material.
         for (std::string texture_name : temp_meshgroup->textures) {
-            std::shared_ptr<Texture> texture = resource::ResourceMap::Get<Texture>(texture_name);
+            std::shared_ptr<Texture> texture = TrillekGame::GetGraphicSystem().Get<Texture>(texture_name);
             if (!texture) {
                 std::vector<Property> props;
                 props.push_back(Property("filename", texture_name));
                 auto pixel_data = resource::ResourceMap::Create<resource::PixelBuffer>(texture_name, props);
                 if (pixel_data) {
                     texture = std::make_shared<Texture>(*pixel_data.get());
-                    resource::ResourceMap::Add<Texture>(texture_name, texture);
+                    TrillekGame::GetGraphicSystem().Add(texture_name, texture);
                 }
             }
 
@@ -58,8 +65,10 @@ void Renderable::UpdateBufferGroups() {
             if (temp_meshgroup->verts.size() > 0) {
 
                 glBindBuffer(GL_ARRAY_BUFFER, buffer_group->vbo); // Bind the vertex buffer.
+                CheckGLError();
                 glBufferData(GL_ARRAY_BUFFER, sizeof(resource::VertexData) * temp_meshgroup->verts.size(),
                     &temp_meshgroup->verts[0], GL_STATIC_DRAW); // Stores the verts in the vertex buffer.
+                CheckGLError();
 
                 GLuint shader_program = 0;
                 if (this->shader) {
@@ -95,6 +104,8 @@ void Renderable::UpdateBufferGroups() {
                 glVertexAttribPointer(boneWeightLocation, 4, GL_FLOAT, GL_FALSE, sizeof(resource::VertexData),
                     (GLvoid*)offsetof(resource::VertexData, bone_weights)); // Tell the VAO the vertex data will be stored at the location we just found.
                 glEnableVertexAttribArray(boneWeightLocation); // Enable the VAO line for vertex data.
+
+                glGetError(); // clear errors
             }
 
             if (temp_meshgroup->indicies.size() > 0) {
@@ -105,7 +116,7 @@ void Renderable::UpdateBufferGroups() {
             }
         }
 
-        glBindVertexArray(0); // Reset the buffer binding because we are good programmers.
+        glBindVertexArray(0); CheckGLError(); // Reset the buffer binding because we are good programmers.
 
     }
 }
@@ -156,7 +167,7 @@ bool Renderable::Initialize(const std::vector<Property> &properties) {
         return false;
     }
 
-    this->shader = resource::ResourceMap::Get<graphics::Shader>(shader_name);
+    this->shader = TrillekGame::GetGraphicSystem().Get<graphics::Shader>(shader_name);
     if (!this->shader) {
         return false;
     }

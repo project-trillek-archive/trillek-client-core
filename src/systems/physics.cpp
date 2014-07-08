@@ -24,7 +24,6 @@ void PhysicsSystem::Start() {
 }
 
 void PhysicsSystem::AddComponent(const unsigned int entity_id, std::shared_ptr<ComponentBase> component) {
-    // Do a static_pointer_cast to make sure we do have a Renderable component.
     std::shared_ptr<Collidable> shape = std::dynamic_pointer_cast<Collidable>(component);
     if (!shape) {
         return;

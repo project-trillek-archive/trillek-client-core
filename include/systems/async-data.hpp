@@ -60,6 +60,8 @@ public:
      */
     void Unpublish(frame_tp frame) {
         std::unique_lock<std::mutex> locker(m_current);
+        // delete the future
+        current_future = std::shared_future<std::shared_ptr<const T>>();
         // set the promise
         current_promise = std::promise<std::shared_ptr<const T>>();
         current_future = current_promise.get_future().share();

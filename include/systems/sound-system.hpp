@@ -27,62 +27,42 @@ public:
     ~Sound();
 
     /** \brief Start Sound
-     *
-     * \return void
-     *
      */
     void Play();
 
     /** \brief Pause Sound
-     *
-     * \return void
-     *
      */
     void Pause();
 
     /** \brief Resumes Sound
-     *
-     * \return void
-     *
      */
     void Resume();
 
     /** \brief Stops Sound
-     *
-     * \return void
-     *
      */
     void Stop();
 
     /** \brief Set sound position
      *
      * \param position glm::vec3
-     * \return void
-     *
      */
     void SetPosition(glm::vec3 position);
 
     /** \brief Set sound velocity
      *
      * \param velocity glm::vec3
-     * \return void
-     *
      */
     void SetVelocity(glm::vec3 velocity);
 
     /** \brief Set sound direction
      *
      * \param direction glm::vec3
-     * \return void
-     *
      */
     void SetDirection(glm::vec3 direction);
 
     /** \brief outer angle of sound cone
      *
      * \param angle float
-     * \return void
-     *
      */
     void SetOuterConeAngle(float angle);
 
@@ -130,23 +110,18 @@ public:
      *
      * \param id const std::string&
      * \return std::shared_ptr<Sound>
-     *
      */
     std::shared_ptr<Sound> GetSound(const std::string& id);
 
     /** \brief set the position manualy if no transform is set in the system
      *
      * \param position const glm::vec3&
-     * \return void
-     *
      */
     void SetListenerPosition(const glm::vec3& position);
 
     /** \brief Sets the velocity of the sound listener
      *
      * \param velocity glm::vec3
-     * \return void
-     *
      */
     void SetListenerVelocity(const glm::vec3& velocity);
 
@@ -154,8 +129,6 @@ public:
      *
      * \param at glm::vec3
      * \param up glm::vec3
-     * \return void
-     *
      */
     void SetListenerOrientation(const glm::vec3& at, const glm::vec3& up);
 

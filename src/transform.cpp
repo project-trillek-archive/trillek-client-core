@@ -45,12 +45,12 @@ void Transform::SetTranslation(const glm::vec3 new_translation) {
     this->translation = new_translation;
 }
 
-void Transform::SetRotation(const glm::vec3 new_rotaiton) {
-    this->rotation = new_rotaiton;
+void Transform::SetRotation(const glm::vec3 new_rotation) {
+    this->rotation = new_rotation;
 
-    glm::quat qX = glm::angleAxis(new_rotaiton.x, RIGHT_VECTOR);
-    glm::quat qY = glm::angleAxis(new_rotaiton.y, UP_VECTOR);
-    glm::quat qZ = glm::angleAxis(new_rotaiton.z, FORWARD_VECTOR);
+    glm::quat qX = glm::angleAxis(new_rotation.x, RIGHT_VECTOR);
+    glm::quat qY = glm::angleAxis(new_rotation.y, UP_VECTOR);
+    glm::quat qZ = glm::angleAxis(new_rotation.z, FORWARD_VECTOR);
     glm::quat change = qX * qY * qZ;
 
     this->orientation = glm::normalize(change);

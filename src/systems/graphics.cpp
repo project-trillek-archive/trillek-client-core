@@ -1,41 +1,278 @@
-#include "trillek-game.hpp"
 #include "transform.hpp"
+#include "type-id.hpp"
 #include "systems/graphics.hpp"
 #include "systems/resource-system.hpp"
 #include "systems/transform-system.hpp"
-
+#include "resources/text-file.hpp"
+#include "resources/md5mesh.hpp"
 #include "resources/mesh.hpp"
 #include "graphics/shader.hpp"
 #include "graphics/material.hpp"
 #include "graphics/renderable.hpp"
 #include "graphics/six-dof-camera.hpp"
 #include "graphics/animation.hpp"
+#include "graphics/light.hpp"
+#include "graphics/render-list.hpp"
 
 namespace trillek {
 namespace graphics {
+
+RenderSystem::RenderSystem() : Parser("graphics") {
+    multisample = false;
+    this->frame_drop = false;
+    Shader::InitializeTypes();
+}
 
 const int* RenderSystem::Start(const unsigned int width, const unsigned int height) {
     // Use the GL3 way to get the version number
     glGetIntegerv(GL_MAJOR_VERSION, &this->gl_version[0]);
     glGetIntegerv(GL_MINOR_VERSION, &this->gl_version[1]);
+    //glGetIntegerv(GL_SHADING_LANGUAGE_VERSION, &this->gl_version[3]);
+    CheckGLError();
+    int opengl_version = gl_version[0] * 100 + gl_version[1] * 10;
 
-    // Sanity check to make sure we are at least in a good major version number.
-    assert((this->gl_version[0] > 1) && (this->gl_version[0] < 5));
+    if(opengl_version < 300) {
+        std::cerr << "[FATAL-GRAPHICS] OpenGL version (" << opengl_version << ") less than required minimum (300)\n";
+        assert(opengl_version >= 300);
+    }
+    if(opengl_version < 330) {
+        std::cerr << "[WARNING-GRAPHICS] OpenGL version (" << opengl_version << ") less than recommended (330)\n";
+    }
 
     SetViewportSize(width, height);
 
-    // Activate the camera and get the initial view matrix.
-    // TODO: Make camera into a component that is added to an entity.
-    this->camera = std::make_shared<SixDOFCamera>();
+    // Activate the lowest ID or first camera and get the initial view matrix.
+    id_t cam_idnum = 0;
+    std::weak_ptr<CameraBase> cam_ptr;
+    auto cam_itr = cameras.begin();
+    if(cam_itr != cameras.end()) {
+        cam_idnum = cam_itr->first;
+        cam_ptr = cam_itr->second;
+        for(cam_itr++ ; cam_itr != cameras.end(); cam_itr++) {
+            if(cam_itr->first < cam_idnum) {
+                cam_idnum = cam_itr->first;
+                cam_ptr = cam_itr->second;
+            }
+        }
+        this->camera_id = cam_idnum;
+        this->camera = cam_ptr.lock(); // get the ptr to it
+    }
+    else {
+        // make one if none found
+        this->camera_id = 0;
+        this->camera = std::make_shared<SixDOFCamera>();
+    }
     if (this->camera) {
-        this->camera->Activate(0);
-        this->view_matrix = this->camera->GetViewMatrix();
+        this->camera->Activate(cam_idnum);
+        this->vp_center.view_matrix = this->camera->GetViewMatrix();
     }
 
-    // App specific global gl settings
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    glEnable(GL_DEPTH_TEST);
+    float quaddata[] = {
+        -1,  1, 0, 1,
+         1,  1, 1, 1,
+        -1, -1, 0, 0,
+         1, -1, 1, 0
+    };
+    uint16_t quadindicies[] = { 0, 2, 1, 1, 2, 3 };
+    const unsigned QUADVERTSIZE = sizeof(float) * 4;
+    glGenVertexArrays(1, &screenquad.vao); // Generate the VAO
+    glGenBuffers(1, &screenquad.vbo); // Generate the vertex buffer.
+    glGenBuffers(1, &screenquad.ibo); // Generate the element buffer.
+
+    glBindVertexArray(screenquad.vao); CheckGLError(); // Bind the VAO
+
+    glBindBuffer(GL_ARRAY_BUFFER, screenquad.vbo); CheckGLError(); // Bind the vertex buffer.
+
+    // Store the verts in the buffer.
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quaddata), quaddata, GL_STATIC_DRAW); CheckGLError();
+
+    // Set the layout for the shaders
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, QUADVERTSIZE, (GLvoid*)0);
+    glEnableVertexAttribArray(0); CheckGLError();
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, screenquad.ibo); // Bind the element buffer.
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(quadindicies), quadindicies, GL_STATIC_DRAW);
+    CheckGLError();
+
+    glBindVertexArray(0); CheckGLError(); // unbind VAO when done
+
+    std::list<Property> settings;
+    settings.push_back(Property("version", opengl_version));
+    settings.push_back(Property("screen-width", width));
+    settings.push_back(Property("screen-height", height));
+    settings.push_back(Property("multisample", this->multisample));
+    settings.push_back(Property("samples", (int)8));
+
+    for(unsigned int p = 0; p < 3; p++) {
+        for(auto& ginstance : this->graphics_instances) {
+            for(auto& gobject : ginstance.second) {
+                if(gobject.second && gobject.second->initialize_priority == p) {
+                    gobject.second->SystemStart(settings);
+                }
+            }
+        }
+    }
     return this->gl_version;
+}
+
+bool RenderSystem::Serialize(rapidjson::Document& document) {
+    rapidjson::Value resource_node(rapidjson::kObjectType);
+
+    document.AddMember("graphics", resource_node, document.GetAllocator());
+    return true;
+}
+
+bool RenderSystem::Parse(rapidjson::Value& node) {
+    if(node.IsObject()) {
+        // Iterate over types.
+        for(auto type_itr = node.MemberBegin(); type_itr != node.MemberEnd(); ++type_itr) {
+            std::string section_type(type_itr->name.GetString(), type_itr->name.GetStringLength());
+
+            auto typefunc = parser_functions.find(section_type);
+            if(typefunc != parser_functions.end()) {
+                if(!typefunc->second(type_itr->value)) {
+                    // TODO use logger
+                    std::cerr << "[ERROR] Graphics parsing failed\n";
+                    return false;
+                }
+            }
+            else {
+                // TODO use logger
+                std::cerr << "[INFO] RenderSystem::Parse - skipping \"" << section_type << "\" section\n";
+            }
+        }
+        return true;
+    }
+    return false;
+}
+
+void RenderSystem::RegisterListResolvers() {
+    std::map<std::string, GLuint> fbo_copytype_map;
+    fbo_copytype_map["all"] = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT;
+    fbo_copytype_map["color"] = GL_COLOR_BUFFER_BIT;
+    fbo_copytype_map["colour"] = GL_COLOR_BUFFER_BIT; // just because
+    fbo_copytype_map["depth"] = GL_DEPTH_BUFFER_BIT;
+    fbo_copytype_map["stencil"] = GL_STENCIL_BUFFER_BIT;
+    fbo_copytype_map["depth-stencil"] = GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT;
+
+    const RenderSystem& rensys = *this;
+    list_resolvers[RenderCmd::CLEAR_SCREEN] = [&rensys] (RenderCommandItem &rlist) -> bool {
+        return true;
+    };
+    list_resolvers[RenderCmd::MODULE_CMD] = [&rensys] (RenderCommandItem &rlist) -> bool {
+        return true;
+    };
+    list_resolvers[RenderCmd::SCRIPT] = [&rensys] (RenderCommandItem &rlist) -> bool {
+        return true;
+    };
+    list_resolvers[RenderCmd::RENDER] = [&rensys] (RenderCommandItem &rlist) -> bool {
+        if(rlist.cmdvalue.Is<std::string>()) {
+            const std::string &rentype = rlist.cmdvalue.Get<std::string>();
+            if(rentype == "all-geometry") {
+                rlist.run_values.push_back(Container((long)0));
+            }
+            else if(rentype == "depth-geometry") {
+                rlist.run_values.push_back(Container((long)1));
+            }
+            else if(rentype == "lighting") {
+                rlist.run_values.push_back(Container((long)2));
+            }
+            else if(rentype == "post") {
+                rlist.run_values.push_back(Container((long)3));
+            }
+            else {
+                // TODO use logger
+                std::cerr << "[ERROR-GRAPHICS] Invalid render method\n";
+                return false;
+            }
+        }
+        else {
+            return false;
+        }
+        return true;
+    };
+    list_resolvers[RenderCmd::SET_PARAM] = [&rensys] (RenderCommandItem &rlist) -> bool {
+        return true;
+    };
+    auto layerresolver = [&rensys] (RenderCommandItem &rlist) -> bool {
+        if(rlist.cmdvalue.IsEmpty()) {
+            rlist.run_values.push_back(Container(false));
+        }
+        else if(rlist.cmdvalue.Is<std::string>()) {
+            rlist.run_values.push_back(Container(true));
+            auto layerptr = rensys.Get<RenderLayer>(rlist.cmdvalue.Get<std::string>());
+            if(!layerptr) {
+                // TODO use logger
+                std::cerr << "[ERROR-GRAPHICS] Layer not found: " << rlist.cmdvalue.Get<std::string>() << '\n';
+                return false;
+            }
+            rlist.run_values.push_back(Container(layerptr));
+        }
+        return true;
+    };
+    list_resolvers[RenderCmd::READ_LAYER] = layerresolver;
+    list_resolvers[RenderCmd::WRITE_LAYER] = layerresolver;
+    list_resolvers[RenderCmd::SET_RENDER_LAYER] = layerresolver;
+    list_resolvers[RenderCmd::BIND_LAYER_TEXTURES] = layerresolver;
+    list_resolvers[RenderCmd::COPY_LAYER] = [fbo_copytype_map, &rensys] (RenderCommandItem &rlist) -> bool {
+        if(rlist.cmdvalue.IsEmpty()) {
+            rlist.run_values.push_back(Container(false));
+        }
+        else if(rlist.cmdvalue.Is<std::string>()) {
+            rlist.run_values.push_back(Container(true));
+            auto layerptr = rensys.Get<RenderLayer>(rlist.cmdvalue.Get<std::string>());
+            if(!layerptr) {
+                // TODO use logger
+                std::cerr << "[ERROR-GRAPHICS] Layer not found: " << rlist.cmdvalue.Get<std::string>() << '\n';
+                return false;
+            }
+            rlist.run_values.push_back(Container(layerptr));
+        }
+        std::shared_ptr<RenderLayer> target;
+        GLuint copytypebits = 0;
+        for(auto& prop : rlist.load_properties) {
+            if(prop.GetName() == "type") {
+                if(prop.Is<std::string>()) {
+                    const std::string& typestring = prop.Get<std::string>();
+                    auto fboct = fbo_copytype_map.find(typestring);
+                    if(fboct != fbo_copytype_map.end()) {
+                        copytypebits |= fboct->second;
+                    }
+                    else {
+                        return false;
+                    }
+                }
+                else {
+                    return false;
+                }
+            }
+            else if(prop.GetName() == "to") {
+                if(prop.Is<std::string>()) {
+                    target = rensys.Get<RenderLayer>(prop.Get<std::string>());
+                    if(!target) {
+                        // TODO use logger
+                        std::cerr << "[ERROR-GRAPHICS] Layer not found: " << prop.Get<std::string>() << '\n';
+                        return false;
+                    }
+                }
+            }
+        }
+        if(!target) {
+            rlist.run_values.push_back(Container(false));
+        }
+        else {
+            rlist.run_values.push_back(Container(true));
+            rlist.run_values.push_back(Container(target));
+        }
+        rlist.run_values.push_back(Container(copytypebits));
+        return true;
+    };
+    list_resolvers[RenderCmd::BIND_TEXTURE] = [&rensys] (RenderCommandItem &rlist) -> bool {
+        return true;
+    };
+    list_resolvers[RenderCmd::BIND_SHADER] = [&rensys] (RenderCommandItem &rlist) -> bool {
+        return true;
+    };
 }
 
 void RenderSystem::ThreadInit() {
@@ -43,17 +280,196 @@ void RenderSystem::ThreadInit() {
 }
 
 void RenderSystem::RunBatch() const {
-    // Clear the backbuffer and primary depth/stencil buffer
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glViewport(0, 0, this->window_width, this->window_height); // Set the viewport size to fill the window
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); // Clear required buffers
 
+    if(!this->frame_drop) {
+        RenderScene();
+
+        TrillekGame::GetOS().SwapBuffers();
+    }
+    // If the user closes the window, we notify all the systems
+    if (TrillekGame::GetOS().Closing()) {
+        TrillekGame::NotifyCloseWindow();
+    }
+}
+
+void RenderSystem::RenderScene() const {
+
+    const ViewMatrixSet *c_view;
+    c_view = &vp_center;
+    glm::mat4x4 inv_proj = glm::inverse(c_view->projection_matrix);
+    glViewport(c_view->viewport.x, c_view->viewport.y, c_view->viewport.z, c_view->viewport.w);
+
+    if(activerender) {
+        for(auto& cmditem : activerender->render_commands) {
+            if(!cmditem.resolved && !cmditem.resolve_error) {
+                auto resolve = list_resolvers.find(cmditem.cmd);
+                if(resolve != list_resolvers.end()) {
+                    cmditem.run_values.clear();
+                    if(!resolve->second(cmditem)) {
+                        cmditem.resolve_error = true;
+                        // should probably log some warning/error
+                        // since this item may not be able to render
+                        // TODO use logging system instead
+                        std::cerr << "[ERROR-GRAPHICS] Parsing render command failed\n";
+                        break;
+                    }
+                    cmditem.resolved = true;
+                }
+                else {
+                    break;
+                }
+            }
+            switch(cmditem.cmd) {
+            case RenderCmd::CLEAR_SCREEN:
+                glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+                // Clear required buffers
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+                break;
+            case RenderCmd::MODULE_CMD:
+                break;
+            case RenderCmd::SCRIPT:
+                break;
+            case RenderCmd::RENDER:
+            {
+                switch(cmditem.run_values.front().Get<long>()) {
+                case 0:
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                    glEnable(GL_DEPTH_TEST);
+                    RenderColorPass(&c_view->view_matrix[0][0], &c_view->projection_matrix[0][0]);
+                    break;
+                case 1:
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                    glEnable(GL_DEPTH_TEST);
+                    RenderDepthOnlyPass(&c_view->view_matrix[0][0], &c_view->projection_matrix[0][0]);
+                    break;
+                case 2:
+                    glDisable(GL_MULTISAMPLE);
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                    glDisable(GL_DEPTH_TEST);
+                    RenderLightingPass(c_view->view_matrix, &inv_proj[0][0]);
+                    break;
+                case 3:
+                    glDisable(GL_MULTISAMPLE);
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                    glDisable(GL_DEPTH_TEST);
+                    RenderPostPass();
+                    break;
+                default:
+                    break;
+                }
+            }
+                break;
+            case RenderCmd::SET_PARAM:
+                break;
+            case RenderCmd::READ_LAYER:
+            {
+                auto run_op = cmditem.run_values.begin();
+                if(run_op->Get<bool>()) {
+                    run_op++;
+                    auto layer = run_op->Get<std::shared_ptr<RenderLayer>>();
+                    if(layer) {
+                        layer->BindToRead();
+                    }
+                }
+                else {
+                    RenderLayer::UnbindFromAll();
+                }
+            }
+                break;
+            case RenderCmd::WRITE_LAYER:
+            {
+                auto run_op = cmditem.run_values.begin();
+                if(run_op->Get<bool>()) {
+                    run_op++;
+                    auto layer = run_op->Get<std::shared_ptr<RenderLayer>>();
+                    if(layer) {
+                        layer->BindToWrite();
+                    }
+                }
+                else {
+                    RenderLayer::UnbindFromAll();
+                }
+            }
+                break;
+            case RenderCmd::SET_RENDER_LAYER:
+            {
+                auto run_op = cmditem.run_values.begin();
+                if(run_op->Get<bool>()) {
+                    run_op++;
+                    auto layer = run_op->Get<std::shared_ptr<RenderLayer>>();
+                    if(layer) {
+                        layer->BindToRender();
+                    }
+                }
+                else {
+                    RenderLayer::UnbindFromAll();
+                }
+            }
+                break;
+            case RenderCmd::BIND_LAYER_TEXTURES:
+            {
+                auto run_op = cmditem.run_values.begin();
+                if(run_op->Get<bool>()) {
+                    run_op++;
+                    auto layer = run_op->Get<std::shared_ptr<RenderLayer>>();
+                    if(layer) {
+                        layer->BindTextures();
+                    }
+                }
+                else {
+                }
+            }
+                break;
+            case RenderCmd::COPY_LAYER:
+            {
+                ViewRect src, dest;
+                auto run_op = cmditem.run_values.begin();
+                if(run_op->Get<bool>()) {
+                    run_op++;
+                    auto layer = run_op->Get<std::shared_ptr<RenderLayer>>();
+                    if(layer) {
+                        layer->BindToRead();
+                        layer->GetRect(src);
+                    }
+                }
+                else {
+                    RenderLayer::UnbindFromRead();
+                    src = c_view->viewport;
+                }
+                run_op++;
+                if(run_op->Get<bool>()) {
+                    run_op++;
+                    auto layer = run_op->Get<std::shared_ptr<RenderLayer>>();
+                    if(layer) {
+                        layer->BindToWrite();
+                        layer->GetRect(dest);
+                    }
+                }
+                else {
+                    RenderLayer::UnbindFromWrite();
+                    dest = c_view->viewport;
+                }
+                run_op++;
+                GLuint typebits = run_op->Get<GLuint>();
+                glBlitFramebuffer(src.x, src.y, src.z, src.w, dest.x, dest.y, dest.z, dest.w, typebits, GL_NEAREST);
+            }
+                break;
+            case RenderCmd::BIND_TEXTURE:
+                break;
+            case RenderCmd::BIND_SHADER:
+                break;
+            }
+        }
+    }
+}
+
+void RenderSystem::RenderColorPass(const float *view_matrix, const float *proj_matrix) const {
     for (auto matgrp : this->material_groups) {
         const auto& shader = matgrp.material.GetShader();
         shader->Use();
 
-        glUniformMatrix4fv((*shader)("view"), 1, GL_FALSE, &this->view_matrix[0][0]);
-        glUniformMatrix4fv((*shader)("projection"), 1, GL_FALSE, &this->projection_matrix[0][0]);
+        glUniformMatrix4fv((*shader)("view"), 1, GL_FALSE, view_matrix);
+        glUniformMatrix4fv((*shader)("projection"), 1, GL_FALSE, proj_matrix);
 
         for (const auto& texgrp : matgrp.texture_groups) {
             // Activate all textures for this texture group.
@@ -68,12 +484,14 @@ void RenderSystem::RunBatch() const {
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufgrp->ibo);
 
                 static GLint temp;
-                for (unsigned int entity_id : rengrp.instances) {
+                for (id_t entity_id : rengrp.instances) {
                     glUniformMatrix4fv((*shader)("model"), 1, GL_FALSE, &this->model_matrices.at(entity_id)[0][0]);
-                    if (rengrp.animations.find(entity_id) != rengrp.animations.end()) {
+                    auto renanim = rengrp.animations.find(entity_id);
+                    if (renanim != rengrp.animations.end()) {
                         temp = 1;
                         glUniform1iv((*shader)("animated"), 1, &temp);
-                        glUniformMatrix4fv((*shader)("animation_matrix"), rengrp.animations.at(entity_id)->animation_matricies.size(), GL_FALSE, &rengrp.animations.at(entity_id)->animation_matricies[0][0][0]);
+                        auto &animmatricies = renanim->second->animation_matricies;
+                        glUniformMatrix4fv((*shader)("animation_matrix"), animmatricies.size(), GL_FALSE, &animmatricies[0][0][0]);
                     }
                     else {
                         temp = 0;
@@ -89,12 +507,71 @@ void RenderSystem::RunBatch() const {
 
         shader->UnUse();
     }
+}
 
-    TrillekGame::GetOS().SwapBuffers();
-    // If the user closes the window, we notify all the systems
-    if (TrillekGame::GetOS().Closing()) {
-        TrillekGame::NotifyCloseWindow();
+void RenderSystem::RenderDepthOnlyPass(const float *view_matrix, const float *proj_matrix) const {
+    // TODO Similar to color pass but without textures and everything uses a depth shader
+    // This is intended for shadow map passes or the like
+}
+
+void RenderSystem::RenderLightingPass(const glm::mat4x4 &view_matrix, const float *inv_proj_matrix) const {
+    glBindVertexArray(screenquad.vao); CheckGLError();
+    GLint l_pos_loc = 0;
+    GLint l_dir_loc = 0;
+    GLint l_col_loc = 0;
+    GLint l_type_loc = 0;
+    if(lightingshader) {
+        lightingshader->Use();
+        l_pos_loc = lightingshader->Uniform("light_pos");
+        l_col_loc = lightingshader->Uniform("light_color");
+        l_dir_loc = lightingshader->Uniform("light_dir");
+        l_type_loc = lightingshader->Uniform("light_type");
+        glUniform1i(lightingshader->Uniform("layer0"), 0);
+        glUniform1i(lightingshader->Uniform("layer1"), 1);
+        glUniform1i(lightingshader->Uniform("layer2"), 2);
+        glUniform1i(lightingshader->Uniform("layer3"), 3);
+        glUniformMatrix4fv(lightingshader->Uniform("inv_proj"), 1, GL_FALSE, inv_proj_matrix);
     }
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ONE);
+    for (auto& clight : this->alllights) {
+        if(clight.second && clight.second->enabled) {
+            LightBase *activelight = clight.second.get();
+            const glm::mat4& lightmat = this->model_matrices.at(clight.first);
+            glm::vec4 lightpos = view_matrix * glm::vec4(lightmat[3][0], lightmat[3][1], lightmat[3][2], 1);
+            glm::vec4 lightdir = glm::mat3x4(lightmat) * glm::vec3(0.f, 0.f, -1.f);
+            if(l_pos_loc > 0) glUniform3f(l_pos_loc, lightpos.x, lightpos.y, lightpos.z);
+            if(l_dir_loc > 0) glUniform3f(l_dir_loc, lightdir.x, lightdir.y, lightdir.z);
+            if(l_col_loc > 0) glUniform3fv(l_col_loc, 1, (float*)&activelight->color);
+            if(l_type_loc > 0) glUniform1ui(l_type_loc, activelight->lighttype);
+            auto lp_itr = activelight->light_props.begin();
+            for(;lp_itr != activelight->light_props.end(); lp_itr++) {
+                GLint uniformloc = lightingshader->Uniform(lp_itr->GetName().c_str());
+                if(uniformloc > 0) {
+                    if(lp_itr->Is<float>()) {
+                        glUniform1f(uniformloc, lp_itr->Get<float>());
+                    }
+                    else if(lp_itr->Is<glm::vec3>()) {
+                        glm::vec3 val = lp_itr->Get<glm::vec3>();
+                        glUniform3f(uniformloc, val.x, val.y, val.z);
+                    }
+                    else if(lp_itr->Is<glm::vec4>()) {
+                        glm::vec4 val = lp_itr->Get<glm::vec4>();
+                        glUniform4f(uniformloc, val.x, val.y, val.z, val.w);
+                    }
+                    else if(lp_itr->Is<glm::vec2>()) {
+                        glm::vec2 val = lp_itr->Get<glm::vec2>();
+                        glUniform2f(uniformloc, val.x, val.y);
+                    }
+                }
+            }
+            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0); // render quad for each light
+        }
+    }
+    glDisable(GL_BLEND);
+    // unbind when done
+    glUseProgram(0);
+    glBindVertexArray(0); CheckGLError();
 }
 
 void RenderSystem::UpdateModelMatrices() {
@@ -109,9 +586,10 @@ void RenderSystem::UpdateModelMatrices() {
         const auto id = it->first;
         const auto transform = it->second;
         if (this->camera) {
-            if (id == this->camera->GetEntityID()) {
-                this->view_matrix = this->camera->GetViewMatrix();
-                continue;
+            if (id == this->camera_id) {
+                this->vp_center.view_matrix = this->camera->GetViewMatrix();
+//                this->model_matrices[id] = this->camera->GetViewMatrix();
+//                continue;
             }
         }
         glm::mat4 model_matrix = glm::translate(transform->GetTranslation()) *
@@ -121,9 +599,35 @@ void RenderSystem::UpdateModelMatrices() {
     }
 }
 
+void RenderSystem::RenderPostPass() const {
+
+}
+
+void RenderSystem::RegisterStaticParsers() {
+    RenderSystem &rensys = *this;
+    auto aglambda =  [&rensys] (const rapidjson::Value& node) -> bool {
+        for(auto settingitr = node.MemberBegin(); settingitr != node.MemberEnd(); settingitr++) {
+            std::string settingname = util::MakeString(settingitr->name);
+            if(settingitr->value.IsString()) {
+                std::string settingval = util::MakeString(settingitr->value);
+                if(settingname == "active-graph") {
+                    rensys.activerender = rensys.Get<RenderList>(settingval);
+                }
+                else if(settingname == "lighting-shader") {
+                    rensys.lightingshader = rensys.Get<Shader>(settingval);
+                }
+            }
+        }
+        return true;
+    };
+    parser_functions["settings"] = aglambda;
+}
+
 void RenderSystem::SetViewportSize(const unsigned int width, const unsigned int height) {
     this->window_height = height;
     this->window_width = width;
+
+    this->vp_center.viewport = ViewRect(0,0,width,height);
 
     // Determine the aspect ratio and sanity check it to a safe ratio
     float aspect_ratio = static_cast<float>(this->window_width) / static_cast<float>(this->window_height);
@@ -132,7 +636,7 @@ void RenderSystem::SetViewportSize(const unsigned int width, const unsigned int 
     }
 
     // update projection matrix based on new aspect ratio
-    this->projection_matrix = glm::perspective(
+    this->vp_center.projection_matrix = glm::perspective(
         glm::radians(45.0f),
         aspect_ratio,
         0.1f,
@@ -140,18 +644,42 @@ void RenderSystem::SetViewportSize(const unsigned int width, const unsigned int 
         );
 }
 
-void RenderSystem::AddComponent(const unsigned int entity_id, std::shared_ptr<ComponentBase> component) {
-    // Do a static_pointer_cast to make sure we do have a Renderable component.
-    auto ren = std::static_pointer_cast<Renderable>(component);
-    if (!ren) {
-        return;
+template<>
+bool RenderSystem::AddEntityComponent(const id_t entity_id, std::shared_ptr<LightBase> light) {
+
+    // Loop through all the lights and see if one exists for the given entity.
+    for (auto& r : this->alllights) {
+        if (r.first == entity_id) {
+            r.second = light;
+            return false;
+        }
     }
 
-    // Loop through all the renderables and see if one exists for the given entityID.
+    // No entry exists for the given entity, so add it.
+    this->alllights.push_back(std::make_pair(entity_id, light));
+
+    return true;
+}
+
+template<>
+bool RenderSystem::AddEntityComponent(const id_t entity_id, std::shared_ptr<CameraBase> cam) {
+    auto cam_itr = this->cameras.find(entity_id);
+    if(cam_itr != this->cameras.end()) {
+        this->cameras[entity_id] = cam; // replace existing
+        return false;
+    }
+    this->cameras[entity_id] = cam;
+    return true;
+}
+
+template<>
+bool RenderSystem::AddEntityComponent(const id_t entity_id, std::shared_ptr<Renderable> ren) {
+
+    // Loop through all the renderables and see if one exists for the given entity_id.
     for (auto& r : this->renderables) {
         if (r.first == entity_id) {
             r.second = ren;
-            return;
+            return false;
         }
     }
 
@@ -174,14 +702,9 @@ void RenderSystem::AddComponent(const unsigned int entity_id, std::shared_ptr<Co
 
         matgrp->material.SetShader(ren->GetShader());
 
-        const auto& shader = matgrp->material.GetShader();
-        shader->Use();
-        shader->AddUniform("view");
-        shader->AddUniform("projection");
-        shader->AddUniform("model");
-        shader->AddUniform("animation_matrix");
-        shader->AddUniform("animated");
-        shader->UnUse();
+        //const auto& shader = matgrp->material.GetShader();
+        //shader->Use();
+        //shader->UnUse();
     }
 
     // Map the renderable into the render graph material groups.
@@ -241,12 +764,27 @@ void RenderSystem::AddComponent(const unsigned int entity_id, std::shared_ptr<Co
             texgrp->renderable_groups.push_back(std::move(temp));
         }
     }
+    return true;
+}
+
+void RenderSystem::AddComponent(const id_t entity_id, std::shared_ptr<ComponentBase> component) {
+
+    int r;
+    if(0 != (r = TryAddComponent<Renderable>(entity_id, component))) {
+        if(r < 0) return;
+    }
+    else if(0 != (r = TryAddComponent<LightBase>(entity_id, component))) {
+        if(r < 0) return;
+    }
+    else if(0 != (r = TryAddComponent<CameraBase>(entity_id, component))) {
+        if(r < 0) return;
+    }
 
     // We mark the transform to force the initial model matrix creation.
     TransformMap::GetTransform(entity_id)->MarkAsModified();
 }
 
-void RenderSystem::RemoveRenderable(const unsigned int entity_id) {
+void RenderSystem::RemoveRenderable(const id_t entity_id) {
     // Loop through all the renderables and see if one exists for the given entityID.
     for (auto& r : this->renderables) {
         if (r.first == entity_id) {
@@ -290,12 +828,28 @@ void RenderSystem::RemoveRenderable(const unsigned int entity_id) {
 }
 
 void RenderSystem::HandleEvents(const frame_tp& timepoint) {
-    static frame_tp last_tp;
-    std::chrono::duration<float> delta = timepoint - last_tp;
-    last_tp = timepoint;
+    auto now = frame_tp(TrillekGame::GetOS().GetTime());
+    static frame_tp last_tp = now;
+    auto delta = now - last_tp;
+    if(delta > std::chrono::nanoseconds(66666666ll)) {
+        if(!this->frame_drop) {
+            std::cerr << "[GRAPHICS] Time lag " << (delta.count() - 16666666) * 1.0E-9 << " > 50 milliseconds\n";
+            this->frame_drop_count = 0;
+        }
+        this->frame_drop = true;
+        this->frame_drop_count++;
+    }
+    else {
+        if(this->frame_drop) {
+            std::cerr << "[GRAPHICS] Dropped frames " << this->frame_drop_count << "\n";
+            this->frame_drop_count = 0;
+        }
+        this->frame_drop = false;
+    }
+    last_tp = now;
     for (auto ren : this->renderables) {
         if (ren.second->GetAnimation()) {
-            ren.second->GetAnimation()->UpdateAnimation(delta.count());
+            ren.second->GetAnimation()->UpdateAnimation(delta.count() * 1E-9d);
         }
     }
     updated_transforms = TransformMap::GetAsyncUpdatedTransforms().GetFuture(timepoint);

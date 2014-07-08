@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 #include "graphics/camera.hpp"
+#include "trillek-game.hpp"
 
 namespace trillek {
 namespace graphics {
@@ -13,10 +14,8 @@ class SixDOFCamera :
     public CameraBase {
 public:
     /**
-    * \brief Computes the view matrix for a 6 DOF camera using the provided transform.
-    *
-    * \return void
-    */
+     * \brief Computes the view matrix for a 6 DOF camera using the provided transform.
+     */
     glm::mat4 GetViewMatrix() {
         if (!this->camera_transform) {
             return glm::mat4(1.0f);
@@ -29,11 +28,10 @@ public:
     }
 
     /**
-    * \brief Handles keyboard events.
-    *
-    * This method calls the physics system SetForce method after each event.
-    * \return void
-    */
+     * \brief Handles keyboard events.
+     *
+     * This method calls the physics system SetForce method after each event.
+     */
     void Notify(const KeyboardEvent* key_event) {
         if (!this->camera_transform) {
             return;
@@ -129,7 +127,11 @@ public:
 private:
 };
 
-
 } // End of graphics
+
+namespace reflection {
+TRILLEK_MAKE_IDTYPE_NAME(graphics::SixDOFCamera, "camera", 2002)
+} // namespace reflection
+
 } // End of trillek
 #endif

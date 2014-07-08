@@ -1,4 +1,3 @@
-#include "systems/meta-engine-system.hpp"
 #include "trillek-game.hpp"
 
 namespace trillek {
