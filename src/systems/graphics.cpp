@@ -401,10 +401,21 @@ void RenderSystem::RenderScene() const {
                     auto layer = run_op->Get<std::shared_ptr<RenderLayer>>();
                     if(layer) {
                         layer->BindToRender();
+                        if(layer->IsCustomSize()) {
+                            ViewRect sizeview;
+                            layer->GetRect(sizeview);
+                            glViewport(sizeview.x, sizeview.y,
+                                sizeview.z, sizeview.w);
+                        }
+                        else {
+                            glViewport(c_view->viewport.x, c_view->viewport.y,
+                                c_view->viewport.z, c_view->viewport.w);
+                        }
                     }
                 }
                 else {
                     RenderLayer::UnbindFromAll();
+                    glViewport(c_view->viewport.x, c_view->viewport.y, c_view->viewport.z, c_view->viewport.w);
                 }
             }
                 break;
@@ -472,6 +483,9 @@ void RenderSystem::RenderColorPass(const float *view_matrix, const float *proj_m
 
         glUniformMatrix4fv((*shader)("view"), 1, GL_FALSE, view_matrix);
         glUniformMatrix4fv((*shader)("projection"), 1, GL_FALSE, proj_matrix);
+        GLint u_model_loc = shader->Uniform("model");
+        GLint u_animatrix_loc = shader->Uniform("animation_matrix");
+        GLint u_animate_loc = shader->Uniform("animated");
 
         for (const auto& texgrp : matgrp.texture_groups) {
             // Activate all textures for this texture group.
@@ -486,15 +500,15 @@ void RenderSystem::RenderColorPass(const float *view_matrix, const float *proj_m
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufgrp->ibo);
 
                 for (id_t entity_id : rengrp.instances) {
-                    glUniformMatrix4fv((*shader)("model"), 1, GL_FALSE, &this->model_matrices.at(entity_id)[0][0]);
+                    glUniformMatrix4fv(u_model_loc, 1, GL_FALSE, &this->model_matrices.at(entity_id)[0][0]);
                     auto renanim = rengrp.animations.find(entity_id);
                     if (renanim != rengrp.animations.end()) {
-                        glUniform1i((*shader)("animated"), 1);
+                        glUniform1i(u_animate_loc, 1);
                         auto &animmatricies = renanim->second->animation_matricies;
-                        glUniformMatrix4fv((*shader)("animation_matrix"), animmatricies.size(), GL_FALSE, &animmatricies[0][0][0]);
+                        glUniformMatrix4fv(u_animatrix_loc, animmatricies.size(), GL_FALSE, &animmatricies[0][0][0]);
                     }
                     else {
-                        glUniform1i((*shader)("animated"), 0);
+                        glUniform1i(u_animate_loc, 0);
                     }
                     glDrawElements(GL_TRIANGLES, bufgrp->ibo_count, GL_UNSIGNED_INT, 0);
                 }
@@ -514,13 +528,49 @@ void RenderSystem::RenderDepthOnlyPass(const float *view_matrix, const float *pr
     if(!depthpassshader) {
         return;
     }
+    CheckGLError();
     depthpassshader->Use();
+    CheckGLError();
+    if(this->alllights.begin() == this->alllights.end()) {
+        return;
+    }
+    auto lightitr = this->alllights.begin();
+    LightBase *light = lightitr->second.get();
+    if(light == nullptr) return;
+    const glm::mat4x4& lightmat = this->model_matrices.at(lightitr->first);
+    glm::vec3 lightpos = glm::vec3(lightmat[3][0], lightmat[3][1], lightmat[3][2]);
+    glm::vec4 lightdir = glm::mat3x4(lightmat) * glm::vec3(0.f, 0.f, -1.f);
+    glm::mat4x4 light_matrix =
+        glm::perspective(3.1415f*0.5f, 1.f, 0.5f, 10000.f)
+        * glm::lookAt(lightpos, lightpos-UP_VECTOR, FORWARD_VECTOR);
+    glm::mat4x4 invlight_matrix = glm::inverse(light_matrix);
+    glm::mat4x4 invview_matrix = glm::inverse(*(const glm::mat4x4*)view_matrix);
+    CheckGLError();
+    glUniform3f(depthpassshader->Uniform("light_pos"), lightpos.x, lightpos.y, lightpos.z);
+    glUniformMatrix4fv(depthpassshader->Uniform("light_vp"), 1, GL_FALSE, (float*)&light_matrix);
+    glUniformMatrix4fv(depthpassshader->Uniform("light_ivp"), 1, GL_FALSE, (float*)&invview_matrix);
     glUniformMatrix4fv(depthpassshader->Uniform("view"), 1, GL_FALSE, view_matrix);
     glUniformMatrix4fv(depthpassshader->Uniform("projection"), 1, GL_FALSE, proj_matrix);
-    glUniform1i(lightingshader->Uniform("layer0"), 0);
-    glUniform1i(lightingshader->Uniform("layer1"), 1);
-    glUniform1i(lightingshader->Uniform("layer2"), 2);
-    glUniform1i(lightingshader->Uniform("layer3"), 3);
+    CheckGLError();
+    if(light->shadows) {
+        light->depthmatrix = light_matrix;
+    }
+    GLint layerloc;
+    layerloc = depthpassshader->Uniform("layer0");
+    if(layerloc > 0) glUniform1i(layerloc, 0);
+    CheckGLError();
+    layerloc = depthpassshader->Uniform("layer1");
+    if(layerloc > 0) glUniform1i(layerloc, 1);
+    CheckGLError();
+    layerloc = depthpassshader->Uniform("layer2");
+    if(layerloc > 0) glUniform1i(layerloc, 2);
+    CheckGLError();
+    layerloc = depthpassshader->Uniform("layer3");
+    if(layerloc > 0) glUniform1i(layerloc, 3);
+    CheckGLError();
+    GLint u_model_loc = depthpassshader->Uniform("model");
+    GLint u_animatrix_loc = depthpassshader->Uniform("animation_matrix");
+    GLint u_animate_loc = depthpassshader->Uniform("animated");
     for (auto matgrp : this->material_groups) {
         for (const auto& texgrp : matgrp.texture_groups) {
             // Loop through each renderable group.
@@ -530,22 +580,24 @@ void RenderSystem::RenderDepthOnlyPass(const float *view_matrix, const float *pr
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufgrp->ibo);
 
                 for (id_t entity_id : rengrp.instances) {
-                    glUniformMatrix4fv((*depthpassshader)("model"), 1, GL_FALSE, &this->model_matrices.at(entity_id)[0][0]);
+                    glUniformMatrix4fv(u_model_loc, 1, GL_FALSE, &this->model_matrices.at(entity_id)[0][0]);
                     auto renanim = rengrp.animations.find(entity_id);
                     if (renanim != rengrp.animations.end()) {
-                        glUniform1i((*depthpassshader)("animated"), 1);
+                        glUniform1i(u_animate_loc, 1);
                         auto &animmatricies = renanim->second->animation_matricies;
-                        glUniformMatrix4fv((*depthpassshader)("animation_matrix"), animmatricies.size(), GL_FALSE, &animmatricies[0][0][0]);
+                        glUniformMatrix4fv(u_animatrix_loc, animmatricies.size(), GL_FALSE, &animmatricies[0][0][0]);
                     }
                     else {
-                        glUniform1i((*depthpassshader)("animated"), 0);
+                        glUniform1i(u_animate_loc, 0);
                     }
                     glDrawElements(GL_TRIANGLES, bufgrp->ibo_count, GL_UNSIGNED_INT, 0);
                 }
             }
         }
     }
+    CheckGLError();
     Shader::UnUse();
+    CheckGLError();
 }
 
 void RenderSystem::RenderLightingPass(const glm::mat4x4 &view_matrix, const float *inv_proj_matrix) const {
@@ -554,16 +606,23 @@ void RenderSystem::RenderLightingPass(const glm::mat4x4 &view_matrix, const floa
     GLint l_dir_loc = 0;
     GLint l_col_loc = 0;
     GLint l_type_loc = 0;
+    GLint l_ushadow_loc = 0;
+    GLint l_tshadow_loc = 0;
+    GLint l_sshadow_loc = 0;
     if(lightingshader) {
         lightingshader->Use();
         l_pos_loc = lightingshader->Uniform("light_pos");
         l_col_loc = lightingshader->Uniform("light_color");
         l_dir_loc = lightingshader->Uniform("light_dir");
         l_type_loc = lightingshader->Uniform("light_type");
+        l_ushadow_loc = lightingshader->Uniform("shadow_enabled");
+        l_tshadow_loc = lightingshader->Uniform("shadow_matrix");
+        l_sshadow_loc = lightingshader->Uniform("shadow_depth");
         glUniform1i(lightingshader->Uniform("layer0"), 0);
         glUniform1i(lightingshader->Uniform("layer1"), 1);
         glUniform1i(lightingshader->Uniform("layer2"), 2);
         glUniform1i(lightingshader->Uniform("layer3"), 3);
+        if(l_sshadow_loc > 0) glUniform1i(l_sshadow_loc, 4);
         glUniformMatrix4fv(lightingshader->Uniform("inv_proj"), 1, GL_FALSE, inv_proj_matrix);
     }
     glEnable(GL_BLEND);
@@ -571,6 +630,8 @@ void RenderSystem::RenderLightingPass(const glm::mat4x4 &view_matrix, const floa
     for (auto& clight : this->alllights) {
         if(clight.second && clight.second->enabled) {
             LightBase *activelight = clight.second.get();
+            std::shared_ptr<Texture> shadowbuf;
+            GLint useshadow = 0;
             const glm::mat4& lightmat = this->model_matrices.at(clight.first);
             glm::vec4 lightpos = view_matrix * glm::vec4(lightmat[3][0], lightmat[3][1], lightmat[3][2], 1);
             glm::vec4 lightdir = glm::mat3x4(lightmat) * glm::vec3(0.f, 0.f, -1.f);
@@ -598,7 +659,18 @@ void RenderSystem::RenderLightingPass(const glm::mat4x4 &view_matrix, const floa
                         glUniform2f(uniformloc, val.x, val.y);
                     }
                 }
+                else if(activelight->shadows && lp_itr->GetName() == "shadow") {
+                    shadowbuf = TrillekGame::GetGraphicSystem().Get<Texture>(lp_itr->Get<std::string>());
+                    if(shadowbuf) {
+                        useshadow = 1;
+                        glActiveTexture(GL_TEXTURE4);
+                        glBindTexture(GL_TEXTURE_2D, shadowbuf->GetID());
+                        glm::mat4x4 invviewshadow = activelight->depthmatrix * glm::inverse(view_matrix);
+                        if(l_tshadow_loc > 0) glUniformMatrix4fv(l_tshadow_loc, 1, GL_FALSE, &invviewshadow[0][0]);
+                    }
+                }
             }
+            if(l_ushadow_loc > 0) glUniform1i(l_ushadow_loc, useshadow);
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0); // render quad for each light
         }
     }
