@@ -6,6 +6,7 @@
 #include <memory>
 #include <map>
 
+#include "trillek.hpp"
 #include "async-data.hpp"
 #include "trillek-scheduler.hpp"
 #include "atomic-map.hpp"

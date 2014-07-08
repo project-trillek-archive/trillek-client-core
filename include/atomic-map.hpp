@@ -52,7 +52,7 @@ public:
     template<class L=K,class U=T>
     void Insert(L&& key, U&& value) const {
         std::lock_guard<std::mutex> locker(mtx);
-        q[std::forward<K>(key)] = std::forward<T>(value);
+        q[std::forward<K>(key)] = std::forward<U>(value);
     }
 
     /** \brief Remove an element

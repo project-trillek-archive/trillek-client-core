@@ -5,6 +5,7 @@
 #include <map>
 #include <mutex>
 
+#include "trillek.hpp"
 #include "util/json-parser.hpp"
 #include "systems/async-data.hpp"
 #include "atomic-map.hpp"
