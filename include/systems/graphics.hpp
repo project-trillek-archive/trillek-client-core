@@ -279,6 +279,7 @@ private:
     // Active objects
     std::shared_ptr<RenderList> activerender;
     std::shared_ptr<Shader> lightingshader;
+    std::shared_ptr<Shader> depthpassshader;
     std::shared_ptr<CameraBase> camera;
     id_t camera_id;
 

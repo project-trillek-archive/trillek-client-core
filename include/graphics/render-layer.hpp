@@ -66,6 +66,8 @@ public:
     bool IsColor() const {
         return (attachtarget == GL_COLOR_ATTACHMENT0);
     }
+    bool IsCustomSize() const { return customsize; }
+
     GLenum GetAttach() const {
         if(attachtarget == GL_COLOR_ATTACHMENT0) {
             return GL_COLOR_ATTACHMENT0 + outputnumber;
@@ -77,6 +79,7 @@ private:
     bool multisample;
     bool multisample_texture;
     bool clearonuse;
+    bool customsize;
     float clearvalues[4];
     int clearstencil;
     unsigned int width;
@@ -124,6 +127,7 @@ public:
     void BindToRead() const;
     void BindToWrite() const;
     void BindTextures() const;
+    bool IsCustomSize() const { return customsize; }
 
     void GetRect(ViewRect& vr) {
         vr.x = 0;
@@ -138,6 +142,7 @@ private:
     GLuint clearbits;
     bool clearhighbuffers;
     GLuint fbo_id;
+    bool customsize;
     unsigned int width;
     unsigned int height;
     std::unique_ptr<GLenum> draworder;
