@@ -683,7 +683,7 @@ void RenderSystem::UpdateModelMatrices() {
     try {
         transforms = *updated_transforms.get();
     }
-    catch(std::future_error& e) {
+    catch(std::future_error) {
         std::cerr << "Render system missed a frame" << std::endl;
     }
     for (auto it = transforms.cbegin(); it != transforms.cend(); ++it) {
@@ -956,7 +956,7 @@ void RenderSystem::HandleEvents(const frame_tp& timepoint) {
     last_tp = now;
     for (auto ren : this->renderables) {
         if (ren.second->GetAnimation()) {
-            ren.second->GetAnimation()->UpdateAnimation(delta.count() * 1E-9d);
+            ren.second->GetAnimation()->UpdateAnimation(delta.count() * 1E-9);
         }
     }
     updated_transforms = TransformMap::GetAsyncUpdatedTransforms().GetFuture(timepoint);

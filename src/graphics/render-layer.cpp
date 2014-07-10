@@ -558,7 +558,7 @@ void RenderLayer::BindToRender() const {
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo_id); CheckGLError();
     if(clearany) {
         GLuint attachcount = this->attachments.size();
-        int i, primaryindex = 0;
+        unsigned int i, primaryindex = 0;
         for(i = 0; i < attachcount; i++) {
             auto& attitr = this->attachments[i];
             if(attitr) {
@@ -585,7 +585,7 @@ void RenderLayer::BindToRead() const {
 
 void RenderLayer::BindTextures() const {
     GLuint attachcount = this->attachments.size();
-    for(int i = 0; i < attachcount; i++) {
+    for(unsigned int i = 0; i < attachcount; i++) {
         auto& attitr = this->attachments[i];
         if(attitr) {
             glActiveTexture(GL_TEXTURE0 + i);
