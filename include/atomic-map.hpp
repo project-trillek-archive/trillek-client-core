@@ -36,7 +36,7 @@ public:
     std::map<K,T> Poll() const {
         std::unique_lock<std::mutex> locker(mtx);
         if (! q.size()) {
-            return {};
+            return std::map<K,T>{};
         }
         auto ret = std::map<K,T>{};
         std::swap(ret,q);
