@@ -30,7 +30,10 @@ int main(int argCount, char **argValues) {
     trillek::TrillekGame::GetPhysicsSystem().Start();
 
     trillek::util::JSONPasrser jparser;
-    jparser.Parse("assets/tests/sample.json");
+    
+    if (!jparser.Parse("assets/tests/sample.json")) {
+        std::cerr << "Error loading JSON configuration file." << std::endl;
+    }
 
     trillek::sound::System& soundsystem = trillek::TrillekGame::GetSoundSystem();
     std::shared_ptr<trillek::sound::Sound> s1 = soundsystem.GetSound("music_track_1");

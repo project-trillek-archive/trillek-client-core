@@ -25,6 +25,10 @@ bool JSONPasrser::Parse(const std::string& fname) {
     props.push_back(p);
     this->file = resource::ResourceMap::Create<trillek::resource::TextFile>("JSON_test", props);
 
+    if (!this->file) {
+        return false;
+    }
+
     this->document.Parse<0>(this->file->GetText().c_str());
     if (this->document.HasParseError()) {
         return false;
