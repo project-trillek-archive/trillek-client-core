@@ -19,11 +19,11 @@ public:
     ~ResourceBase() { }
 
     /**
-    * \brief Returns a resource with the specified name.
-    *
-    * \param[in] const std::vector<Property> &properties The creation properties for the resource.
-    * \return bool True if initialization finished with no errors.
-    */
+     * \brief Returns a resource with the specified name.
+     *
+     * \param[in] const std::vector<Property> &properties The creation properties for the resource.
+     * \return bool True if initialization finished with no errors.
+     */
     virtual bool Initialize(const std::vector<Property> &properties) = 0;
 };
 
@@ -65,10 +65,10 @@ public:
     ~ResourceMap() { }
 
     /**
-    * \brief Register a type to be available for factory calls.
-    *
-    * \return void
-    */
+     * \brief Register a type to be available for factory calls.
+     *
+     * \return void
+     */
     template<class T>
     static void RegisterResourceType() {
         // Store the type ID associated with the type name.
@@ -83,11 +83,11 @@ public:
     }
 
     /**
-    * \brief Returns a type ID associated with the given name.
-    *
-    * \param[in] const std::string & type_Name The name to look for a type ID.
-    * \return unsigned int Returns 0 if the name doesn't exist.
-    */
+     * \brief Returns a type ID associated with the given name.
+     *
+     * \param[in] const std::string & type_Name The name to look for a type ID.
+     * \return unsigned int Returns 0 if the name doesn't exist.
+     */
     static unsigned int GetTypeIDFromName(const std::string& type_Name) {
         if (resource_type_id.find(type_Name) == resource_type_id.end()) {
             return 0;
@@ -96,11 +96,11 @@ public:
     }
 
     /**
-    * \brief Gets a resource by the given name.
-    *
-    * \param[in] const std::string& name Name of the resource to retrieve.
-    * \return std::shared_ptr<T> Returns nullptr if the resource hasn't been created yet, otherwise the requested resource..
-    */
+     * \brief Gets a resource by the given name.
+     *
+     * \param[in] const std::string& name Name of the resource to retrieve.
+     * \return std::shared_ptr<T> Returns nullptr if the resource hasn't been created yet, otherwise the requested resource..
+     */
     template<class T>
     static std::shared_ptr<T> Get(const std::string& name) {
         unsigned int type_id = reflection::GetTypeID<T>();
@@ -111,16 +111,16 @@ public:
     }
 
     /**
-    * \brief Used to create a resource at runtime when type information isn't available, but the type ID is.
-    *
-    * This also differs with the compile time version in that it can't return the created resource, but it can
-    * only return wether it was created successfully or not. This is because you can't template the retrun value
-    * if you don't have the type information.
-    * \param[in] const unsigned int type_id The ID of the type of resource to create. This is used to select the correct factory.
-    * \param[in] const std::string & name What the created resource will be named.
-    * \param[in] const std::vector<Property> & properties The creation properties for the resource.
-    * \return bool True if the resource loaded successfully. Get must be used, later, where the type information is known to retrieve the resource if it was loaded correctly.
-    */
+     * \brief Used to create a resource at runtime when type information isn't available, but the type ID is.
+     *
+     * This also differs with the compile time version in that it can't return the created resource, but it can
+     * only return wether it was created successfully or not. This is because you can't template the retrun value
+     * if you don't have the type information.
+     * \param[in] const unsigned int type_id The ID of the type of resource to create. This is used to select the correct factory.
+     * \param[in] const std::string & name What the created resource will be named.
+     * \param[in] const std::vector<Property> & properties The creation properties for the resource.
+     * \return bool True if the resource loaded successfully. Get must be used, later, where the type information is known to retrieve the resource if it was loaded correctly.
+     */
     static bool Create(const unsigned int type_id, const std::string& name, const std::vector<Property> &properties) {
         if (instance->factories.find(type_id) != instance->factories.end()) {
             return instance->factories[type_id](name, properties) != nullptr;
@@ -129,12 +129,12 @@ public:
     }
 
     /**
-    * \brief Creates a resource with the given name and initializes it. This is used at compile time when type information is known.
-    *
-    * \param[in] const std::string & name The name of the resource to create.
-    * \param[in] const std::vector<Property> & properties The creation properties for the resource.
-    * \return std::shared_ptr<T> Returns nullptr if it failed to be created, otherwise the created resource.
-    */
+     * \brief Creates a resource with the given name and initializes it. This is used at compile time when type information is known.
+     *
+     * \param[in] const std::string & name The name of the resource to create.
+     * \param[in] const std::vector<Property> & properties The creation properties for the resource.
+     * \return std::shared_ptr<T> Returns nullptr if it failed to be created, otherwise the created resource.
+     */
     template<class T>
     static std::shared_ptr<T> Create(const std::string& name, const std::vector<Property> &properties) {
         unsigned int type_id = reflection::GetTypeID<T>();
@@ -149,12 +149,12 @@ public:
     }
 
     /**
-    * \brief Adds a resource to be managed by the system.
-    *
-    * \param[in] const std::string & name The name of the resource.
-    * \param[in] std::shared_ptr<T> r The resource to add.
-    * \return void
-    */
+     * \brief Adds a resource to be managed by the system.
+     *
+     * \param[in] const std::string & name The name of the resource.
+     * \param[in] std::shared_ptr<T> r The resource to add.
+     * \return void
+     */
     template<class T>
     static void Add(const std::string& name, std::shared_ptr<T> r) {
         unsigned int type_id = reflection::GetTypeID<T>();
@@ -162,14 +162,14 @@ public:
     }
 
     /**
-    * \brief Removes a resources managed by the system.
-    *
-    * This doesn't invalidate any strong references to the resource as it doesn't destroy the resource.
-    * Any weak references to the resource should be checked to make sure they are valid and haven't been
-    * removed.
-    * \param[in] const std::string & name Name of the resource to remove.
-    * \return void
-    */
+     * \brief Removes a resources managed by the system.
+     *
+     * This doesn't invalidate any strong references to the resource as it doesn't destroy the resource.
+     * Any weak references to the resource should be checked to make sure they are valid and haven't been
+     * removed.
+     * \param[in] const std::string & name Name of the resource to remove.
+     * \return void
+     */
     static void Remove(const std::string& name) {
         for (const auto& list : instance->resources) {
             if (list.second.find(name) != list.second.end()) {
@@ -180,11 +180,11 @@ public:
     }
 
     /**
-    * \brief Checks if a resource exists with the given name.
-    *
-    * \param[in] const std::string& name Name of the resource to check if it exists.
-    * \return bool True if the resource exists.
-    */
+     * \brief Checks if a resource exists with the given name.
+     *
+     * \param[in] const std::string& name Name of the resource to check if it exists.
+     * \return bool True if the resource exists.
+     */
     static bool Exists(const std::string& name) {
         for (const auto& list : instance->resources) {
             if (list.second.find(name) != list.second.end()) {
@@ -195,14 +195,14 @@ public:
     }
 
     /**
-    * \brief Registers all resource types as defined in the function body.
-    *
-    * This function is defined in a separate source file to reduce compile times.
-    * This function is coupled to each resource type, and all resource types
-    * known at compile time should be registered via the function body.
-    * Interally it just calls the tempalte method Register().
-    * \return void
-    */
+     * \brief Registers all resource types as defined in the function body.
+     *
+     * This function is defined in a separate source file to reduce compile times.
+     * This function is coupled to each resource type, and all resource types
+     * known at compile time should be registered via the function body.
+     * Internally it just calls the template method Register().
+     * \return void
+     */
     static void RegisterTypes();
 
     // Inherited from Parse

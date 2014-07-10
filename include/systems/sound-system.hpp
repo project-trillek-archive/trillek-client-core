@@ -27,62 +27,42 @@ public:
     ~Sound();
 
     /** \brief Start Sound
-     *
-     * \return void
-     *
      */
     void Play();
 
     /** \brief Pause Sound
-     *
-     * \return void
-     *
      */
     void Pause();
 
     /** \brief Resumes Sound
-     *
-     * \return void
-     *
      */
     void Resume();
 
     /** \brief Stops Sound
-     *
-     * \return void
-     *
      */
     void Stop();
 
     /** \brief Set sound position
      *
      * \param position glm::vec3
-     * \return void
-     *
      */
     void SetPosition(glm::vec3 position);
 
     /** \brief Set sound velocity
      *
      * \param velocity glm::vec3
-     * \return void
-     *
      */
     void SetVelocity(glm::vec3 velocity);
 
     /** \brief Set sound direction
      *
      * \param direction glm::vec3
-     * \return void
-     *
      */
     void SetDirection(glm::vec3 direction);
 
     /** \brief outer angle of sound cone
      *
      * \param angle float
-     * \return void
-     *
      */
     void SetOuterConeAngle(float angle);
 
@@ -90,7 +70,7 @@ public:
 }; // end of class Sound
 
 
-class System : public util::Parser, public SystemBase, public event::Subscriber<Transform> {
+class System : public util::Parser, public SystemBase {
 private:
     System() : Parser("sounds") { }
     System(const System& right) : Parser("sounds")  {
@@ -114,10 +94,6 @@ public:
             if(alureInitDevice(NULL, NULL) == false) {
                 std::cout << "Failed to open OpenAL device: " << alureGetErrorString() << std::endl;
             }
-
-            // get transform from entity id 0 (camera)
-            event::Dispatcher<Transform>::GetInstance()->Subscribe(0, &(*System::instance));
-
         });
 
         return System::instance;
@@ -130,31 +106,22 @@ public:
     virtual void RunBatch() const;
     virtual void Terminate();
 
-    /** \brief handles listener position and orientation when entity with id 0 is updated (camera)
-     */
-    virtual void Notify(const unsigned int entity_id, const Transform* data);
-
     /** \brief Creates and returns a Sound if successful
      *
      * \param id const std::string&
      * \return std::shared_ptr<Sound>
-     *
      */
     std::shared_ptr<Sound> GetSound(const std::string& id);
 
     /** \brief set the position manualy if no transform is set in the system
      *
      * \param position const glm::vec3&
-     * \return void
-     *
      */
     void SetListenerPosition(const glm::vec3& position);
 
     /** \brief Sets the velocity of the sound listener
      *
      * \param velocity glm::vec3
-     * \return void
-     *
      */
     void SetListenerVelocity(const glm::vec3& velocity);
 
@@ -162,8 +129,6 @@ public:
      *
      * \param at glm::vec3
      * \param up glm::vec3
-     * \return void
-     *
      */
     void SetListenerOrientation(const glm::vec3& at, const glm::vec3& up);
 

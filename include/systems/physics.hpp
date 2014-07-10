@@ -6,7 +6,10 @@
 #include <memory>
 #include <map>
 
+#include "trillek.hpp"
+#include "async-data.hpp"
 #include "trillek-scheduler.hpp"
+#include "atomic-map.hpp"
 #include "systems/system-base.hpp"
 
 namespace trillek {
@@ -17,6 +20,8 @@ class Collidable;
 struct Force {
     double x, y, z;
 };
+
+typedef Force Torque;
 
 class PhysicsSystem : public SystemBase {
 public:
@@ -35,9 +40,8 @@ public:
      * \brief Causes an update in the system based on the change in time.
      *
      * Updates the state of the system based off how much time has elapsed since the last update.
-     * \return void
      */
-    void RunBatch() const override;
+    void RunBatch() const override {};
 
     /**
      * \brief Adds a Shape component to the system.
@@ -47,10 +51,8 @@ public:
      * without adding the Shape component.
      * \param const unsigned int entity_id The entity ID the compoennt belongs to.
      * \param std::shared_ptr<ComponentBase> component The component to add.
-     * \return void
      */
     void AddComponent(const unsigned int entity_id, std::shared_ptr<ComponentBase> component);
-
 
     /** \brief Handle incoming events to update data
      *
@@ -60,39 +62,69 @@ public:
      *
      * If event handling need some batch processing, a task list must be
      * prepared and stored temporarily to be retrieved by RunBatch().
-     *
      */
     void HandleEvents(const frame_tp& timepoint) override;
 
     /** \brief Save the data and terminate the system
      *
      * This function is called when the program is closing
-     *
      */
     void Terminate() override;
 
     /** \brief Set a rigid body's current linear force.
      *
-     * \param const unsigned int entity_id The entity ID of the rigid body.
+     * \param unsigned int entity_id The entity ID of the rigid body.
      * \param Force f The rigid body's new force.
+     */
+    void SetForce(unsigned int entity_id, const Force f) const;
+
+    /** \brief Set a rigid body's current torque.
+     *
+     * \param unsigned int entity_id The entity ID of the rigid body.
+     * \param Force f The rigid body's new torque.
      * \return void
      */
-    void SetForce(const unsigned int entity_id, const Force f);
+    void SetTorque(unsigned int entity_id, const Torque t) const;
 
     /** \brief Remove a rigid body's current linear force.
     *
     * \param const unsigned int entity_id The entity ID of the rigid body.
-     * \return void
     */
-    void RemoveForce(const unsigned int entity_id);
+    void RemoveForce(const unsigned int entity_id) const ;
 
-    /** \brief Set a rigid body's gravity.
+    /** \brief Remove a rigid body's current torque.
     *
     * \param const unsigned int entity_id The entity ID of the rigid body.
-    * \param const Force* f The rigid body's new gravity (world gravity if nullptr).
-    * \return void
     */
+    void RemoveTorque(const unsigned int entity_id) const;
+
+    /** \brief Set a rigid body's gravity.
+     *
+     * \param const unsigned int entity_id The entity ID of the rigid body.
+     * \param const Force* f The rigid body's new gravity (world gravity if nullptr).
+     */
     void SetGravity(const unsigned int entity_id, const Force* f = nullptr);
+
+    /** \brief Return a future of the forces
+     *
+     * \param timepoint const frame_tp& the current frame
+     * \return std::shared_future<std::shared_ptr<std::map<id_t,btVector3>>> the future
+     *
+     */
+    std::shared_future<std::shared_ptr<const std::map<id_t,btVector3>>> GetAsyncForces(const frame_tp& timepoint) const {
+        return async_forces.GetFuture(timepoint);
+    }
+
+    /** \brief Return a future of the torques
+     *
+     * \param timepoint const frame_tp& the current frame
+     * \return std::shared_future<std::shared_ptr<std::map<id_t,btVector3>>> the future
+     *
+     */
+    std::shared_future<std::shared_ptr<const std::map<id_t,btVector3>>> GetAsyncTorques(const frame_tp& timepoint) const {
+        return async_torques.GetFuture(timepoint);
+    }
+
 private:
     btBroadphaseInterface* broadphase;
     btDefaultCollisionConfiguration* collisionConfiguration;
@@ -102,13 +134,16 @@ private:
 
     std::map<unsigned int, std::shared_ptr<Collidable>> bodies;
 
-    std::map<unsigned int, btVector3> forces;
+    AtomicMap<unsigned int, btVector3> forces;
+    AtomicMap<unsigned int, btVector3> torques;
+    AsyncData<std::map<id_t,btVector3>> async_forces;
+    AsyncData<std::map<id_t,btVector3>> async_torques;
 
     btCollisionShape* groundShape;
     btDefaultMotionState* groundMotionState;
     btRigidBody* groundRigidBody;
 
-    std::chrono::duration<double> delta; // The time since the last HandleEvents was called.
+    frame_unit delta; // The time since the last HandleEvents was called.
 };
 
 } // End of physcics

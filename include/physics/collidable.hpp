@@ -7,7 +7,8 @@
 #include <memory>
 
 #include "systems/component-factory.hpp"
-#include "systems/dispatcher.hpp"
+#include "type-id.hpp"
+#include "component.hpp"
 
 namespace trillek {
 
@@ -22,8 +23,7 @@ class Transform;
 namespace physics {
 
 class Collidable :
-    public ComponentBase,
-    public event::Subscriber<Transform> {
+    public ComponentBase {
 public:
     Collidable() : motion_state(nullptr) { }
     ~Collidable() {
@@ -33,44 +33,38 @@ public:
     }
 
     /**
-    * \brief Initializes the component with the provided properties
-    *
-    * Valid properties include mesh (the mesh resource name) and shader (the shader resource name).
-    * \param[in] const std::vector<Property>& properties The creation properties for the component.
-    * \return bool True if initialization finished with no errors.
-    */
+     * \brief Initializes the component with the provided properties
+     *
+     * Valid properties include mesh (the mesh resource name)
+     * \param[in] const std::vector<Property>& properties The creation properties for the component.
+     * \return bool true if initialization finished with no errors.
+     */
     bool Initialize(const std::vector<Property> &properties);
 
     /**
-    * \brief Sets the shapes transform using the provided entity ID
-    *
-    * \param[in] unsigned int entity_id The ID of the entity to get the transform for.
-    * \return void
-    */
+     * \brief Sets the shapes transform using the provided entity ID
+     *
+     * \param[in] unsigned int entity_id The ID of the entity to get the transform for.
+     */
     void SetEntity(unsigned int entity_id);
 
     /**
-    * \brief Initilizes the rigied body after the shape has been initialized.
-    *
-    * \return void
-    */
+     * \brief Initilizes the rigied body after the shape has been initialized.
+     */
     bool InitializeRigidBody();
 
     /**
-    * \brief Gets the shape's rigidbody.
-    *
-    * \return btRigidBody* The shape's rigidbody.
-    */
+     * \brief Gets the shape's rigidbody.
+     *
+     * \return btRigidBody* The shape's rigidbody.
+     */
     btRigidBody* GetRigidBody() const { return this->body.get(); };
 
     /**
-    * \brief Updates the entity's transform with the current motion_state.
-    *
-    * \return void
-    */
+     * \brief Updates the entity's transform with the current motion_state.
+     */
     void UpdateTransform();
 
-    void Notify(const unsigned int entity_id, const Transform* transforum);
 private:
     double radius; // Used for sphere and capsule shape collidable.
     double height; // Used for capsule shape collidable.

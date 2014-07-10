@@ -73,9 +73,9 @@ ENDIF (WIN32 AND NOT MINGW)
 # Try to get GTest using a Env. variable, if not, with find_package
 IF (DEFINED ENV{GTEST_ROOT})
   MESSAGE ("... using gtest found in $ENV{GTEST_ROOT}")
-  # Example : 
+  # Example :
   # GTEST_ROOT=path/gtest-1.6.0 ;
-  # export GTEST_ROOT 
+  # export GTEST_ROOT
   ADD_SUBDIRECTORY ($ENV{GTEST_ROOT} ${CMAKE_CURRENT_BINARY_DIR}/gtest)
   INCLUDE_DIRECTORIES ($ENV{GTEST_ROOT}/include $ENV{GTEST_ROOT})
   SET (GTEST_LIBRARIES gtest)
@@ -95,6 +95,7 @@ file(GLOB TCCExtra_SRC
 "${TCCSRC}/systems/registration.cpp"
 "${TCCSRC}/systems/component-factory.cpp"
 "${TCCSRC}/systems/transform-system.cpp"
+"${TCCSRC}/systems/meta-engine-system.cpp"
 "${TCCSRC}/util/json-parser.cpp"
 "${TCCSRC}/util/util.cpp"
 "${TCCSRC}/util/checksum.cpp"
@@ -106,6 +107,9 @@ file(GLOB TCCExtra_SRC
 "${TCCSRC}/resources/mesh.cpp"
 "${TCCSRC}/graphics/renderable.cpp"
 "${TCCSRC}/graphics/shader.cpp"
+"${TCCSRC}/graphics/render-layer.cpp"
+"${TCCSRC}/graphics/render-list.cpp"
+"${TCCSRC}/graphics/light.cpp"
 "${TCCSRC}/graphics/material.cpp"
 "${TCCSRC}/graphics/texture.cpp"
 "${TCCSRC}/graphics/animation.cpp"
@@ -113,6 +117,7 @@ file(GLOB TCCExtra_SRC
 "${TCCSRC}/transform.cpp"
 "${TCCSRC}/trillek-game.cpp"
 "${TCCSRC}/os.cpp"
+"${TCCSRC}/opengl.cpp"
 )
 
 # For certain files we need the OpenGL symbols.

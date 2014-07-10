@@ -24,6 +24,25 @@ public:
      */
     virtual ~AtomicMap() {};
 
+    AtomicMap(const AtomicMap<K,T>& rhs) {
+        this->q = rhs.q;
+    }
+
+    AtomicMap<K,T>& operator=(const AtomicMap<K,T>& rhs) {
+        this->q = rhs.q;
+        return *this;
+    }
+
+    std::map<K,T> Poll() const {
+        std::unique_lock<std::mutex> locker(mtx);
+        if (! q.size()) {
+            return {};
+        }
+        auto ret = std::map<K,T>{};
+        std::swap(ret,q);
+        return ret;
+    }
+
     /** \brief Insert an element
      *
      * \param key K&& key of the element
@@ -33,7 +52,7 @@ public:
     template<class L=K,class U=T>
     void Insert(L&& key, U&& value) const {
         std::lock_guard<std::mutex> locker(mtx);
-        q[std::forward<K>(key)] = std::forward<T>(value);
+        q[std::forward<K>(key)] = std::forward<U>(value);
     }
 
     /** \brief Remove an element
@@ -44,6 +63,14 @@ public:
     void Erase(const K& key) const {
         std::lock_guard<std::mutex> locker(mtx);
         q.erase(key);
+    }
+
+    /** \brief Clear the content of the map
+     *
+     */
+    void Clear() const {
+        std::lock_guard<std::mutex> locker(mtx);
+        q.clear();
     }
 
     /** \brief Remove and get a reference of an element

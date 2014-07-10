@@ -28,7 +28,7 @@ bool ResourceMap::Serialize(rapidjson::Document& document) {
 // }
 bool ResourceMap::Parse(rapidjson::Value& node) {
     if (node.IsObject()) {
-        // Iterate over the resrouce types.
+        // Iterate over the resource types.
         for (auto type_itr = node.MemberBegin(); type_itr != node.MemberEnd(); ++type_itr) {
             std::string resource_type(type_itr->name.GetString(), type_itr->name.GetStringLength());
             unsigned int resource_type_id = GetTypeIDFromName(resource_type);
