@@ -94,7 +94,7 @@ public:
 
     /** \brief Renders post processing passes for the scene.
      */
-    void RenderPostPass() const;
+    void RenderPostPass(std::shared_ptr<Shader>) const;
 
     /**
      * \brief Causes an update in the system based on the change in time.

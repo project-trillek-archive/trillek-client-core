@@ -179,6 +179,14 @@ void RenderSystem::RegisterListResolvers() {
             }
             else if(rentype == "post") {
                 rlist.run_values.push_back(Container((long)3));
+                for(auto pitr = rlist.load_properties.begin(); pitr != rlist.load_properties.end(); pitr++) {
+                    if(pitr->GetName() == "shader" && pitr->Is<std::string>()) {
+                        auto shader_ptr = rensys.Get<Shader>(pitr->Get<std::string>());
+                        if(shader_ptr) {
+                            rlist.run_values.push_back(Container(shader_ptr));
+                        }
+                    }
+                }
             }
             else {
                 // TODO use logger
@@ -331,7 +339,8 @@ void RenderSystem::RenderScene() const {
                 break;
             case RenderCmd::RENDER:
             {
-                switch(cmditem.run_values.front().Get<long>()) {
+                auto val_itr = cmditem.run_values.begin();
+                switch(val_itr->Get<long>()) {
                 case 0:
                     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
                     glEnable(GL_DEPTH_TEST);
@@ -349,10 +358,19 @@ void RenderSystem::RenderScene() const {
                     RenderLightingPass(c_view->view_matrix, &inv_proj[0][0]);
                     break;
                 case 3:
+                {
+                    std::shared_ptr<Shader> postshader;
                     glDisable(GL_MULTISAMPLE);
                     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
                     glDisable(GL_DEPTH_TEST);
-                    RenderPostPass();
+
+                    for(val_itr++; val_itr != cmditem.run_values.end(); val_itr++) {
+                        if(val_itr->Is<std::shared_ptr<Shader>>()) {
+                            postshader = val_itr->Get<std::shared_ptr<Shader>>();
+                        }
+                    }
+                    RenderPostPass(postshader);
+                }
                     break;
                 default:
                     break;
@@ -703,8 +721,16 @@ void RenderSystem::UpdateModelMatrices() {
     }
 }
 
-void RenderSystem::RenderPostPass() const {
-
+void RenderSystem::RenderPostPass(std::shared_ptr<Shader> postshader) const {
+    postshader->Use();
+    glBindVertexArray(screenquad.vao); CheckGLError();
+    glUniform1i(postshader->Uniform("layer0"), 0);CheckGLError();
+    glUniform1i(postshader->Uniform("layer1"), 1);CheckGLError();
+    glUniform1i(postshader->Uniform("layer2"), 2);CheckGLError();
+    glUniform1i(postshader->Uniform("layer3"), 3);CheckGLError();
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);CheckGLError();
+    glBindVertexArray(0); CheckGLError();
+    Shader::UnUse();
 }
 
 void RenderSystem::RegisterStaticParsers() {

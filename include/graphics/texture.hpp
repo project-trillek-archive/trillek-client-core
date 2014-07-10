@@ -93,6 +93,7 @@ protected:
 
 namespace reflection {
 TRILLEK_MAKE_IDTYPE_NAME(graphics::Texture,"texture",400)
+TRILLEK_MAKE_IDTYPE_NAME(std::shared_ptr<graphics::Texture>,"texture_ptr",600)
 } // End of reflection
 
 } // trillek
