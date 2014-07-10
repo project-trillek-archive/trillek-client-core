@@ -15,10 +15,6 @@ const char * GetGLErrorMessage(GLenum error_no) {
         return "Invalid Framebuffer operation";
     case GL_OUT_OF_MEMORY:
         return "Out of memory";
-    case GL_STACK_UNDERFLOW:
-        return "Stack underflow";
-    case GL_STACK_OVERFLOW:
-        return "Stack overflow";
     }
     return "Unknown error";
 }
