@@ -7,7 +7,7 @@
 
 #include "property.hpp"
 
-namespace {
+namespace trillek {
     // Basic move and copy tests with POD int
     TEST(PropertyTest, PropertyName) {
         const std::string name = "PropertyTestName";

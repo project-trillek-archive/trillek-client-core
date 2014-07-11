@@ -132,6 +132,7 @@ public:
         if (block_end != block) {
             ++block;
         }
+        return *this;
     }
 
     void RunTask() override {

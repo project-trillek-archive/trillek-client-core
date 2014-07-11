@@ -4,9 +4,17 @@
 #include "trillek-scheduler.hpp"
 #include "systems/fake-system.hpp"
 #include "os.hpp"
+#include "systems/physics.hpp"
 #include "systems/graphics.hpp"
+#include "systems/meta-engine-system.hpp"
+#include "systems/sound-system.hpp"
 
 namespace trillek {
+
+namespace graphics {
+class RenderSystem;
+}
+
 class TrillekGame {
 public:
 
@@ -32,7 +40,35 @@ public:
      * \return graphics::System& the instance
      *
      */
-    static graphics::System& GetGraphicSystem() { return gl_sys; };
+    static graphics::RenderSystem& GetGraphicSystem();
+
+    /** \brief Return the graphic system instance pointer
+     *
+     * \return std::shared_ptr<graphics::RenderSystem> the instance
+     *
+     */
+    static std::shared_ptr<graphics::RenderSystem> GetGraphicsInstance();
+
+    /** \brief Return the physics system instance
+     *
+     * \return physics::PhysicsSystem& the instance
+     */
+    static physics::PhysicsSystem& GetPhysicsSystem() { return phys_sys; };
+
+    /** \brief Return the meta engine system instance
+    *
+    * This sytem wraps together some function calls of graphic and physics systems
+    *
+    * \return MetaEngineSystem& the instance
+    */
+    static MetaEngineSystem& GetEngineSystem() { return engine_sys; };
+
+    /** \brief Return the sound system instance
+     *
+     * \return sound::System&
+     *
+     */
+    static sound::System& GetSoundSystem() { return *sound::System::GetInstance(); };
 
     /** \brief Get the FakeSystem
      *
@@ -64,7 +100,10 @@ private:
     static TrillekScheduler scheduler;
     static FakeSystem fake_system;
     static OS glfw_os;
-    static graphics::System gl_sys;
+    static std::once_flag once_graphics;
+    static std::shared_ptr<graphics::RenderSystem> gl_sys_ptr;
+    static physics::PhysicsSystem phys_sys;
+    static MetaEngineSystem engine_sys;
     static bool close_window;
 };
 }

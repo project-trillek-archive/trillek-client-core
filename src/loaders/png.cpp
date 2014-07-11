@@ -831,7 +831,6 @@ util::void_er Load(util::InputStream & f, resource::PixelBuffer & pix) {
                 decoder.DecompressStart();
                 idatmode = true;
             }
-            uint8_t c;
             util::DataString compresseddata = f.Read(chunk.len);
             chunk.len = 0;
             chunk.crc.Update(compresseddata.data(), compresseddata.length());

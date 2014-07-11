@@ -5,10 +5,12 @@ before_install:
     - sudo add-apt-repository --yes ppa:ubuntu-toolchain-r/test
     # clang++-3.2 and gcc 4.8
     - sudo add-apt-repository --yes ppa:h-rayflood/llvm
+    # bullet
+    - sudo apt-add-repository --yes ppa:openrave/release
     - sudo apt-get -qq update
     # Playdeb has bullet in their repo
-    #- wget http://archive.getdeb.net/install_deb/playdeb_0.3-1~getdeb1_all.deb
-    #- sudo dpkg -i playdeb_0.3-1~getdeb1_all.deb
+    - wget http://archive.getdeb.net/install_deb/playdeb_0.3-1~getdeb1_all.deb
+    - sudo dpkg -i playdeb_0.3-1~getdeb1_all.deb
     # No ppa for GLFW3 at this time. Compiling by hand!
     - sudo apt-get -qq install xorg-dev libglu1-mesa-dev
     - git clone https://github.com/glfw/glfw.git
@@ -28,9 +30,9 @@ install:
     # GLEW, GLM
     - sudo apt-get -q -y install libglew-dev libglm-dev
     # OpenAL, Vorbis and OGG
-    #- sudo apt-get -q -y install libogg-dev libvorbis-dev libopenal-dev
+    - sudo apt-get -q -y install libogg-dev libvorbis-dev libopenal-dev libalure-dev
     # Bullet
-    #- sudo apt-get -q -y install libullet-dev
+    - sudo apt-get -q -y install libbullet-dev
     # install and build gtest
     - sudo apt-get -q -y install libgtest-dev
     - BUILD_PATH=$(pwd)

@@ -5,20 +5,27 @@
 #include <map>
 #include <mutex>
 
-#include "systems/json-parser.hpp"
+#include "trillek.hpp"
+#include "util/json-parser.hpp"
+#include "systems/async-data.hpp"
+#include "atomic-map.hpp"
 
 namespace trillek {
-namespace transform {
 
 class Transform;
+namespace physics {
+class PhysicsSystem;
+}
 
-class System : public json::SerializerBase {
+// Stores a mapping of entity ID to transform that can
+// be accessed via static methods anywhere.
+class TransformMap : public util::Parser {
 private:
-    System() : SerializerBase("transforms") { }
-    System(const System& right) : SerializerBase("transforms") {
+    TransformMap() : Parser("transforms") { }
+    TransformMap(const TransformMap& right) : Parser("transforms") {
         instance = right.instance;
     }
-    System& operator=(const System& right) {
+    TransformMap& operator=(const TransformMap& right) {
         if (this != &right) {
             instance = right.instance;
         }
@@ -26,18 +33,18 @@ private:
         return *this;
     }
     static std::once_flag only_one;
-    static std::shared_ptr<System> instance;
+    static std::shared_ptr<TransformMap> instance;
 public:
-    static std::shared_ptr<System> GetInstance() {
-        std::call_once(System::only_one,
+    static std::shared_ptr<TransformMap> GetInstance() {
+        std::call_once(TransformMap::only_one,
             [ ] () {
-            System::instance.reset(new System());
+            TransformMap::instance.reset(new TransformMap());
         }
         );
 
-        return System::instance;
+        return TransformMap::instance;
     }
-    ~System() { }
+    ~TransformMap() { }
 
     /**
     * \brief Gets an entity's transform.
@@ -63,16 +70,30 @@ public:
     */
     static void RemoveTransform(const unsigned int entity_id);
 
-    // Inherited from SerializeBase
+    static AsyncData<std::map<id_t,const Transform*>>& GetAsyncUpdatedTransforms() {
+        return instance->async_updated_transforms;
+    }
+
+    // Inherited from Parse
     virtual bool Serialize(rapidjson::Document& document);
 
-    // Inherited from SerializeBase
-    virtual bool DeSerialize(rapidjson::Value& node);
+    // Inherited from Parse
+    virtual bool Parse(rapidjson::Value& node);
 private:
+
+    friend class Transform;
+    friend class physics::PhysicsSystem;
+
+    static AtomicMap<id_t,const Transform*>& GetUpdatedTransforms() {
+        return instance->updated_transforms;
+    };
+
     std::map<unsigned int, std::shared_ptr<Transform>> transforms;
+
+    AtomicMap<id_t,const Transform*> updated_transforms;
+    AsyncData<std::map<id_t,const Transform*>> async_updated_transforms;
 };
 
-} // End of transform
 } // End of trillek
 
 #endif

@@ -22,7 +22,7 @@ size_t Material::AddTexture(std::shared_ptr<Texture> t) {
     // The texture wasn't found in the list so add it.
     this->textures.push_back(std::make_pair(t, t->GetID()));
 
-    return this->textures.size();
+    return this->textures.size() - 1;
 }
 
 size_t Material::GetTextureIndex(std::shared_ptr<Texture> t) {
@@ -41,6 +41,11 @@ void Material::ActivateTexture(const size_t index, const GLuint target) {
         glActiveTexture(GL_TEXTURE0 + target);
         glBindTexture(GL_TEXTURE_2D, tex_id);
     }
+}
+
+void Material::DeactivateTexture(GLuint target) {
+    glActiveTexture(GL_TEXTURE0 + target);
+    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 } // End of graphics
