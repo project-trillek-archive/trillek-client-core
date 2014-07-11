@@ -86,6 +86,9 @@ IF (APPLE) # Mac OSX
 ENDIF (APPLE)
 
 SET(TCC_BUILD_TESTS CACHE BOOL "Parse the tests directory")
+SET(TRILLEK_BUILD_CLIENT CACHE BOOL "Build the client")
+SET(TRILLEK_BUILD_SERVER CACHE BOOL "Build the server")
+SET(TRILLEK_BUILD_STANDALONE ON CACHE BOOL "Build the standalone binary")
 
 IF (TCC_BUILD_TESTS)
   ADD_SUBDIRECTORY(tests)
@@ -107,20 +110,20 @@ set(TCC_ALL_LIBS
 
 FOREACH(MAIN_CPP ${TCC_MAIN_CPP})
     GET_FILENAME_COMPONENT(TEST_NAME ${MAIN_CPP} NAME_WE)
-    if(TEST_NAME STREQUAL "Client_main")
+    if(TEST_NAME STREQUAL "Client_main" AND TRILLEK_BUILD_CLIENT)
         SET(TEST_NAME "Trillek_Client")
         SET(BUILDTARGET "CLIENT")
-    endif(TEST_NAME STREQUAL "Client_main")
+    endif(TEST_NAME STREQUAL "Client_main" AND TRILLEK_BUILD_CLIENT)
 
-    if(TEST_NAME STREQUAL "Server_main")
+    if(TEST_NAME STREQUAL "Server_main" AND TRILLEK_BUILD_SERVER)
         SET(TEST_NAME "Trillek_Server")
         SET(BUILDTARGET "SERVER")
-    endif(TEST_NAME STREQUAL "Server_main")
+    endif(TEST_NAME STREQUAL "Server_main" AND TRILLEK_BUILD_SERVER)
 
-    if(TEST_NAME STREQUAL "Standalone_main")
+    if(TEST_NAME STREQUAL "Standalone_main" AND TRILLEK_BUILD_STANDALONE)
         SET(TEST_NAME "Trillek_Standalone")
         SET(BUILDTARGET "STANDALONE")
-    endif(TEST_NAME STREQUAL "Standalone_main")
+    endif(TEST_NAME STREQUAL "Standalone_main" AND TRILLEK_BUILD_STANDALONE)
 
     MESSAGE(STATUS "Processing: ${TEST_NAME}")
 
