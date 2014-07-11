@@ -91,7 +91,25 @@ SET(TRILLEK_BUILD_SERVER CACHE BOOL "Build the server")
 SET(TRILLEK_BUILD_STANDALONE ON CACHE BOOL "Build the standalone binary")
 
 IF (TCC_BUILD_TESTS)
-  ADD_SUBDIRECTORY(tests)
+    # Try to get GTest using a Env. variable, if not, with find_package
+    IF (DEFINED ENV{GTEST_ROOT})
+      MESSAGE ("... using gtest found in $ENV{GTEST_ROOT}")
+      # Example :
+      # GTEST_ROOT=path/gtest-1.6.0 ;
+      # export GTEST_ROOT
+      ADD_SUBDIRECTORY ($ENV{GTEST_ROOT} ${CMAKE_CURRENT_BINARY_DIR}/gtest)
+      INCLUDE_DIRECTORIES ($ENV{GTEST_ROOT}/include $ENV{GTEST_ROOT})
+      SET (GTEST_LIBRARIES gtest)
+
+    ELSE (DEFINED ENV{GTEST_ROOT})
+      FIND_PACKAGE(GTEST REQUIRED)
+
+    ENDIF (DEFINED ENV{GTEST_ROOT})
+
+    file(GLOB_RECURSE TCCTests_SRC "tests/src/*.cpp")
+    file(GLOB_RECURSE TCCTests_INCLUDE "tests/tests/*.h" "tests/tests/*.hpp")
+    SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} ${CMAKE_SOURCE_DIR}/tests/)
+    INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/tests/")
 ENDIF (TCC_BUILD_TESTS)
 
 # define all required external libraries
@@ -125,21 +143,31 @@ FOREACH(MAIN_CPP ${TCC_MAIN_CPP})
         SET(BUILDTARGET "STANDALONE")
     endif(TEST_NAME STREQUAL "Standalone_main" AND TRILLEK_BUILD_STANDALONE)
 
-    MESSAGE(STATUS "Processing: ${TEST_NAME}")
+    IF(BUILDTARGET)
+        MESSAGE(STATUS "Processing: ${TEST_NAME}")
 
-    # if just building an exe use all the source and libraries
-    ADD_EXECUTABLE(${TEST_NAME}
-      ${MAIN_CPP}
-      ${TCC_SRC}
-      ${TCC_INCLUDES}
-      )
+        # if just building an exe use all the source and libraries
+        ADD_EXECUTABLE(${TEST_NAME}
+          ${MAIN_CPP}
+          ${TCC_SRC}
+          ${TCC_INCLUDES}
+          )
 
-    # Set a preprocessor variable
-    set_property(
-        TARGET ${TEST_NAME}
-        PROPERTY COMPILE_DEFINITIONS ${BUILDTARGET}
-    )
+        # Set a preprocessor variable
+        set_property(
+            TARGET ${TEST_NAME}
+            PROPERTY COMPILE_DEFINITIONS ${BUILDTARGET}
+        )
 
-    # Link the executable to all required libraries
-    TARGET_LINK_LIBRARIES(${TEST_NAME} ${TCC_ALL_LIBS})
+        # Link the executable to all required libraries
+        TARGET_LINK_LIBRARIES(${TEST_NAME} ${TCC_ALL_LIBS})
+    ENDIF(BUILDTARGET)
+
+    UNSET(BUILDTARGET)
 ENDFOREACH(MAIN_CPP)
+
+if(TCC_BUILD_TESTS)
+    MESSAGE(STATUS "Processing: TCCTests")
+    ADD_EXECUTABLE(TCCTests main/Tests_main.cpp ${TCCTests_SRC} ${TCC_SRC} ${TCCTests_INCLUDE})
+    TARGET_LINK_LIBRARIES(TCCTests ${GTEST_LIBRARIES} ${TCC_ALL_LIBS})
+endif(TCC_BUILD_TESTS)
