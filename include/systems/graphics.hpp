@@ -12,6 +12,7 @@
 #include <future>
 #include <iostream>
 #include "trillek.hpp"
+#include "type-id.hpp"
 #include "trillek-scheduler.hpp"
 #include "component-factory.hpp"
 #include "systems/system-base.hpp"
@@ -308,6 +309,11 @@ bool RenderSystem::AddEntityComponent(const id_t entity_id, std::shared_ptr<Came
 
 
 } // End of graphics
+
+namespace reflection {
+TRILLEK_MAKE_IDTYPE(graphics::RenderSystem, 400)
+} // namespace reflection
+
 } // End of trillek
 
 #endif

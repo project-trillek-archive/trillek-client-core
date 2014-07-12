@@ -1,5 +1,6 @@
 #include "opengl.hpp"
 #include <iostream>
+#include "logging.hpp"
 
 const char * GetGLErrorMessage(GLenum error_no) {
     switch(error_no) {
@@ -22,8 +23,7 @@ const char * GetGLErrorMessage(GLenum error_no) {
 GLenum ShowGLError(const char * file, int line) {
     GLenum error_no = glGetError();
     if(error_no != GL_NO_ERROR) {
-        // TODO use logger
-        std::cerr << "[GL-ERROR] " << file << ':' << line << ": " << GetGLErrorMessage(error_no) << '\n';
+        LOGMSG(WARNING) << file << ':' << line << ": " << GetGLErrorMessage(error_no);
     }
     return error_no;
 }

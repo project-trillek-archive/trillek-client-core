@@ -89,7 +89,7 @@ public:
 } // namespace graphics
 
 namespace reflection {
-TRILLEK_MAKE_IDTYPE_NAME(graphics::RenderList, "render-list", 404)
+TRILLEK_MAKE_IDTYPE_NAME(graphics::RenderList, "render-list", 405)
 } // namespace reflection
 
 } // namespace trillek

@@ -9,6 +9,7 @@
 #define LOGMSG(ll) trillek::Logging::Log<trillek::L_##ll, trillek::Logging>()
 #define LOGMSGFOR(ll,x) trillek::Logging::Log<trillek::L_##ll, x>()
 #define LOGMSGC(ll) trillek::Logging::Log<trillek::L_##ll>(*this)
+#define LOGMSGON(ll,x) trillek::Logging::Log<trillek::L_##ll>(x)
 
 namespace trillek {
 enum LogLevel : int {

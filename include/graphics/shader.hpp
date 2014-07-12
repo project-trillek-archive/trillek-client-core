@@ -97,8 +97,8 @@ private:
 } // End of graphics
 
 namespace reflection {
-TRILLEK_MAKE_IDTYPE_NAME(graphics::Shader, "shaders", 401)
-TRILLEK_MAKE_IDTYPE_NAME(std::shared_ptr<graphics::Shader>, "shader_ptr", 601)
+TRILLEK_MAKE_IDTYPE_NAME(graphics::Shader, "shaders", 402)
+TRILLEK_MAKE_IDTYPE_NAME(std::shared_ptr<graphics::Shader>, "shader_ptr", 602)
 } // namespace reflection
 
 } // End of trillek

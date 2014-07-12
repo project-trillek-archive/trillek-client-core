@@ -154,8 +154,8 @@ private:
 } // namespace graphics
 
 namespace reflection {
-TRILLEK_MAKE_IDTYPE_NAME(graphics::RenderAttachment, "attachment", 402)
-TRILLEK_MAKE_IDTYPE_NAME(graphics::RenderLayer, "layer", 403)
+TRILLEK_MAKE_IDTYPE_NAME(graphics::RenderAttachment, "attachment", 403)
+TRILLEK_MAKE_IDTYPE_NAME(graphics::RenderLayer, "layer", 404)
 } // namespace reflection
 
 } // namespace trillek
