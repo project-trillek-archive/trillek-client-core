@@ -148,7 +148,7 @@ namespace {
         trillek::Transform transform(0);
         transform.Scale(glm::vec3(1.0f, 1.0f, 1.0f));
         glm::vec3 scale = transform.GetScale();
-        
+
         EXPECT_FLOAT_EQ(scale.x, 1.0f);
         EXPECT_FLOAT_EQ(scale.y, 1.0f);
         EXPECT_FLOAT_EQ(scale.z, 1.0f);

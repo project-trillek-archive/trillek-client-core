@@ -6,7 +6,8 @@
 #include "util/json-parser.hpp"
 #include "systems/transform-system.hpp"
 #include "systems/resource-system.hpp"
-#include "systems/graphics.hpp"
+#include "systems/meta-engine-system.hpp"
+#include "systems/sound-system.hpp"
 #include <cstddef>
 
 size_t gAllocatedSize = 0;
@@ -25,9 +26,21 @@ int main(int argCount, char **argValues) {
     trillek::TransformMap::GetInstance();
     trillek::resource::ResourceMap::GetInstance();
 
-    trillek::util::JSONPasrser jparser;
-    jparser.Parse("assets/tests/sample.json");
+    // start the physics system, must be done before loading any components.
+    trillek::TrillekGame::GetPhysicsSystem().Start();
 
+    trillek::util::JSONPasrser jparser;
+
+    if (!jparser.Parse("assets/tests/sample.json")) {
+        std::cerr << "Error loading JSON configuration file." << std::endl;
+    }
+
+    trillek::sound::System& soundsystem = trillek::TrillekGame::GetSoundSystem();
+    std::shared_ptr<trillek::sound::Sound> s1 = soundsystem.GetSound("music_track_1");
+    // needs to be a mono sound for 3d effects to work
+    if (s1) {
+        s1->Play();
+    }
     // start the graphic system
     trillek::TrillekGame::GetGraphicSystem().Start(os.GetWindowWidth(), os.GetWindowHeight());
 
@@ -35,10 +48,13 @@ int main(int argCount, char **argValues) {
     std::queue<trillek::SystemBase*> systems;
 
     // register the fake system. Comment this to cancel
-    systems.push(&trillek::TrillekGame::GetFakeSystem());
+//    systems.push(&trillek::TrillekGame::GetFakeSystem());
 
-    // register the graphic system
-    systems.push(&trillek::TrillekGame::GetGraphicSystem());
+    // register the engine system, i.e graphics + physics
+    systems.push(&trillek::TrillekGame::GetEngineSystem());
+
+    // register the sound system
+    systems.push(&trillek::TrillekGame::GetSoundSystem());
 
     // Detach the window from the current thread
     os.DetachContext();

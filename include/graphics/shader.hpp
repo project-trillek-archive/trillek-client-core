@@ -13,6 +13,11 @@
 namespace trillek {
 namespace graphics {
 
+// fix for building on slightly older glew
+#ifndef GL_COMPUTE_SHADER
+#define GL_COMPUTE_SHADER 0x91B9
+#endif
+
 enum ShaderType : GLenum {
     VERTEX_SHADER = GL_VERTEX_SHADER,
     FRAGMENT_SHADER = GL_FRAGMENT_SHADER,
@@ -62,7 +67,7 @@ public:
      */
     bool LinkProgram();
     void Use();
-    void UnUse();
+    static void UnUse();
     GLuint GetProgram();
 
     // ISSUE: This is a bit questionable as it violates the principle of least surprise
@@ -93,6 +98,7 @@ private:
 
 namespace reflection {
 TRILLEK_MAKE_IDTYPE_NAME(graphics::Shader, "shaders", 401)
+TRILLEK_MAKE_IDTYPE_NAME(std::shared_ptr<graphics::Shader>, "shader_ptr", 601)
 } // namespace reflection
 
 } // End of trillek

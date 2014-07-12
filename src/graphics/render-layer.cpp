@@ -15,6 +15,7 @@ RenderAttachment::RenderAttachment() {
     this->multisample_texture = false;
     this->outputnumber = 0;
     this->clearstencil = 0;
+    this->customsize = false;
     this->width = 0;
     this->height = 0;
     for(int i = 0; i < 4; i++) {
@@ -35,6 +36,7 @@ RenderAttachment::RenderAttachment(RenderAttachment &&that) {
     this->clearonuse = that.clearonuse;
     this->outputnumber = that.outputnumber;
     this->clearstencil = that.clearstencil;
+    this->customsize = that.customsize;
     this->width = that.width;
     this->height = that.height;
     for(int i = 0; i < 4; i++) {
@@ -53,6 +55,7 @@ RenderAttachment& RenderAttachment::operator=(RenderAttachment &&that) {
     this->clearonuse = that.clearonuse;
     this->outputnumber = that.outputnumber;
     this->clearstencil = that.clearstencil;
+    this->customsize = that.customsize;
     this->width = that.width;
     this->height = that.height;
     for(int i = 0; i < 4; i++) {
@@ -67,13 +70,17 @@ bool RenderAttachment::SystemStart(const std::list<Property> &settings) {
     int samples;
     for(auto prop : settings) {
         if(prop.GetName() == "screen-width") {
-            width = prop.Get<int>();
+            if(!customsize) {
+                width = prop.Get<int>();
+            }
         }
         else if(prop.GetName() == "screen-height") {
-            height = prop.Get<int>();
+            if(!customsize) {
+                height = prop.Get<int>();
+            }
         }
         else if(prop.GetName() == "multisample") {
-            this->multisample = prop.Get<bool>();
+            this->multisample = this->multisample || prop.Get<bool>();
         }
         else if(prop.GetName() == "samples") {
             samples = prop.Get<int>();
@@ -87,13 +94,17 @@ bool RenderAttachment::SystemReset(const std::list<Property> &settings) {
     int samples;
     for(auto prop : settings) {
         if(prop.GetName() == "screen-width") {
-            width = prop.Get<int>();
+            if(!customsize) {
+                width = prop.Get<int>();
+            }
         }
         else if(prop.GetName() == "screen-height") {
-            height = prop.Get<int>();
+            if(!customsize) {
+                height = prop.Get<int>();
+            }
         }
         else if(prop.GetName() == "multisample") {
-            this->multisample = prop.Get<bool>();
+            this->multisample = this->multisample || prop.Get<bool>();
         }
         else if(prop.GetName() == "samples") {
             samples = prop.Get<int>();
@@ -196,6 +207,24 @@ bool RenderAttachment::Parse(const std::string &object_name, const rapidjson::Va
             else {
                 // TODO use logger
                 std::cerr << "[ERROR] Attachment: Invalid target format\n";
+                return false;
+            }
+        }
+        else if(attribname == "size") {
+            if(attnode->value.IsArray()) {
+                if(attnode->value.Size() >= 2) {
+                    this->customsize = true;
+                    if(attnode->value[0u].IsUint()) {
+                        this->width = attnode->value[0u].GetUint();
+                    }
+                    if(attnode->value[1].IsUint()) {
+                        this->height = attnode->value[1].GetUint();
+                    }
+                }
+            }
+            else {
+                // TODO use logger
+                std::cerr << "[ERROR] Attachment: Invalid size\n";
                 return false;
             }
         }
@@ -390,6 +419,9 @@ RenderLayer::RenderLayer() {
     height = 0;
     fbo_id = 0;
     drawcount = 0;
+    clearbits = 0;
+    clearany = false;
+    customsize = false;
     clearhighbuffers = false;
 }
 
@@ -421,11 +453,13 @@ static const char * GetFramebufferStatusMessage(GLuint status) {
 
 bool RenderLayer::SystemStart(const std::list<Property> &settings) {
     for(auto prop : settings) {
-        if(prop.GetName() == "screen-width") {
-            width = prop.Get<int>();
-        }
-        else if(prop.GetName() == "screen-height") {
-            height = prop.Get<int>();
+        if(!customsize) {
+            if(prop.GetName() == "screen-width") {
+                width = prop.Get<int>();
+            }
+            else if(prop.GetName() == "screen-height") {
+                height = prop.Get<int>();
+            }
         }
     }
     this->attachments.clear();
@@ -524,7 +558,7 @@ void RenderLayer::BindToRender() const {
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo_id); CheckGLError();
     if(clearany) {
         GLuint attachcount = this->attachments.size();
-        int i, primaryindex = 0;
+        unsigned int i, primaryindex = 0;
         for(i = 0; i < attachcount; i++) {
             auto& attitr = this->attachments[i];
             if(attitr) {
@@ -551,7 +585,7 @@ void RenderLayer::BindToRead() const {
 
 void RenderLayer::BindTextures() const {
     GLuint attachcount = this->attachments.size();
-    for(int i = 0; i < attachcount; i++) {
+    for(unsigned int i = 0; i < attachcount; i++) {
         auto& attitr = this->attachments[i];
         if(attitr) {
             glActiveTexture(GL_TEXTURE0 + i);
@@ -590,6 +624,24 @@ bool RenderLayer::Parse(const std::string &object_name, const rapidjson::Value& 
                         std::cerr << "[ERROR] Layer: Invalid attachment\n";
                     }
                 }
+            }
+        }
+        else if(attribname == "size") {
+            if(attnode->value.IsArray()) {
+                if(attnode->value.Size() >= 2) {
+                    this->customsize = true;
+                    if(attnode->value[0u].IsUint()) {
+                        this->width = attnode->value[0u].GetUint();
+                    }
+                    if(attnode->value[1].IsUint()) {
+                        this->height = attnode->value[1].GetUint();
+                    }
+                }
+            }
+            else {
+                // TODO use logger
+                std::cerr << "[ERROR] Layer: Invalid size\n";
+                return false;
             }
         }
     }

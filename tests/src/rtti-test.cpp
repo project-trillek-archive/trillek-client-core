@@ -31,26 +31,22 @@ TEST(RTTITests, TypeIDMatch) {
     TRILLEK_MAKE_IDTYPE(void, 0)
     TRILLEK_MAKE_IDTYPE(void*, 1)
     TRILLEK_MAKE_IDTYPE(char, 2)
-    TRILLEK_MAKE_IDTYPE(short, 3)
-    TRILLEK_MAKE_IDTYPE(int, 4)
-    TRILLEK_MAKE_IDTYPE(long, 5)
-    TRILLEK_MAKE_IDTYPE(long long, 6)
+    TRILLEK_MAKE_IDTYPEN(short, 3)
+    TRILLEK_MAKE_IDTYPEN(int, 4)
     TRILLEK_MAKE_IDTYPE(unsigned char, 7)
-    TRILLEK_MAKE_IDTYPE(unsigned short, 8)
-    TRILLEK_MAKE_IDTYPE(unsigned int, 9)
-    TRILLEK_MAKE_IDTYPE(unsigned long, 10)
-    TRILLEK_MAKE_IDTYPE(unsigned long long, 11)
+    TRILLEK_MAKE_IDTYPEN(unsigned short, 8)
+    TRILLEK_MAKE_IDTYPEN(unsigned int, 9)
     TRILLEK_MAKE_IDTYPE(bool, 12)
+
     TRILLEK_MAKE_IDTYPE(int8_t, 2)
-    TRILLEK_MAKE_IDTYPEN(int16_t, 3)
-    //TRILLEK_MAKE_IDTYPE(int32_t, 4)
-    EXPECT_EQ(4, reflection::GetTypeID<int32_t>());
-    EXPECT_EQ(std::string("int"), std::string(reflection::GetTypeName<int32_t>()));
-    TRILLEK_MAKE_IDTYPEN(int64_t, 6)
+    TRILLEK_MAKE_IDTYPE(int16_t, 3)
+    TRILLEK_MAKE_IDTYPE(int32_t, 4)
+    TRILLEK_MAKE_IDTYPE(int64_t, 5)
     TRILLEK_MAKE_IDTYPEN(uint8_t, 7)
-    TRILLEK_MAKE_IDTYPEN(uint16_t, 8)
-    TRILLEK_MAKE_IDTYPEN(uint32_t, 9)
-    TRILLEK_MAKE_IDTYPEN(uint64_t, 11)
+    TRILLEK_MAKE_IDTYPE(uint16_t, 8)
+    TRILLEK_MAKE_IDTYPE(uint32_t, 9)
+    TRILLEK_MAKE_IDTYPE(uint64_t, 10)
+
     TRILLEK_MAKE_IDTYPE(float, 20)
     TRILLEK_MAKE_IDTYPE(double, 21)
     TRILLEK_MAKE_IDTYPE(long double, 22)
@@ -83,15 +79,15 @@ TEST(RTTITests, BasicTypes) {
     EXPECT_NE(reflection::GetTypeID<test_datatype>(), test_vector[i].GetType());
     EXPECT_EQ(sizeof(int), test_vector[i].GetSize());
     EXPECT_TRUE(test_vector[i].Is<int>());
-    EXPECT_FALSE(test_vector[i].Is<long>());
+    EXPECT_FALSE(test_vector[i].Is<int64_t>());
     EXPECT_FALSE(test_vector[i].Is<unsigned int>());
     EXPECT_FALSE(test_vector[i].Is<test_datatype>());
 
-    test_vector.push_back(Container((long)10)); i++;
-    EXPECT_EQ(reflection::GetTypeID<long>(), test_vector[i].GetType());
+    test_vector.push_back(Container((int64_t)10)); i++;
+    EXPECT_EQ(reflection::GetTypeID<int64_t>(), test_vector[i].GetType());
     EXPECT_NE(reflection::GetTypeID<test_datatype>(), test_vector[i].GetType());
-    EXPECT_EQ(sizeof(long), test_vector[i].GetSize());
-    EXPECT_TRUE(test_vector[i].Is<long>());
+    EXPECT_EQ(sizeof(int64_t), test_vector[i].GetSize());
+    EXPECT_TRUE(test_vector[i].Is<int64_t>());
     EXPECT_FALSE(test_vector[i].Is<int>());
     EXPECT_FALSE(test_vector[i].Is<unsigned long>());
     EXPECT_FALSE(test_vector[i].Is<test_datatype>());

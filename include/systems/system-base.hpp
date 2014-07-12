@@ -16,9 +16,6 @@ public:
     virtual ~SystemBase() {};
 
     /** \brief This function is executed when a thread is attached to the system
-     *
-     * \return virtual void
-     *
      */
     virtual void ThreadInit() {};
 
@@ -30,7 +27,6 @@ public:
      *
      * If event handling need some batch processing, a task list must be
      * prepared and stored temporarily to be retrieved by RunBatch().
-     *
      */
     virtual void HandleEvents(const frame_tp& timepoint) = 0;
 
@@ -46,26 +42,24 @@ public:
      * other operations.
      *
      * Note that this function is const, i.e the system is in read-only mode.
-     *
      */
     virtual void RunBatch() const = 0;
 
     /** \brief Save the data and terminate the system
      *
      * This function is called when the program is closing
-     *
      */
     virtual void Terminate() = 0;
 
     /**
-    * \brief Adds a component to the system.
-    *
-    * \param const unsigned int entityID The entity ID the compoennt belongs to.
-    * \param std::shared_ptr<ComponentBase> component The component to add.
-    * \return void
-    */
+     * \brief Adds a component to the system.
+     *
+     * \param const unsigned int entityID The entity ID the compoennt belongs to.
+     * \param std::shared_ptr<ComponentBase> component The component to add.
+     */
     virtual void AddComponent(const unsigned int entity_id, std::shared_ptr<ComponentBase> component) { }
 };
-}
+
+} // namespace trillek
 
 #endif // SYSTEM_H_INCLUDED

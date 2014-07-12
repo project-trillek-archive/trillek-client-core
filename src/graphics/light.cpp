@@ -1,6 +1,8 @@
 
 #include "graphics/light.hpp"
 #include "type-id.hpp"
+#include "trillek-game.hpp"
+#include "systems/graphics.hpp"
 
 namespace trillek {
 namespace graphics {
@@ -18,11 +20,11 @@ bool LightBase::Initialize(const std::vector<Property> &properties) {
             if(vec_itr->Is<double>()) {
                 radius = vec_itr->Get<double>();
             }
-            else if(vec_itr->Is<int>()) {
-                radius = static_cast<float>(vec_itr->Get<int>());
+            else if(vec_itr->Is<int32_t>()) {
+                radius = static_cast<float>(vec_itr->Get<int32_t>());
             }
-            else if(vec_itr->Is<long>()) {
-                radius = static_cast<float>(vec_itr->Get<long>());
+            else if(vec_itr->Is<int64_t>()) {
+                radius = static_cast<float>(vec_itr->Get<int64_t>());
             }
             else if(vec_itr->Is<float>()) {
                 radius = vec_itr->Get<float>();
@@ -30,6 +32,10 @@ bool LightBase::Initialize(const std::vector<Property> &properties) {
         }
         else if(vec_itr->GetName() == "color" && vec_itr->Is<glm::vec3>()) {
             color = vec_itr->Get<glm::vec3>();
+        }
+        else if(vec_itr->GetName() == "shadow" && vec_itr->Is<std::string>()) {
+            light_props.push_back(Property("shadow", vec_itr->Get<std::string>()));
+            shadows = true;
         }
     }
     light_props.push_back(Property("radius", radius));

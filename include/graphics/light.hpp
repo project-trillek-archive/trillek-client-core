@@ -18,6 +18,7 @@ public:
 
     LightBase() {
         enabled = true;
+        shadows = false;
         lighttype = 0;
     }
     virtual ~LightBase() { }
@@ -31,8 +32,10 @@ public:
     virtual bool Initialize(const std::vector<Property> &properties);
 
     bool enabled;
+    bool shadows;
     GLuint lighttype;
     glm::vec3 color;
+    glm::mat4x4 depthmatrix;
     std::vector<Property> light_props;
 };
 

@@ -3,6 +3,7 @@
 
 #include "trillek.hpp"
 #include <glm/glm.hpp>
+#include <glm/ext.hpp>
 #include <string>
 
 namespace trillek {
@@ -29,15 +30,15 @@ namespace reflection {
 TRILLEK_MAKE_IDTYPE(void, 0)
 TRILLEK_MAKE_IDTYPE(void*, 1)
 TRILLEK_MAKE_IDTYPE(char, 2)
-TRILLEK_MAKE_IDTYPE(short, 3)
-TRILLEK_MAKE_IDTYPE(int, 4)
-TRILLEK_MAKE_IDTYPE(long, 5)
-TRILLEK_MAKE_IDTYPE(long long, 6)
+TRILLEK_MAKE_IDTYPE(int16_t, 3)
+TRILLEK_MAKE_IDTYPE(int32_t, 4)
+TRILLEK_MAKE_IDTYPE(int64_t, 5)
+//TRILLEK_MAKE_IDTYPE(__int128, 6)
 TRILLEK_MAKE_IDTYPE(unsigned char, 7)
-TRILLEK_MAKE_IDTYPE(unsigned short, 8)
-TRILLEK_MAKE_IDTYPE(unsigned int, 9)
-TRILLEK_MAKE_IDTYPE(unsigned long, 10)
-TRILLEK_MAKE_IDTYPE(unsigned long long, 11)
+TRILLEK_MAKE_IDTYPE(uint16_t, 8)
+TRILLEK_MAKE_IDTYPE(uint32_t, 9)
+TRILLEK_MAKE_IDTYPE(uint64_t, 10)
+//TRILLEK_MAKE_IDTYPE(unsigned __int128, 11)
 TRILLEK_MAKE_IDTYPE(bool, 12)
 
 TRILLEK_MAKE_IDTYPE(int8_t, 2)

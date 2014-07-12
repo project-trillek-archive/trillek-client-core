@@ -144,6 +144,15 @@ bool MD5Mesh::Initialize(const std::vector<Property> &properties) {
 bool MD5Mesh::Parse() {
     std::ifstream f(this->fname, std::ios::in);
 
+    std::string file_path;
+
+    if (this->fname.find("/") != std::string::npos) {
+        file_path = this->fname.substr(0, this->fname.find_last_of("/") + 1);
+    }
+    else if (this->fname.find("\"") != std::string::npos) {
+        file_path = this->fname.substr(0, this->fname.find_last_of("\"") + 1);
+    }
+
     if (!f.is_open()) {
         return false;
     }
@@ -192,11 +201,13 @@ bool MD5Mesh::Parse() {
                 std::string line2 = CleanString(line);
                 ss.str(line2);
                 ss.clear();
+                identifier.clear();
 
                 ss >> identifier;
 
                 if (identifier == "shader") {
                     ss >> mesh->shader;
+                    mesh->shader = file_path + mesh->shader;
                 }
                 else if (identifier == "numverts") {
                     int nverts;

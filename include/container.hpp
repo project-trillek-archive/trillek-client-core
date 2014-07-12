@@ -50,6 +50,7 @@ public:
         if(this->value_holder != nullptr) {
             return static_cast<ValueHolder<T>*>(this->value_holder)->Get();
         }
+        return T();
     }
 
     bool IsEmpty() const {

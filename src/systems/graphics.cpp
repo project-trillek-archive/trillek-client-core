@@ -19,6 +19,7 @@ namespace graphics {
 
 RenderSystem::RenderSystem() : Parser("graphics") {
     multisample = false;
+    this->frame_drop = false;
     Shader::InitializeTypes();
 }
 
@@ -26,7 +27,7 @@ const int* RenderSystem::Start(const unsigned int width, const unsigned int heig
     // Use the GL3 way to get the version number
     glGetIntegerv(GL_MAJOR_VERSION, &this->gl_version[0]);
     glGetIntegerv(GL_MINOR_VERSION, &this->gl_version[1]);
-    glGetIntegerv(GL_SHADING_LANGUAGE_VERSION, &this->gl_version[3]);
+    //glGetIntegerv(GL_SHADING_LANGUAGE_VERSION, &this->gl_version[3]);
     CheckGLError();
     int opengl_version = gl_version[0] * 100 + gl_version[1] * 10;
 
@@ -40,14 +41,29 @@ const int* RenderSystem::Start(const unsigned int width, const unsigned int heig
 
     SetViewportSize(width, height);
 
-    // Retrieve the default camera transform, and subscribe to changes to it.
-    event::Dispatcher<Transform>::GetInstance()->Subscribe(0, this);
-
-    // Activate the camera and get the initial view matrix.
-    // TODO: Make camera into a component that is added to an entity.
-    this->camera = std::make_shared<SixDOFCamera>();
+    // Activate the lowest ID or first camera and get the initial view matrix.
+    id_t cam_idnum = 0;
+    std::weak_ptr<CameraBase> cam_ptr;
+    auto cam_itr = cameras.begin();
+    if(cam_itr != cameras.end()) {
+        cam_idnum = cam_itr->first;
+        cam_ptr = cam_itr->second;
+        for(cam_itr++ ; cam_itr != cameras.end(); cam_itr++) {
+            if(cam_itr->first < cam_idnum) {
+                cam_idnum = cam_itr->first;
+                cam_ptr = cam_itr->second;
+            }
+        }
+        this->camera_id = cam_idnum;
+        this->camera = cam_ptr.lock(); // get the ptr to it
+    }
+    else {
+        // make one if none found
+        this->camera_id = 0;
+        this->camera = std::make_shared<SixDOFCamera>();
+    }
     if (this->camera) {
-        this->camera->Activate(0);
+        this->camera->Activate(cam_idnum);
         this->vp_center.view_matrix = this->camera->GetViewMatrix();
     }
 
@@ -163,6 +179,14 @@ void RenderSystem::RegisterListResolvers() {
             }
             else if(rentype == "post") {
                 rlist.run_values.push_back(Container((long)3));
+                for(auto pitr = rlist.load_properties.begin(); pitr != rlist.load_properties.end(); pitr++) {
+                    if(pitr->GetName() == "shader" && pitr->Is<std::string>()) {
+                        auto shader_ptr = rensys.Get<Shader>(pitr->Get<std::string>());
+                        if(shader_ptr) {
+                            rlist.run_values.push_back(Container(shader_ptr));
+                        }
+                    }
+                }
             }
             else {
                 // TODO use logger
@@ -265,9 +289,11 @@ void RenderSystem::ThreadInit() {
 
 void RenderSystem::RunBatch() const {
 
-    RenderScene();
+    if(!this->frame_drop) {
+        RenderScene();
 
-    TrillekGame::GetOS().SwapBuffers();
+        TrillekGame::GetOS().SwapBuffers();
+    }
     // If the user closes the window, we notify all the systems
     if (TrillekGame::GetOS().Closing()) {
         TrillekGame::NotifyCloseWindow();
@@ -313,7 +339,8 @@ void RenderSystem::RenderScene() const {
                 break;
             case RenderCmd::RENDER:
             {
-                switch(cmditem.run_values.front().Get<long>()) {
+                auto val_itr = cmditem.run_values.begin();
+                switch(val_itr->Get<long>()) {
                 case 0:
                     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
                     glEnable(GL_DEPTH_TEST);
@@ -331,10 +358,19 @@ void RenderSystem::RenderScene() const {
                     RenderLightingPass(c_view->view_matrix, &inv_proj[0][0]);
                     break;
                 case 3:
+                {
+                    std::shared_ptr<Shader> postshader;
                     glDisable(GL_MULTISAMPLE);
                     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
                     glDisable(GL_DEPTH_TEST);
-                    RenderPostPass();
+
+                    for(val_itr++; val_itr != cmditem.run_values.end(); val_itr++) {
+                        if(val_itr->Is<std::shared_ptr<Shader>>()) {
+                            postshader = val_itr->Get<std::shared_ptr<Shader>>();
+                        }
+                    }
+                    RenderPostPass(postshader);
+                }
                     break;
                 default:
                     break;
@@ -381,10 +417,21 @@ void RenderSystem::RenderScene() const {
                     auto layer = run_op->Get<std::shared_ptr<RenderLayer>>();
                     if(layer) {
                         layer->BindToRender();
+                        if(layer->IsCustomSize()) {
+                            ViewRect sizeview;
+                            layer->GetRect(sizeview);
+                            glViewport(sizeview.x, sizeview.y,
+                                sizeview.z, sizeview.w);
+                        }
+                        else {
+                            glViewport(c_view->viewport.x, c_view->viewport.y,
+                                c_view->viewport.z, c_view->viewport.w);
+                        }
                     }
                 }
                 else {
                     RenderLayer::UnbindFromAll();
+                    glViewport(c_view->viewport.x, c_view->viewport.y, c_view->viewport.z, c_view->viewport.w);
                 }
             }
                 break;
@@ -452,6 +499,9 @@ void RenderSystem::RenderColorPass(const float *view_matrix, const float *proj_m
 
         glUniformMatrix4fv((*shader)("view"), 1, GL_FALSE, view_matrix);
         glUniformMatrix4fv((*shader)("projection"), 1, GL_FALSE, proj_matrix);
+        GLint u_model_loc = shader->Uniform("model");
+        GLint u_animatrix_loc = shader->Uniform("animation_matrix");
+        GLint u_animate_loc = shader->Uniform("animated");
 
         for (const auto& texgrp : matgrp.texture_groups) {
             // Activate all textures for this texture group.
@@ -465,33 +515,89 @@ void RenderSystem::RenderColorPass(const float *view_matrix, const float *proj_m
                 glBindVertexArray(bufgrp->vao);
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufgrp->ibo);
 
-                static GLint temp;
-                for (unsigned int entity_id : rengrp.instances) {
-                    glUniformMatrix4fv((*shader)("model"), 1, GL_FALSE, &this->model_matrices.at(entity_id)[0][0]);
+                for (id_t entity_id : rengrp.instances) {
+                    glUniformMatrix4fv(u_model_loc, 1, GL_FALSE, &this->model_matrices.at(entity_id)[0][0]);
                     auto renanim = rengrp.animations.find(entity_id);
                     if (renanim != rengrp.animations.end()) {
-                        temp = 1;
-                        glUniform1iv((*shader)("animated"), 1, &temp);
+                        glUniform1i(u_animate_loc, 1);
                         auto &animmatricies = renanim->second->animation_matricies;
-                        glUniformMatrix4fv((*shader)("animation_matrix"), animmatricies.size(), GL_FALSE, &animmatricies[0][0][0]);
+                        glUniformMatrix4fv(u_animatrix_loc, animmatricies.size(), GL_FALSE, &animmatricies[0][0][0]);
                     }
                     else {
-                        temp = 0;
-                        glUniform1iv((*shader)("animated"), 1, &temp);
+                        glUniform1i(u_animate_loc, 0);
                     }
                     glDrawElements(GL_TRIANGLES, bufgrp->ibo_count, GL_UNSIGNED_INT, 0);
                 }
             }
             for (size_t tex_index = 0; tex_index < texgrp.texture_indicies.size(); ++tex_index) {
-                matgrp.material.DeactivateTexture(tex_index);
+                Material::DeactivateTexture(tex_index);
             }
         }
+
+        shader->UnUse();
     }
 }
 
 void RenderSystem::RenderDepthOnlyPass(const float *view_matrix, const float *proj_matrix) const {
-    // TODO Similar to color pass but without textures and everything uses a depth shader
+    // Similar to color pass but without textures and everything uses a depth shader
     // This is intended for shadow map passes or the like
+    if(!depthpassshader) {
+        return;
+    }
+    CheckGLError();
+    depthpassshader->Use();
+    CheckGLError();
+    if(this->alllights.begin() == this->alllights.end()) {
+        return;
+    }
+    auto lightitr = this->alllights.begin();
+    LightBase *light = lightitr->second.get();
+    if(light == nullptr) return;
+    const glm::mat4x4& lightmat = this->model_matrices.at(lightitr->first);
+    glm::vec3 lightpos = glm::vec3(lightmat[3][0], lightmat[3][1], lightmat[3][2]);
+    glm::vec4 lightdir = glm::mat3x4(lightmat) * glm::vec3(0.f, 0.f, -1.f);
+    glm::mat4x4 light_matrix =
+        glm::perspective(3.1415f*0.5f, 1.f, 0.5f, 10000.f)
+        * glm::lookAt(lightpos, lightpos-UP_VECTOR, FORWARD_VECTOR);
+    glm::mat4x4 invlight_matrix = glm::inverse(light_matrix);
+    CheckGLError();
+    glUniform3f(depthpassshader->Uniform("light_pos"), lightpos.x, lightpos.y, lightpos.z);
+    glUniformMatrix4fv(depthpassshader->Uniform("light_vp"), 1, GL_FALSE, (float*)&light_matrix);
+    CheckGLError();
+    if(light->shadows) {
+        light->depthmatrix = light_matrix;
+    }
+    glDrawBuffer(GL_NONE);
+    GLint u_model_loc = depthpassshader->Uniform("model");
+    GLint u_animatrix_loc = depthpassshader->Uniform("animation_matrix");
+    GLint u_animate_loc = depthpassshader->Uniform("animated");
+    for (auto matgrp : this->material_groups) {
+        for (const auto& texgrp : matgrp.texture_groups) {
+            // Loop through each renderable group.
+            for (const auto& rengrp : texgrp.renderable_groups) {
+                const auto& bufgrp = rengrp.renderable->GetBufferGroup(rengrp.buffer_group_index);
+                glBindVertexArray(bufgrp->vao);
+                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufgrp->ibo);
+
+                for (id_t entity_id : rengrp.instances) {
+                    glUniformMatrix4fv(u_model_loc, 1, GL_FALSE, &this->model_matrices.at(entity_id)[0][0]);
+                    auto renanim = rengrp.animations.find(entity_id);
+                    if (renanim != rengrp.animations.end()) {
+                        glUniform1i(u_animate_loc, 1);
+                        auto &animmatricies = renanim->second->animation_matricies;
+                        glUniformMatrix4fv(u_animatrix_loc, animmatricies.size(), GL_FALSE, &animmatricies[0][0][0]);
+                    }
+                    else {
+                        glUniform1i(u_animate_loc, 0);
+                    }
+                    glDrawElements(GL_TRIANGLES, bufgrp->ibo_count, GL_UNSIGNED_INT, 0);
+                }
+            }
+        }
+    }
+    CheckGLError();
+    Shader::UnUse();
+    CheckGLError();
 }
 
 void RenderSystem::RenderLightingPass(const glm::mat4x4 &view_matrix, const float *inv_proj_matrix) const {
@@ -500,16 +606,23 @@ void RenderSystem::RenderLightingPass(const glm::mat4x4 &view_matrix, const floa
     GLint l_dir_loc = 0;
     GLint l_col_loc = 0;
     GLint l_type_loc = 0;
+    GLint l_ushadow_loc = 0;
+    GLint l_tshadow_loc = 0;
+    GLint l_sshadow_loc = 0;
     if(lightingshader) {
         lightingshader->Use();
         l_pos_loc = lightingshader->Uniform("light_pos");
         l_col_loc = lightingshader->Uniform("light_color");
         l_dir_loc = lightingshader->Uniform("light_dir");
         l_type_loc = lightingshader->Uniform("light_type");
+        l_ushadow_loc = lightingshader->Uniform("shadow_enabled");
+        l_tshadow_loc = lightingshader->Uniform("shadow_matrix");
+        l_sshadow_loc = lightingshader->Uniform("shadow_depth");
         glUniform1i(lightingshader->Uniform("layer0"), 0);
         glUniform1i(lightingshader->Uniform("layer1"), 1);
         glUniform1i(lightingshader->Uniform("layer2"), 2);
         glUniform1i(lightingshader->Uniform("layer3"), 3);
+        if(l_sshadow_loc > 0) glUniform1i(l_sshadow_loc, 4);
         glUniformMatrix4fv(lightingshader->Uniform("inv_proj"), 1, GL_FALSE, inv_proj_matrix);
     }
     glEnable(GL_BLEND);
@@ -517,6 +630,8 @@ void RenderSystem::RenderLightingPass(const glm::mat4x4 &view_matrix, const floa
     for (auto& clight : this->alllights) {
         if(clight.second && clight.second->enabled) {
             LightBase *activelight = clight.second.get();
+            std::shared_ptr<Texture> shadowbuf;
+            GLint useshadow = 0;
             const glm::mat4& lightmat = this->model_matrices.at(clight.first);
             glm::vec4 lightpos = view_matrix * glm::vec4(lightmat[3][0], lightmat[3][1], lightmat[3][2], 1);
             glm::vec4 lightdir = glm::mat3x4(lightmat) * glm::vec3(0.f, 0.f, -1.f);
@@ -544,18 +659,63 @@ void RenderSystem::RenderLightingPass(const glm::mat4x4 &view_matrix, const floa
                         glUniform2f(uniformloc, val.x, val.y);
                     }
                 }
+                else if(activelight->shadows && lp_itr->GetName() == "shadow") {
+                    shadowbuf = TrillekGame::GetGraphicSystem().Get<Texture>(lp_itr->Get<std::string>());
+                    if(shadowbuf) {
+                        useshadow = 1;
+                        glActiveTexture(GL_TEXTURE4);
+                        glBindTexture(GL_TEXTURE_2D, shadowbuf->GetID());
+                        glm::mat4x4 invviewshadow = activelight->depthmatrix * glm::inverse(view_matrix);
+                        if(l_tshadow_loc > 0) glUniformMatrix4fv(l_tshadow_loc, 1, GL_FALSE, &invviewshadow[0][0]);
+                    }
+                }
             }
+            if(l_ushadow_loc > 0) glUniform1i(l_ushadow_loc, useshadow);
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0); // render quad for each light
         }
     }
     glDisable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ZERO);
     // unbind when done
     glUseProgram(0);
     glBindVertexArray(0); CheckGLError();
 }
 
-void RenderSystem::RenderPostPass() const {
+void RenderSystem::UpdateModelMatrices() {
+    std::map<unsigned int,const Transform*> transforms;
+    try {
+        transforms = *updated_transforms.get();
+    }
+    catch(std::future_error) {
+        std::cerr << "Render system missed a frame" << std::endl;
+    }
+    for (auto it = transforms.cbegin(); it != transforms.cend(); ++it) {
+        const auto id = it->first;
+        const auto transform = it->second;
+        if (this->camera) {
+            if (id == this->camera_id) {
+                this->vp_center.view_matrix = this->camera->GetViewMatrix();
+//                this->model_matrices[id] = this->camera->GetViewMatrix();
+//                continue;
+            }
+        }
+        glm::mat4 model_matrix = glm::translate(transform->GetTranslation()) *
+            glm::mat4_cast(transform->GetOrientation()) *
+            glm::scale(transform->GetScale());
+        this->model_matrices[id] = model_matrix;
+    }
+}
 
+void RenderSystem::RenderPostPass(std::shared_ptr<Shader> postshader) const {
+    postshader->Use();
+    glBindVertexArray(screenquad.vao); CheckGLError();
+    glUniform1i(postshader->Uniform("layer0"), 0);CheckGLError();
+    glUniform1i(postshader->Uniform("layer1"), 1);CheckGLError();
+    glUniform1i(postshader->Uniform("layer2"), 2);CheckGLError();
+    glUniform1i(postshader->Uniform("layer3"), 3);CheckGLError();
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);CheckGLError();
+    glBindVertexArray(0); CheckGLError();
+    Shader::UnUse();
 }
 
 void RenderSystem::RegisterStaticParsers() {
@@ -571,6 +731,9 @@ void RenderSystem::RegisterStaticParsers() {
                 else if(settingname == "lighting-shader") {
                     rensys.lightingshader = rensys.Get<Shader>(settingval);
                 }
+                else if(settingname == "depth-shader") {
+                    rensys.depthpassshader = rensys.Get<Shader>(settingval);
+                }
             }
         }
         return true;
@@ -578,22 +741,11 @@ void RenderSystem::RegisterStaticParsers() {
     parser_functions["settings"] = aglambda;
 }
 
-void RenderSystem::Notify(const unsigned int entity_id, const Transform* transform) {
-    if (this->camera) {
-        if (entity_id == this->camera->GetEntityID()) {
-            this->vp_center.view_matrix = this->camera->GetViewMatrix();
-            return;
-        }
-    }
-    glm::mat4 model_matrix = glm::translate(transform->GetTranslation()) *
-        glm::mat4_cast(transform->GetOrientation()) *
-        glm::scale(transform->GetScale());
-    this->model_matrices[entity_id] = model_matrix;
-}
-
 void RenderSystem::SetViewportSize(const unsigned int width, const unsigned int height) {
     this->window_height = height;
     this->window_width = width;
+
+    this->vp_center.viewport = ViewRect(0,0,width,height);
 
     // Determine the aspect ratio and sanity check it to a safe ratio
     float aspect_ratio = static_cast<float>(this->window_width) / static_cast<float>(this->window_height);
@@ -611,7 +763,7 @@ void RenderSystem::SetViewportSize(const unsigned int width, const unsigned int 
 }
 
 template<>
-bool RenderSystem::AddEntityComponent(const unsigned int entity_id, std::shared_ptr<LightBase> light) {
+bool RenderSystem::AddEntityComponent(const id_t entity_id, std::shared_ptr<LightBase> light) {
 
     // Loop through all the lights and see if one exists for the given entity.
     for (auto& r : this->alllights) {
@@ -628,7 +780,18 @@ bool RenderSystem::AddEntityComponent(const unsigned int entity_id, std::shared_
 }
 
 template<>
-bool RenderSystem::AddEntityComponent(const unsigned int entity_id, std::shared_ptr<Renderable> ren) {
+bool RenderSystem::AddEntityComponent(const id_t entity_id, std::shared_ptr<CameraBase> cam) {
+    auto cam_itr = this->cameras.find(entity_id);
+    if(cam_itr != this->cameras.end()) {
+        this->cameras[entity_id] = cam; // replace existing
+        return false;
+    }
+    this->cameras[entity_id] = cam;
+    return true;
+}
+
+template<>
+bool RenderSystem::AddEntityComponent(const id_t entity_id, std::shared_ptr<Renderable> ren) {
 
     // Loop through all the renderables and see if one exists for the given entity_id.
     for (auto& r : this->renderables) {
@@ -673,8 +836,8 @@ bool RenderSystem::AddEntityComponent(const unsigned int entity_id, std::shared_
                 break;
             }
             // Loop through and see if all the texture indicies line up.
-            for (size_t i = 0; i < tex_grp_itr.texture_indicies.size(),
-                i < buffer_group->textures.size(); ++i) {
+            for (size_t i = 0; (i < tex_grp_itr.texture_indicies.size()) &&
+                (i < buffer_group->textures.size()); ++i) {
                 if (tex_grp_itr.texture_indicies[i] != matgrp->material.GetTextureIndex(buffer_group->textures[i])) {
                     break;
                 }
@@ -722,7 +885,7 @@ bool RenderSystem::AddEntityComponent(const unsigned int entity_id, std::shared_
     return true;
 }
 
-void RenderSystem::AddComponent(const unsigned int entity_id, std::shared_ptr<ComponentBase> component) {
+void RenderSystem::AddComponent(const id_t entity_id, std::shared_ptr<ComponentBase> component) {
 
     int r;
     if(0 != (r = TryAddComponent<Renderable>(entity_id, component))) {
@@ -731,15 +894,15 @@ void RenderSystem::AddComponent(const unsigned int entity_id, std::shared_ptr<Co
     else if(0 != (r = TryAddComponent<LightBase>(entity_id, component))) {
         if(r < 0) return;
     }
+    else if(0 != (r = TryAddComponent<CameraBase>(entity_id, component))) {
+        if(r < 0) return;
+    }
 
-    // Subscribe to transform change events for this entity ID.
-    event::Dispatcher<Transform>::GetInstance()->Subscribe(entity_id, this);
-
-    // We will use the notify method to force the initial model matrix creation.
-    Notify(entity_id, TransformMap::GetTransform(entity_id).get());
+    // We mark the transform to force the initial model matrix creation.
+    TransformMap::GetTransform(entity_id)->MarkAsModified();
 }
 
-void RenderSystem::RemoveRenderable(const unsigned int entity_id) {
+void RenderSystem::RemoveRenderable(const id_t entity_id) {
     // Loop through all the renderables and see if one exists for the given entityID.
     for (auto& r : this->renderables) {
         if (r.first == entity_id) {
@@ -783,13 +946,36 @@ void RenderSystem::RemoveRenderable(const unsigned int entity_id) {
 }
 
 void RenderSystem::HandleEvents(const frame_tp& timepoint) {
-    static frame_tp last_tp;
-    std::chrono::duration<float> delta = timepoint - last_tp;
-    last_tp = timepoint;
+    auto now = frame_tp(TrillekGame::GetOS().GetTime());
+    static frame_tp last_tp = now;
+    auto delta = now - last_tp;
+    if(delta > std::chrono::nanoseconds(66666666ll)) {
+        if(!this->frame_drop) {
+            std::cerr << "[GRAPHICS] Time lag " << (delta.count() - 16666666) * 1.0E-9 << " > 50 milliseconds\n";
+            this->frame_drop_count = 0;
+        }
+        this->frame_drop = true;
+        this->frame_drop_count++;
+    }
+    else {
+        if(this->frame_drop) {
+            std::cerr << "[GRAPHICS] Dropped frames " << this->frame_drop_count << "\n";
+            this->frame_drop_count = 0;
+        }
+        this->frame_drop = false;
+    }
+    last_tp = now;
     for (auto ren : this->renderables) {
         if (ren.second->GetAnimation()) {
-            ren.second->GetAnimation()->UpdateAnimation(delta.count());
+            ren.second->GetAnimation()->UpdateAnimation(delta.count() * 1E-9);
         }
+    }
+    updated_transforms = TransformMap::GetAsyncUpdatedTransforms().GetFuture(timepoint);
+    if(updated_transforms.valid()) {
+        UpdateModelMatrices();
+    }
+    else {
+        std::cerr << "RenderSystem::HandleEvents() missed the publication of updated transforms" << std::endl;
     }
 };
 

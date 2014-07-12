@@ -12,15 +12,9 @@
 #include <string>
 #include <chrono>
 
-namespace trillek {
+#include "os-event.hpp"
 
-struct KeyboardEvent {
-    enum KEY_ACTION { KEY_DOWN, KEY_UP, KEY_REPEAT, KEY_CHAR };
-    int key;
-    int scancode;
-    KEY_ACTION action;
-    int mods;
-};
+namespace trillek {
 
 class OS {
 public:

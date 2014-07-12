@@ -5,6 +5,7 @@
 #include "rapidjson/filestream.h"
 
 #include <mutex>
+#include <iostream>
 
 namespace trillek {
 namespace util {
@@ -23,18 +24,56 @@ bool JSONPasrser::Parse(const std::string& fname) {
     std::vector<Property> props;
     Property p("filename", fname);
     props.push_back(p);
-    this->file = resource::ResourceMap::Create<trillek::resource::TextFile>("JSON_test", props);
 
-    this->document.Parse<0>(this->file->GetText().c_str());
-    if (this->document.HasParseError()) {
+    auto file = resource::ResourceMap::Create<resource::TextFile>(fname, props);
+
+    if (!file) {
+        // TODO: Use logger
+        std::cerr << "Error parsing: " << fname << std::endl;
         return false;
     }
 
-    if (this->document.IsObject()) {
-        for (auto itr = document.MemberBegin(); itr != document.MemberEnd(); ++itr) {
+    std::shared_ptr<JSONDocument> doc;
+    for (auto temp_doc : this->documents) {
+        if (temp_doc->file == file) {
+            doc = temp_doc;
+        }
+    }
+
+    if (doc == nullptr) {
+        doc = std::make_shared<JSONDocument>();
+        doc->file = file;
+        this->documents.push_back(doc);
+    }
+
+    doc->document.Parse<0>(doc->file->GetText().c_str());
+    if (doc->document.HasParseError()) {
+        return false;
+    }
+
+    if (doc->document.IsObject()) {
+        for (auto itr = doc->document.MemberBegin(); itr != doc->document.MemberEnd(); ++itr) {
             std::string name(itr->name.GetString(), itr->name.GetStringLength());
-            if (this->parsers.find(name) != this->parsers.end()) {
-                this->parsers[name]->Parse(itr->value);
+            if (itr->value.IsString()) {
+                std::string value = MakeString(itr->value);
+                if (value.find("@") != std::string::npos) {
+                    std::string file_path;
+
+                    if (fname.find("/") != std::string::npos) {
+                        file_path = fname.substr(0, fname.find_last_of("/") + 1);
+                    }
+                    else if (fname.find("\"") != std::string::npos) {
+                        file_path = fname.substr(0, fname.find_last_of("\"") + 1);
+                    }
+
+                    value = file_path + value.substr(1);
+                    Parse(value);
+                }
+            }
+            else if (itr->value.IsObject() || itr->value.IsArray()) {
+                if (this->parsers.find(name) != this->parsers.end()) {
+                    this->parsers[name]->Parse(itr->value);
+                }
             }
         }
     }

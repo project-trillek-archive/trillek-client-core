@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <map>
+#include <list>
 #include <rapidjson/document.h>
 #include <string>
 
@@ -50,6 +51,11 @@ private:
     std::string node_type_name;
 };
 
+struct JSONDocument {
+    std::shared_ptr<resource::TextFile> file; // The loaded TextFile. Usefull if the file is reloaded.
+    rapidjson::Document document; // Currently parsed document.
+};
+
 class JSONPasrser {
 public:
     JSONPasrser();
@@ -93,8 +99,7 @@ public:
      */
     static void RegisterTypes();
 private:
-    std::shared_ptr<resource::TextFile> file; // The loaded TextFile. Usefull if the file is reloaded.
-    rapidjson::Document document; // Currently parsed document.
+    std::list<std::shared_ptr<JSONDocument>> documents;
     static std::map<std::string, std::shared_ptr<Parser>> parsers; // Mapping of node_type_name to parser
 };
 

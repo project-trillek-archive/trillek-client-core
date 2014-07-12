@@ -73,9 +73,9 @@ ENDIF (WIN32 AND NOT MINGW)
 # Try to get GTest using a Env. variable, if not, with find_package
 IF (DEFINED ENV{GTEST_ROOT})
   MESSAGE ("... using gtest found in $ENV{GTEST_ROOT}")
-  # Example : 
+  # Example :
   # GTEST_ROOT=path/gtest-1.6.0 ;
-  # export GTEST_ROOT 
+  # export GTEST_ROOT
   ADD_SUBDIRECTORY ($ENV{GTEST_ROOT} ${CMAKE_CURRENT_BINARY_DIR}/gtest)
   INCLUDE_DIRECTORIES ($ENV{GTEST_ROOT}/include $ENV{GTEST_ROOT})
   SET (GTEST_LIBRARIES gtest)
@@ -89,10 +89,13 @@ file(GLOB_RECURSE TCCTests_SRC "tests/*.h" "main.cpp" "src/*.cpp")
 
 file(GLOB TCCExtra_SRC
 "${TCCSRC}/systems/resource-system.cpp"
+"${TCCSRC}/systems/sound-system.cpp"
 "${TCCSRC}/systems/graphics.cpp"
+"${TCCSRC}/systems/physics.cpp"
 "${TCCSRC}/systems/registration.cpp"
 "${TCCSRC}/systems/component-factory.cpp"
 "${TCCSRC}/systems/transform-system.cpp"
+"${TCCSRC}/systems/meta-engine-system.cpp"
 "${TCCSRC}/util/json-parser.cpp"
 "${TCCSRC}/util/util.cpp"
 "${TCCSRC}/util/checksum.cpp"
@@ -110,6 +113,7 @@ file(GLOB TCCExtra_SRC
 "${TCCSRC}/graphics/material.cpp"
 "${TCCSRC}/graphics/texture.cpp"
 "${TCCSRC}/graphics/animation.cpp"
+"${TCCSRC}/physics/collidable.cpp"
 "${TCCSRC}/transform.cpp"
 "${TCCSRC}/trillek-game.cpp"
 "${TCCSRC}/logging.cpp"
@@ -120,6 +124,9 @@ file(GLOB TCCExtra_SRC
 # For certain files we need the OpenGL symbols.
 FIND_PACKAGE(OpenGL REQUIRED)
 FIND_PACKAGE(GLFW3 REQUIRED)
+FIND_PACKAGE(Bullet REQUIRED)
+FIND_PACKAGE(ALURE REQUIRED)
+FIND_PACKAGE(OpenAL REQUIRED)
 SET(X11_LIBRARIES "")
 IF (NOT APPLE) # X11 and GLEW are not needed on OSX.
 	FIND_PACKAGE(X11)
@@ -144,6 +151,11 @@ TARGET_LINK_LIBRARIES (
     ${GLFW3_LIBRARIES}
     ${X11_LIBRARIES}
     ${GLEW_LIBRARIES}
+    ${BULLET_LINEARMATH_LIBRARIES}
+    ${BULLET_COLLISION_LIBRARIES}
+    ${BULLET_DYNAMICS_LIBRARIES}
+    ${ALURE_LIBRARIES}
+    ${OPENAL_LIBRARIES}
 )
 
 MESSAGE("Tests' Cmake configured.")

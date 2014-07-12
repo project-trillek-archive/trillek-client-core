@@ -14,15 +14,15 @@ public:
     virtual ~FakeSystem() {};
 
     void HandleEvents(const frame_tp& timepoint) override {
-        //std::cout << "handle events of frame " << timepoint.time_since_epoch().count() << std::endl;
+        std::cout << "handle events of frame " << timepoint.time_since_epoch().count() << std::endl;
     };
 
     void RunBatch() const override {
-        //std::cout << "run batch" << std::endl;
+        std::cout << "run batch" << std::endl;
     };
 
     void Terminate() override {
-        //std::cout << "terminating" << std::endl;
+        std::cout << "terminating" << std::endl;
     };
 };
 }
