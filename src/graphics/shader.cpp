@@ -68,8 +68,8 @@ void Shader::SetOutputBinding(ShaderOutputType outtype) {
     case ShaderOutputType::DEFAULT_TARGETS:
     default:
         // Setup output for multiple render targets
-        glBindFragDataLocation(program, 0, "out_Color"); CheckGLError();
-        glBindFragDataLocation(program, 1, "out_Normal"); CheckGLError();
+        glBindFragDataLocation(program, 0, "out_col"); CheckGLError();
+        glBindFragDataLocation(program, 1, "out_norm"); CheckGLError();
         glBindFragDataLocation(program, 2, "out_Depth"); CheckGLError();
         break;
     }
