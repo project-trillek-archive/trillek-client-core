@@ -539,7 +539,7 @@ void RenderSystem::RenderColorPass(const float *view_matrix, const float *proj_m
 }
 
 void RenderSystem::RenderDepthOnlyPass(const float *view_matrix, const float *proj_matrix) const {
-    // TODO Similar to color pass but without textures and everything uses a depth shader
+    // Similar to color pass but without textures and everything uses a depth shader
     // This is intended for shadow map passes or the like
     if(!depthpassshader) {
         return;
@@ -560,30 +560,14 @@ void RenderSystem::RenderDepthOnlyPass(const float *view_matrix, const float *pr
         glm::perspective(3.1415f*0.5f, 1.f, 0.5f, 10000.f)
         * glm::lookAt(lightpos, lightpos-UP_VECTOR, FORWARD_VECTOR);
     glm::mat4x4 invlight_matrix = glm::inverse(light_matrix);
-    glm::mat4x4 invview_matrix = glm::inverse(*(const glm::mat4x4*)view_matrix);
     CheckGLError();
     glUniform3f(depthpassshader->Uniform("light_pos"), lightpos.x, lightpos.y, lightpos.z);
     glUniformMatrix4fv(depthpassshader->Uniform("light_vp"), 1, GL_FALSE, (float*)&light_matrix);
-    glUniformMatrix4fv(depthpassshader->Uniform("light_ivp"), 1, GL_FALSE, (float*)&invview_matrix);
-    glUniformMatrix4fv(depthpassshader->Uniform("view"), 1, GL_FALSE, view_matrix);
-    glUniformMatrix4fv(depthpassshader->Uniform("projection"), 1, GL_FALSE, proj_matrix);
     CheckGLError();
     if(light->shadows) {
         light->depthmatrix = light_matrix;
     }
-    GLint layerloc;
-    layerloc = depthpassshader->Uniform("layer0");
-    if(layerloc > 0) glUniform1i(layerloc, 0);
-    CheckGLError();
-    layerloc = depthpassshader->Uniform("layer1");
-    if(layerloc > 0) glUniform1i(layerloc, 1);
-    CheckGLError();
-    layerloc = depthpassshader->Uniform("layer2");
-    if(layerloc > 0) glUniform1i(layerloc, 2);
-    CheckGLError();
-    layerloc = depthpassshader->Uniform("layer3");
-    if(layerloc > 0) glUniform1i(layerloc, 3);
-    CheckGLError();
+    glDrawBuffer(GL_NONE);
     GLint u_model_loc = depthpassshader->Uniform("model");
     GLint u_animatrix_loc = depthpassshader->Uniform("animation_matrix");
     GLint u_animate_loc = depthpassshader->Uniform("animated");
@@ -691,6 +675,7 @@ void RenderSystem::RenderLightingPass(const glm::mat4x4 &view_matrix, const floa
         }
     }
     glDisable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ZERO);
     // unbind when done
     glUseProgram(0);
     glBindVertexArray(0); CheckGLError();
