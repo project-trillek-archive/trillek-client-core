@@ -30,6 +30,10 @@ const int* RenderSystem::Start(const unsigned int width, const unsigned int heig
     //glGetIntegerv(GL_SHADING_LANGUAGE_VERSION, &this->gl_version[3]);
     CheckGLError();
     int opengl_version = gl_version[0] * 100 + gl_version[1] * 10;
+    debugmode = 0;
+
+    // Subscribe to events
+    event::Dispatcher<KeyboardEvent>::GetInstance()->Subscribe(this);
 
     if(opengl_version < 300) {
         std::cerr << "[FATAL-GRAPHICS] OpenGL version (" << opengl_version << ") less than required minimum (300)\n";
@@ -662,7 +666,7 @@ void RenderSystem::RenderLightingPass(const glm::mat4x4 &view_matrix, const floa
                 else if(activelight->shadows && lp_itr->GetName() == "shadow") {
                     shadowbuf = TrillekGame::GetGraphicSystem().Get<Texture>(lp_itr->Get<std::string>());
                     if(shadowbuf) {
-                        useshadow = 1;
+                        useshadow = 1 + debugmode;
                         glActiveTexture(GL_TEXTURE4);
                         glBindTexture(GL_TEXTURE_2D, shadowbuf->GetID());
                         glm::mat4x4 invviewshadow = activelight->depthmatrix * glm::inverse(view_matrix);

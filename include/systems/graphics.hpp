@@ -21,6 +21,8 @@
 #include "graphics/render-layer.hpp"
 #include "graphics/texture.hpp"
 #include <map>
+#include "systems/dispatcher.hpp"
+#include "os.hpp"
 
 namespace trillek {
 
@@ -51,7 +53,9 @@ struct MaterialGroup {
     std::list<TextureGroup> texture_groups;
 };
 
-class RenderSystem : public SystemBase, public util::Parser {
+class RenderSystem : public SystemBase, public util::Parser,
+    public event::Subscriber<KeyboardEvent>
+{
 public:
 
     RenderSystem();
@@ -230,6 +234,19 @@ public:
     // returns an entity ID
     id_t GetActiveCameraID() const { return camera_id; }
 
+    void Notify(const KeyboardEvent* key_event) {
+        switch(key_event->action) {
+        case KeyboardEvent::KEY_DOWN:
+            switch (key_event->key) {
+            case GLFW_KEY_F10:
+                debugmode = (debugmode & ~3) | ((debugmode + 1) & 3);
+                break;
+            }
+            break;
+        default:
+            break;
+        }
+    }
 private:
 
     template<class CT>
@@ -252,6 +269,7 @@ private:
     void UpdateModelMatrices();
 
     int gl_version[3];
+    int debugmode;
     bool frame_drop;
     uint32_t frame_drop_count;
     ViewMatrixSet vp_center;
