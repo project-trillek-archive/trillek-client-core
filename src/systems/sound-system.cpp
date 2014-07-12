@@ -1,5 +1,6 @@
 #include "systems/sound-system.hpp"
 #include "systems/transform-system.hpp"
+#include "logging.hpp"
 
 namespace trillek {
 namespace sound {
@@ -20,29 +21,29 @@ Sound::~Sound() {
 
 void Sound::Play() {
     auto eos_callback = [](void* userdata, ALuint source) {
-        std::cout << "Source has stopped." << std::endl;
+        LOGMSGFOR(DEBUG, Sound) << "Source has stopped.";
     };
 
     if(alurePlaySource(src, eos_callback, NULL) == AL_FALSE) {
-        std::cout << "Failed to start source." << std::endl;
+        LOGMSGFOR(WARNING, Sound) << "Failed to start source.";
     }
 }
 
 void Sound::Pause() {
     if(alurePauseSource(src) == AL_FALSE) {
-        std::cout << "Failed to pause source." << std::endl;
+        LOGMSGFOR(WARNING, Sound) << "Failed to pause source.";
     }
 }
 
 void Sound::Resume() {
     if(alureResumeSource(src) == AL_FALSE) {
-        std::cout << "Failed to resume source." << std::endl;
+        LOGMSGFOR(WARNING, Sound) << "Failed to resume source.";
     }
 }
 
 void Sound::Stop() {
     if(alureStopSource(src, AL_TRUE) == AL_FALSE) {
-        std::cout << "Failed to stop source." << std::endl;
+        LOGMSGFOR(WARNING, Sound) << "Failed to stop source.";
     }
 }
 
@@ -75,7 +76,7 @@ std::shared_ptr<Sound> System::GetSound(const std::string& id) {
         alGenSources(1, &sound->src);
 
         if(alGetError() != AL_NO_ERROR) {
-            std::cout << "Failed to create OpenAL source for sound: " << id << std::endl;
+            LOGMSGC(ERROR) << "Failed to create OpenAL source for sound: " << id;
             return nullptr;
         }
 
@@ -83,7 +84,7 @@ std::shared_ptr<Sound> System::GetSound(const std::string& id) {
         sound->buff = alureCreateBufferFromFile(sounds[id]->src.c_str());
 
         if(sound->buff  == 0) {
-            std::cout << "Could not load: " << sound->buff << " : " << alureGetErrorString() << std::endl;
+            LOGMSGC(ERROR) << "Could not load: " << sound->buff << " : " << alureGetErrorString();
             return nullptr;
         }
 
@@ -115,7 +116,7 @@ void System::HandleEvents(const frame_tp& timepoint) {
         }
     }
     else {
-        std::cerr << "Sound system missed the updated transform map publication" << std::endl;
+        LOGMSGC(DEBUG) << "Missed the updated transform map publication";
     }
 }
 
@@ -178,6 +179,4 @@ bool System::Parse(rapidjson::Value& node) {
 
 } // end of namespace sound
 } // end of namespace trillek
-
-
 
