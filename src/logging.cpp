@@ -17,10 +17,16 @@ Logging& Logging::GetInstance() {
     return *instance.get();
 }
 void Logging::WriteLine(std::string l, std::string message) {
-    std::cerr << "[" << l << "] " << message << '\n';
+    std::string msgline("[");
+    msgline.append(l).append("] ",2);
+    msgline.append(message);
+    std::cerr << msgline << '\n';
 }
 void Logging::WriteLine(std::string l, std::string section, std::string message) {
-    std::cerr << "[" << l << "-" << section << "] " << message << '\n';
+    std::string msgline("[");
+    msgline.append(l).append("-",1).append(section).append("] ",2);
+    msgline.append(message);
+    std::cerr << msgline << '\n';
 }
 
 } // namespace trillek

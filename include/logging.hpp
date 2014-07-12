@@ -4,6 +4,7 @@
 #include "trillek.hpp"
 #include "type-id.hpp"
 #include <memory>
+#include <sstream>
 
 #define LOGMSG(ll) trillek::Logging::Log<trillek::L_##ll, trillek::Logging>()
 #define LOGMSGFOR(ll,x) trillek::Logging::Log<trillek::L_##ll, x>()
@@ -46,34 +47,30 @@ public:
         LogLine(const LogLine&) = delete;
         LogLine& operator=(const LogLine&) = delete;
         LogLine& operator=(LogLine&&) = delete;
-        LogLine(LogLine&& that) : show(true) {
+        LogLine(LogLine&& that) : show(true), message(that.message.str()) {
             that.show = false;
             glob = that.glob;
             systemname = std::move(that.systemname);
-            message = std::move(that.message);
         }
         ~LogLine() {
             if(show) {
                 if(glob) {
-                    GetInstance().WriteLine(LogLevelString<T>(), message);
+                    GetInstance().WriteLine(LogLevelString<T>(), message.str());
                 }
                 else {
-                    GetInstance().WriteLine(LogLevelString<T>(), systemname, message);
+                    GetInstance().WriteLine(LogLevelString<T>(), systemname, message.str());
                 }
             }
         }
-        LogLine& operator<<(std::string m) {
-            message.append(m);
-            return *this;
-        }
-        LogLine& operator<<(long m) {
-            message.append(std::to_string(m));
+        template<typename K>
+        LogLine& operator<<(K m) {
+            message << m;
             return *this;
         }
     private:
         bool show, glob;
         std::string systemname;
-        std::string message;
+        std::ostringstream message;
     };
 
     template<LogLevel L, typename SYSTEM>
