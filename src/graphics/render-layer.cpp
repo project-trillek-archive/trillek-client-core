@@ -3,6 +3,7 @@
 #include "graphics/texture.hpp"
 #include "trillek-game.hpp"
 #include "systems/graphics.hpp"
+#include "logging.hpp"
 
 namespace trillek {
 namespace graphics {
@@ -172,8 +173,7 @@ bool RenderAttachment::Serialize(rapidjson::Document& document) {
 
 bool RenderAttachment::Parse(const std::string &object_name, const rapidjson::Value& node) {
     if(!node.IsObject()) {
-        // TODO use logger
-        std::cerr << "[WARNING] Invalid attachment entry\n";
+        LOGMSGC(WARNING) << "Invalid attachment entry";
         return false;
     }
     for(auto attnode = node.MemberBegin(); attnode != node.MemberEnd(); attnode++) {
@@ -183,8 +183,7 @@ bool RenderAttachment::Parse(const std::string &object_name, const rapidjson::Va
                 this->texturename = util::MakeString(attnode->value);
             }
             else {
-                // TODO use logger
-                std::cerr << "[ERROR] Attachment: Invalid texture name\n";
+                LOGMSGC(ERROR) << "Invalid texture name";
                 return false;
             }
         }
@@ -205,8 +204,7 @@ bool RenderAttachment::Parse(const std::string &object_name, const rapidjson::Va
                 }
             }
             else {
-                // TODO use logger
-                std::cerr << "[ERROR] Attachment: Invalid target format\n";
+                LOGMSGC(ERROR) << "Invalid target format";
                 return false;
             }
         }
@@ -223,8 +221,7 @@ bool RenderAttachment::Parse(const std::string &object_name, const rapidjson::Va
                 }
             }
             else {
-                // TODO use logger
-                std::cerr << "[ERROR] Attachment: Invalid size\n";
+                LOGMSGC(ERROR) << "Invalid size";
                 return false;
             }
         }
@@ -233,8 +230,7 @@ bool RenderAttachment::Parse(const std::string &object_name, const rapidjson::Va
                 this->outputnumber = attnode->value.GetUint();
             }
             else {
-                // TODO use logger
-                std::cerr << "[ERROR] Attachment: Invalid target\n";
+                LOGMSGC(ERROR) << "Invalid target";
                 return false;
             }
         }
@@ -243,7 +239,7 @@ bool RenderAttachment::Parse(const std::string &object_name, const rapidjson::Va
                 int index = 0;
                 for(auto clearelem = attnode->value.Begin(); clearelem != attnode->value.End(); clearelem++) {
                     if(index > 3) {
-                        std::cerr << "[WARNING] Attachment: Excess clearing value\n";
+                        LOGMSGC(WARNING) << "Excess clearing value";
                         break;
                     }
                     if(clearelem->IsNumber()) {
@@ -253,7 +249,7 @@ bool RenderAttachment::Parse(const std::string &object_name, const rapidjson::Va
                         }
                     }
                     else {
-                        std::cerr << "[ERROR] Attachment: Invalid clearing value\n";
+                        LOGMSGC(ERROR) << "Invalid clearing value";
                         return false;
                     }
                     index++;
@@ -271,8 +267,7 @@ bool RenderAttachment::Parse(const std::string &object_name, const rapidjson::Va
                 this->clearonuse = true;
             }
             else {
-                // TODO use logger
-                std::cerr << "[ERROR] Attachment: Invalid clear\n";
+                LOGMSGC(ERROR) << "Invalid clear";
                 return false;
             }
         }
@@ -469,8 +464,7 @@ bool RenderLayer::SystemStart(const std::list<Property> &settings) {
             this->attachments.push_back(attachptr);
         }
         else {
-            // TODO use logger
-            std::cerr << "[ERROR] Layer: Attachment not found\n";
+            LOGMSGC(ERROR) << "Attachment not found";
             this->attachments.clear();
             return false;
         }
@@ -521,8 +515,7 @@ bool RenderLayer::SystemStart(const std::list<Property> &settings) {
     GLuint status;
     status = glCheckFramebufferStatus(GL_FRAMEBUFFER); CheckGLError();
     if(status != GL_FRAMEBUFFER_COMPLETE) {
-        // TODO Use logger
-        std::cerr << "[ERROR] Framebuffer: " << GetFramebufferStatusMessage(status) << '\n';
+        LOGMSGC(ERROR) << "Framebuffer: " << GetFramebufferStatusMessage(status);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         return false;
     }
@@ -607,8 +600,7 @@ void RenderLayer::UnbindFromAll() {
 
 bool RenderLayer::Parse(const std::string &object_name, const rapidjson::Value& node) {
     if(!node.IsObject()) {
-        // TODO use logger
-        std::cerr << "[WARNING] Invalid render layer entry\n";
+        LOGMSGC(WARNING) << "Invalid render layer entry";
         return false;
     }
     for(auto attnode = node.MemberBegin(); attnode != node.MemberEnd(); attnode++) {
@@ -620,8 +612,7 @@ bool RenderLayer::Parse(const std::string &object_name, const rapidjson::Value& 
                         this->attachmentnames.push_back(util::MakeString(*attach));
                     }
                     else {
-                        // TODO use logger
-                        std::cerr << "[ERROR] Layer: Invalid attachment\n";
+                        LOGMSGC(ERROR) << "Invalid attachment";
                     }
                 }
             }
@@ -639,8 +630,7 @@ bool RenderLayer::Parse(const std::string &object_name, const rapidjson::Value& 
                 }
             }
             else {
-                // TODO use logger
-                std::cerr << "[ERROR] Layer: Invalid size\n";
+                LOGMSGC(ERROR) << "Invalid size";
                 return false;
             }
         }

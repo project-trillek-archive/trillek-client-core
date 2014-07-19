@@ -13,6 +13,7 @@
 #include "graphics/animation.hpp"
 #include "graphics/light.hpp"
 #include "graphics/render-list.hpp"
+#include "logging.hpp"
 
 namespace trillek {
 namespace graphics {
@@ -36,11 +37,14 @@ const int* RenderSystem::Start(const unsigned int width, const unsigned int heig
     event::Dispatcher<KeyboardEvent>::GetInstance()->Subscribe(this);
 
     if(opengl_version < 300) {
-        std::cerr << "[FATAL-GRAPHICS] OpenGL version (" << opengl_version << ") less than required minimum (300)\n";
+        LOGMSGC(FATAL) << "OpenGL version (" << opengl_version << ") less than required minimum (300)";
         assert(opengl_version >= 300);
     }
     if(opengl_version < 330) {
-        std::cerr << "[WARNING-GRAPHICS] OpenGL version (" << opengl_version << ") less than recommended (330)\n";
+        LOGMSGC(WARNING) << "OpenGL version (" << opengl_version << ") less than recommended (330)";
+    }
+    else {
+        LOGMSGC(INFO) << "OpenGL version (" << opengl_version << ')';
     }
 
     SetViewportSize(width, height);
@@ -135,14 +139,12 @@ bool RenderSystem::Parse(rapidjson::Value& node) {
             auto typefunc = parser_functions.find(section_type);
             if(typefunc != parser_functions.end()) {
                 if(!typefunc->second(type_itr->value)) {
-                    // TODO use logger
-                    std::cerr << "[ERROR] Graphics parsing failed\n";
+                    LOGMSGC(ERROR) << "Graphics parsing failed";
                     return false;
                 }
             }
             else {
-                // TODO use logger
-                std::cerr << "[INFO] RenderSystem::Parse - skipping \"" << section_type << "\" section\n";
+                LOGMSGC(INFO) << "RenderSystem::Parse - skipping \"" << section_type << "\" section";
             }
         }
         return true;
@@ -193,8 +195,7 @@ void RenderSystem::RegisterListResolvers() {
                 }
             }
             else {
-                // TODO use logger
-                std::cerr << "[ERROR-GRAPHICS] Invalid render method\n";
+                LOGMSGON(ERROR, rensys) << "Invalid render method";
                 return false;
             }
         }
@@ -214,8 +215,7 @@ void RenderSystem::RegisterListResolvers() {
             rlist.run_values.push_back(Container(true));
             auto layerptr = rensys.Get<RenderLayer>(rlist.cmdvalue.Get<std::string>());
             if(!layerptr) {
-                // TODO use logger
-                std::cerr << "[ERROR-GRAPHICS] Layer not found: " << rlist.cmdvalue.Get<std::string>() << '\n';
+                LOGMSGON(ERROR, rensys) << "Layer not found: " << rlist.cmdvalue.Get<std::string>();
                 return false;
             }
             rlist.run_values.push_back(Container(layerptr));
@@ -234,8 +234,7 @@ void RenderSystem::RegisterListResolvers() {
             rlist.run_values.push_back(Container(true));
             auto layerptr = rensys.Get<RenderLayer>(rlist.cmdvalue.Get<std::string>());
             if(!layerptr) {
-                // TODO use logger
-                std::cerr << "[ERROR-GRAPHICS] Layer not found: " << rlist.cmdvalue.Get<std::string>() << '\n';
+                LOGMSGON(ERROR, rensys) << "Layer not found: " << rlist.cmdvalue.Get<std::string>();
                 return false;
             }
             rlist.run_values.push_back(Container(layerptr));
@@ -262,8 +261,7 @@ void RenderSystem::RegisterListResolvers() {
                 if(prop.Is<std::string>()) {
                     target = rensys.Get<RenderLayer>(prop.Get<std::string>());
                     if(!target) {
-                        // TODO use logger
-                        std::cerr << "[ERROR-GRAPHICS] Layer not found: " << prop.Get<std::string>() << '\n';
+                        LOGMSGON(ERROR, rensys) << "Layer not found: " << prop.Get<std::string>();
                         return false;
                     }
                 }
@@ -319,10 +317,7 @@ void RenderSystem::RenderScene() const {
                     cmditem.run_values.clear();
                     if(!resolve->second(cmditem)) {
                         cmditem.resolve_error = true;
-                        // should probably log some warning/error
-                        // since this item may not be able to render
-                        // TODO use logging system instead
-                        std::cerr << "[ERROR-GRAPHICS] Parsing render command failed\n";
+                        LOGMSGC(ERROR) << "Parsing render command failed";
                         break;
                     }
                     cmditem.resolved = true;
@@ -691,7 +686,7 @@ void RenderSystem::UpdateModelMatrices() {
         transforms = *updated_transforms.get();
     }
     catch(std::future_error) {
-        std::cerr << "Render system missed a frame" << std::endl;
+        LOGMSGC(INFO) << "Render system missed a frame";
     }
     for (auto it = transforms.cbegin(); it != transforms.cend(); ++it) {
         const auto id = it->first;
@@ -955,7 +950,7 @@ void RenderSystem::HandleEvents(const frame_tp& timepoint) {
     auto delta = now - last_tp;
     if(delta > std::chrono::nanoseconds(66666666ll)) {
         if(!this->frame_drop) {
-            std::cerr << "[GRAPHICS] Time lag " << (delta.count() - 16666666) * 1.0E-9 << " > 50 milliseconds\n";
+            LOGMSGC(INFO) << "Time lag " << (delta.count() - 16666666) * 1.0E-9 << " > 50 milliseconds";
             this->frame_drop_count = 0;
         }
         this->frame_drop = true;
@@ -963,7 +958,7 @@ void RenderSystem::HandleEvents(const frame_tp& timepoint) {
     }
     else {
         if(this->frame_drop) {
-            std::cerr << "[GRAPHICS] Dropped frames " << this->frame_drop_count << "\n";
+            LOGMSGC(INFO) << "Dropped frames " << this->frame_drop_count;
             this->frame_drop_count = 0;
         }
         this->frame_drop = false;
@@ -979,7 +974,7 @@ void RenderSystem::HandleEvents(const frame_tp& timepoint) {
         UpdateModelMatrices();
     }
     else {
-        std::cerr << "RenderSystem::HandleEvents() missed the publication of updated transforms" << std::endl;
+        LOGMSGC(INFO) << "HandleEvents() missed the publication of updated transforms";
     }
 };
 
