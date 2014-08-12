@@ -6,6 +6,8 @@ extern "C" {
 #include <luawrapper/luawrapper.hpp>
 #include <luawrapper/luawrapperutil.hpp>
 
+#include "lua/lua_glm.hpp"
+
 #include "transform.hpp"
 #include "systems/transform-system.hpp"
 
@@ -96,7 +98,9 @@ static luaL_Reg Transform_metatable[] =
     { "set_translation", Transform_settranslation },
     { "set_rotation", Transform_setrotation },
     { "set_scale", Transform_setscale },
-    { NULL, NULL }
+    { "get_translation", luaU_get<Transform, glm::vec3, &Transform::GetTranslation> },
+    { "get_rotation", luaU_get<Transform, glm::vec3, &Transform::GetRotation> },
+    { "get_scale", luaU_get<Transform, glm::vec3, &Transform::GetScale> },
 };
 
 int luaopen_Transform(lua_State* L) {
