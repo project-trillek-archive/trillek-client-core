@@ -25,6 +25,7 @@ bin/
 ################################
 CMakeCache.txt
 CMakeFiles/
+CMakeScripts/
 cmake_install.cmake
 compile_commands.json
 cscope.out
@@ -32,6 +33,13 @@ cscope.out
 *.depend
 # We don't want to see Makefiles modifications
 Makefile
+
+################################
+#Xcode
+################################
+
+trillek-client-core.build
+trillek-client-core.xcodeproj
 
 ###############################
 # NetBean
