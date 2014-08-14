@@ -21,7 +21,7 @@ before_install:
     - wget https://rapidjson.googlecode.com/files/rapidjson-0.11.zip
     - unzip rapidjson-0.11.zip -d /tmp
     - sudo cp -r /tmp/rapidjson/include /usr
-    - sudo apt-get install lua5.1
+    - sudo apt-get install liblua5.1-0-dev
     - wget https://bitbucket.org/alexames/luawrapper/downloads/luawrapper.zip
     - unzip luawrapper.zip -d /tmp
     - sudo cp -r /tmp/luawrapper /usr
