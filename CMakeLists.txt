@@ -48,6 +48,8 @@ FIND_PACKAGE(Bullet REQUIRED)
 FIND_PACKAGE(ALURE REQUIRED)
 FIND_PACKAGE(OpenAL REQUIRED)
 FIND_PACKAGE(Lua REQUIRED)
+FIND_PACKAGE(LuaWrapper REQUIRED)
+INCLUDE_DIRECTORIES(${LUA_INCLUDE_DIR})
 
 # Give these some dummy values and if the platform is LINUX or OSX they will be set accordingly.
 SET(X11_LIBRARIES "")
