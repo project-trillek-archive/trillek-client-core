@@ -1,8 +1,5 @@
-extern "C" {
-#include "lua.h"
-#include "lauxlib.h"
-#include "lauxlib.h"
-}
+#include "systems/lua-system.hpp"
+
 #include <luawrapper/luawrapper.hpp>
 #include <luawrapper/luawrapperutil.hpp>
 
