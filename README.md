@@ -23,4 +23,4 @@ How To Build The Engine (Windows instructions)
 17. Rename extracted file to assets, and place into /build/bin/debug
 18. Run trillek-standalone in /build/bin/debug
 
-If you follow these steps, you will build the trillek engine
+If you follow these steps, you will have built the trillek engine
