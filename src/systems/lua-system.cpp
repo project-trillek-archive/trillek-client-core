@@ -1,9 +1,11 @@
 #include "systems/lua-system.hpp"
+#include <iostream>
 
 namespace trillek {
 namespace script {
 
 int luaopen_Transform(lua_State*);
+int luaopen_LuaSys(lua_State*);
 
 LuaSystem::LuaSystem() { } 
 LuaSystem::~LuaSystem() { }
@@ -14,6 +16,7 @@ void LuaSystem::Start() {
     
     // TODO: Move this into a location that makes more sense.
     RegisterSystem(&luaopen_Transform);
+    RegisterSystem(&luaopen_LuaSys);
 }
 
 void LuaSystem::AddComponent(const unsigned int entity_id, std::shared_ptr<ComponentBase> component) { }
@@ -30,6 +33,7 @@ bool LuaSystem::LoadFile(const std::string fname) {
     }
     if (luaL_dofile(L, fname.c_str())) {
         // TODO: Ommit error string about the filename that failed to load.
+        std::cerr << lua_tostring(L, -1) << std::endl;
         return false;
     }
     return true;
