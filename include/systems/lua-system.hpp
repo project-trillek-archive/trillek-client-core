@@ -38,28 +38,25 @@ public:
     void RunBatch() const override { };
 
     /**
-     * \brief Adds a Shape component to the system.
-     *
-     * A dynamic_pointer_case is applied to the component shared_ptr to cast it to
-     * a Shape component. If the cast results in a nullptr the method returns
-     * without adding the Shape component.
+     * \brief Not used
+
      * \param const unsigned int entity_id The entity ID the compoennt belongs to.
      * \param std::shared_ptr<ComponentBase> component The component to add.
      */
     void AddComponent(const unsigned int entity_id, std::shared_ptr<ComponentBase> component);
 
     /**
-    * \brief Calls a systems's register function with this systems lua_State.
-    *
-    * \param LuaRegisterFunction The function to call with this system's lua_State.
-    */
+     * \brief Calls a systems's register function with this systems lua_State.
+     *
+     * \param LuaRegisterFunction The function to call with this system's lua_State.
+     */
     void RegisterSystem(LuaRegisterFunction func);
 
     /**
-    * \brief Load Lua script from a file.
-    *
-    * \param const std::string fname The name of the file to load.
-    */
+     * \brief Load Lua script from a file.
+     *
+     * \param const std::string fname The name of the file to load.
+     */
     bool LoadFile(const std::string fname);
 
     /** \brief Handle incoming events to update data
@@ -80,6 +77,17 @@ public:
     void Terminate() override;
 
 private:
+    /**
+     * \brief Registers all systems, classes, etc with Lua.
+     *
+     * This is called internally after Lua is started. The types are registered
+     * for this instance.
+     *
+     * This function is defined in a separate source file to reduce compile times.
+     * Internally it calls the templated RegisterSomething functions.
+     */
+    void RegisterTypes();
+
     lua_State* L;
     frame_unit delta; // The time since the last HandleEvents was called.
 };

@@ -13,10 +13,7 @@ LuaSystem::~LuaSystem() { }
 void LuaSystem::Start() {
     this->L = luaL_newstate();
     luaL_openlibs(L);
-
-    // TODO: Move this into a location that makes more sense.
-    RegisterSystem(&luaopen_Transform);
-    RegisterSystem(&luaopen_LuaSys);
+    RegisterTypes();
 }
 
 void LuaSystem::AddComponent(const unsigned int entity_id, std::shared_ptr<ComponentBase> component) { }
