@@ -2,6 +2,7 @@
 #define OS_EVENT_HPP_INCLUDED
 
 #include "trillek.hpp"
+#include "type-id.hpp"
 
 namespace trillek {
 
@@ -13,7 +14,11 @@ struct KeyboardEvent {
     int mods;
 };
 
+namespace reflection {
 
+TRILLEK_MAKE_IDTYPE_NAME(KeyboardEvent, "KeyboardEvent", 5000);
+
+} // namespace reflection
 } // namespace trillek
 
 #endif

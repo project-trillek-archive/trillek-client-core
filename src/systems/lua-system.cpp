@@ -7,7 +7,10 @@ namespace script {
 int luaopen_Transform(lua_State*);
 int luaopen_LuaSys(lua_State*);
 
-LuaSystem::LuaSystem() { }
+LuaSystem::LuaSystem() {
+    event::Dispatcher<KeyboardEvent>::GetInstance()->Subscribe(this);
+    this->event_handlers[reflection::GetTypeID<KeyboardEvent>()];
+}
 LuaSystem::~LuaSystem() { }
 
 void LuaSystem::Start() {
@@ -50,6 +53,25 @@ void LuaSystem::HandleEvents(const frame_tp& timepoint) {
 
 void LuaSystem::Terminate() {
     lua_close(L);
+}
+
+void LuaSystem::Notify(const KeyboardEvent* key_event) {
+    if (this->event_handlers.find(reflection::GetTypeID<KeyboardEvent>()) != this->event_handlers.end()) {
+        for (auto handler : this->event_handlers[reflection::GetTypeID<KeyboardEvent>()]) {
+            lua_getglobal(L, handler.c_str());
+            if (key_event->action == KeyboardEvent::KEY_DOWN) {
+                lua_pushstring(L, "Down");
+            }
+            else if (key_event->action == KeyboardEvent::KEY_UP) {
+                lua_pushstring(L, "Up");
+            }
+            else if (key_event->action == KeyboardEvent::KEY_REPEAT) {
+                lua_pushstring(L, "Repeat");
+            }
+            lua_pushnumber(L, key_event->key);
+            lua_pcall(L, 2, 0, 0);
+        }
+    }
 }
 
 } // End of script

@@ -60,7 +60,7 @@ int main(int argCount, char **argValues) {
     trillek::TrillekGame::GetLuaSystem().Start();
 
     // Load a test file/main Lua file.
-    trillek::TrillekGame::GetLuaSystem().LoadFile("test.lua");
+    trillek::TrillekGame::GetLuaSystem().LoadFile("assets/scripts/test.lua");
 
     // register the Lua system.
     systems.push(&trillek::TrillekGame::GetLuaSystem());

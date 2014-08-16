@@ -5,6 +5,8 @@
 #include <map>
 #include <list>
 
+#include "dispatcher.hpp"
+#include "os-event.hpp"
 #include "trillek.hpp"
 #include "systems/system-base.hpp"
 
@@ -20,7 +22,8 @@ namespace script {
 
 typedef int (LuaRegisterFunction)(lua_State*);
 
-class LuaSystem : public SystemBase {
+class LuaSystem : public SystemBase,
+    public event::Subscriber<KeyboardEvent> {
 public:
     LuaSystem();
     ~LuaSystem();
@@ -77,6 +80,13 @@ public:
      * This function is called when the program is closing
      */
     void Terminate() override;
+
+    /**
+     * \brief Handles keyboard events.
+     *
+     * This method calls the physics system SetForce method after each event.
+     */
+    void Notify(const KeyboardEvent* key_event);
 
     /**
      * \brief Registers a script event handler
