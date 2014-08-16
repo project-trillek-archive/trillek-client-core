@@ -21,6 +21,16 @@ int LuaSys_LoadFile(lua_State* L) {
     return 1;
 }
 
+int LuaSys_Subscribe(lua_State* L) {
+    LuaSystem* sys = luaW_check<LuaSystem>(L, 1);
+    int eventType = luaL_checkint(L, 2);
+    std::string function = luaL_checkstring(L, 3);
+
+    sys->RegisterEventSubscriber(eventType, function);
+
+    return 0;
+}
+
 static luaL_Reg LuaSystable[] =
 {
     { "Get", LuaSys_Get },
@@ -30,6 +40,7 @@ static luaL_Reg LuaSystable[] =
 static luaL_Reg LuaSys_metatable[] =
 {
     { "LoadScriptFile", LuaSys_LoadFile },
+    { "Subscribe", LuaSys_Subscribe },
     { NULL, NULL }
 };
 

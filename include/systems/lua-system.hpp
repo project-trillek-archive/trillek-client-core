@@ -2,6 +2,8 @@
 #define LUA_HPP_INCLUDED
 
 #include <string>
+#include <map>
+#include <list>
 
 #include "trillek.hpp"
 #include "systems/system-base.hpp"
@@ -76,6 +78,15 @@ public:
      */
     void Terminate() override;
 
+    /**
+     * \brief Registers a script event handler
+     *
+     * \param int eventType The type of event to subscribe to.
+     * \param std::string the name of the script function to call.
+     */
+    void RegisterEventSubscriber(const int eventType, const std::string function) {
+        this->event_handlers[eventType].push_back(function);
+    }
 private:
     /**
      * \brief Registers all systems, classes, etc with Lua.
@@ -90,6 +101,7 @@ private:
 
     lua_State* L;
     frame_unit delta; // The time since the last HandleEvents was called.
+    std::map<int, std::list<std::string>> event_handlers; // Mapping of event ID to script function.
 };
 
 } // End of script
