@@ -36,6 +36,11 @@ void PhysicsSystem::AddComponent(const unsigned int entity_id, std::shared_ptr<C
 }
 
 void PhysicsSystem::HandleEvents(const frame_tp& timepoint) {
+    // Updated the motions state of all bodies in case it was changed outside physics (e.g scripting).
+    for (auto& shape : this->bodies) {
+        shape.second->UpdateMotionState();
+    }
+
     // Remove access to old updated transforms
     TransformMap::GetAsyncUpdatedTransforms().Unpublish(timepoint);
     // Remove access to forces

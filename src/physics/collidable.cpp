@@ -160,6 +160,19 @@ void Collidable::UpdateTransform() {
     this->entity_transform->MarkAsModified();
 }
 
+void Collidable::UpdateMotionState() {
+    if (!this->entity_transform) {
+        return;
+    }
+    auto pos = this->entity_transform->GetTranslation();
+    auto orientation = this->entity_transform->GetOrientation();
+    btTransform transform;
+    this->motion_state->getWorldTransform(transform);
+    transform.setOrigin(btVector3(pos.x, pos.y, pos.z));
+    transform.setRotation(btQuaternion(orientation.x, orientation.y, orientation.z, orientation.w));
+    this->motion_state->setWorldTransform(transform);
+}
+
 /* Removed since we don't have to push transforms into the simulation but to apply forces
 void Collidable::Notify(const unsigned int entity_id, const Transform* transforum) {
     auto pos = this->entity_transform->GetTranslation();
