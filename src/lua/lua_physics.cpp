@@ -50,6 +50,20 @@ int RemoveTorque(lua_State* L) {
     return 0;
 }
 
+int SetGravity(lua_State* L) {
+    auto physSys = luaW_check<physics::PhysicsSystem>(L, 1);
+    int entity_id = luaL_checkint(L, 2);
+    if (lua_type(L, 3) == LUA_TNIL) {
+        physSys->SetGravity(entity_id, nullptr);
+    }
+    else {
+        physics::Force f = luaU_check<physics::Force>(L, 3);
+        physSys->SetGravity(entity_id, &f);
+    }
+
+    return 0;
+}
+
 
 
 static luaL_Reg Physics_table[] =
@@ -64,6 +78,7 @@ static luaL_Reg Physics_metatable[] =
     { "set_torque", SetTorque },
     { "remove_force", RemoveForce },
     { "remove_torque", RemoveTorque },
+    { "set_gravity", SetGravity },
 };
 
 int luaopen_PhysSys(lua_State* L) {
