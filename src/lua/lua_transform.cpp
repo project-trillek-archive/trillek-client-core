@@ -21,6 +21,14 @@ int Traansform_get(lua_State* L) {
     return 1;
 }
 
+int ComputeVelocityVector(lua_State* L) {
+    Transform* transform = luaW_check<Transform>(L, 1);
+    glm::vec3 speed = luaU_check<glm::vec3>(L, 2);
+    glm::vec3 velocity_vector = transform->GetOrientation() * speed;
+    luaU_push<glm::vec3>(L, velocity_vector);
+    return 1;
+}
+
 static luaL_Reg Transform_table[] =
 {
     { "Get", Traansform_get },
@@ -38,6 +46,7 @@ static luaL_Reg Transform_metatable[] =
     { "get_translation", luaU_get<Transform, glm::vec3, &Transform::GetTranslation> },
     { "get_rotation", luaU_get<Transform, glm::vec3, &Transform::GetRotation> },
     { "get_scale", luaU_get<Transform, glm::vec3, &Transform::GetScale> },
+    { "compute_velocity_vector", &ComputeVelocityVector },
 };
 
 int luaopen_Transform(lua_State* L) {
