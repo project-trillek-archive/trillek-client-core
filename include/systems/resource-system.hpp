@@ -54,7 +54,7 @@ public:
                     return nullptr;
                 };
 
-                ResourceMap::instance->factories[0] = lambda;
+                ResourceMap::instance->factories[""] = lambda;
 
                 ResourceMap::instance->RegisterTypes();
             }
@@ -79,7 +79,7 @@ public:
             return instance->Create<T>(name, properties);
         };
 
-        instance->factories[reflection::GetTypeID<T>()] = lambda;
+        instance->factories[reflection::GetTypeName<T>()] = lambda;
     }
 
     /**
@@ -116,14 +116,14 @@ public:
      * This also differs with the compile time version in that it can't return the created resource, but it can
      * only return wether it was created successfully or not. This is because you can't template the retrun value
      * if you don't have the type information.
-     * \param[in] const unsigned int type_id The ID of the type of resource to create. This is used to select the correct factory.
+     * \param[in] const std::string type_name The string name of the type of resource to create. This is used to select the correct factory.
      * \param[in] const std::string & name What the created resource will be named.
      * \param[in] const std::vector<Property> & properties The creation properties for the resource.
      * \return bool True if the resource loaded successfully. Get must be used, later, where the type information is known to retrieve the resource if it was loaded correctly.
      */
-    static bool Create(const unsigned int type_id, const std::string& name, const std::vector<Property> &properties) {
-        if (instance->factories.find(type_id) != instance->factories.end()) {
-            return instance->factories[type_id](name, properties) != nullptr;
+    static bool Create(const std::string type_name, const std::string& name, const std::vector<Property> &properties) {
+        if (instance->factories.find(type_name) != instance->factories.end()) {
+            return instance->factories[type_name](name, properties) != nullptr;
         }
         return false;
     }
@@ -213,7 +213,7 @@ public:
 private:
     static std::map<unsigned int, std::map<std::string, std::shared_ptr<ResourceBase>>> resources; // Mapping of resource TypeID to loaded resources
     static std::map<std::string, unsigned int> resource_type_id; // Stores a mapping of TypeName to TypeID
-    static std::map<unsigned int, std::function<std::shared_ptr<ResourceBase>(const std::string& name, const std::vector<Property> &properties)>> factories; // Mapping of type ID to factory function.
+    static std::map<std::string, std::function<std::shared_ptr<ResourceBase>(const std::string& name, const std::vector<Property> &properties)>> factories; // Mapping of type ID to factory function.
 };
 
 } // End of system
