@@ -81,13 +81,18 @@ bool JSONPasrser::Parse(const std::string& fname) {
     return true;
 }
 
-void JSONPasrser::Serialize(const std::string& out_directory, const std::string& fname) {
+void JSONPasrser::Serialize(const std::string& out_directory, const std::string& fname, std::shared_ptr<Parser> parser) {
     if (fname.length() > 0) {
         rapidjson::Document document;
         document.SetObject();
 
-        for (auto serializer : parsers) {
-            serializer.second->Serialize(document);
+        if (parser) {
+            parser->Serialize(document);
+        }
+        else {
+            for (auto serializer : parsers) {
+                serializer.second->Serialize(document);
+            }
         }
 
         FILE* file = fopen((out_directory + fname).c_str(), "w");
@@ -97,16 +102,30 @@ void JSONPasrser::Serialize(const std::string& out_directory, const std::string&
         fclose(file);
     }
     else {
-        for (auto serializer : parsers) {
+
+        if (parser) {
             rapidjson::Document document;
             document.SetObject();
-            serializer.second->Serialize(document);
+            parser->Serialize(document);
 
-            FILE* file = fopen((out_directory + serializer.first + ".json").c_str(), "w");
+            FILE* file = fopen((out_directory + fname + ".json").c_str(), "w");
             rapidjson::FileStream f(file);
             rapidjson::PrettyWriter<rapidjson::FileStream> writer(f);
             document.Accept(writer);
             fclose(file);
+        }
+        else {
+            for (auto serializer : parsers) {
+                rapidjson::Document document;
+                document.SetObject();
+                serializer.second->Serialize(document);
+
+                FILE* file = fopen((out_directory + serializer.first + ".json").c_str(), "w");
+                rapidjson::FileStream f(file);
+                rapidjson::PrettyWriter<rapidjson::FileStream> writer(f);
+                document.Accept(writer);
+                fclose(file);
+            }
         }
     }
 }
