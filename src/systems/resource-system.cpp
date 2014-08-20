@@ -6,7 +6,7 @@ namespace resource {
 std::once_flag ResourceMap::only_one;
 std::shared_ptr<ResourceMap> ResourceMap::instance = nullptr;
 std::map<std::string, unsigned int> ResourceMap::resource_type_id;
-std::map<unsigned int, std::function<std::shared_ptr<resource::ResourceBase>(const std::string& name, const std::vector<Property> &properties)>> ResourceMap::factories;
+std::map<std::string, std::function<std::shared_ptr<resource::ResourceBase>(const std::string& name, const std::vector<Property> &properties)>> ResourceMap::factories;
 std::map<unsigned int, std::map<std::string, std::shared_ptr<resource::ResourceBase>>> ResourceMap::resources;
 
 bool ResourceMap::Serialize(rapidjson::Document& document) {
@@ -31,7 +31,6 @@ bool ResourceMap::Parse(rapidjson::Value& node) {
         // Iterate over the resource types.
         for (auto type_itr = node.MemberBegin(); type_itr != node.MemberEnd(); ++type_itr) {
             std::string resource_type(type_itr->name.GetString(), type_itr->name.GetStringLength());
-            unsigned int resource_type_id = GetTypeIDFromName(resource_type);
 
             if (type_itr->value.IsObject()) {
                 // Iterate of the individual resources.
@@ -72,7 +71,7 @@ bool ResourceMap::Parse(rapidjson::Value& node) {
                         }
                     }
 
-                    if (!Create(resource_type_id, resource_name, props)) {
+                    if (!Create(resource_type, resource_name, props)) {
                         // TODO: Log an error about creating this resource.
                     }
                 }

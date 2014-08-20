@@ -14,11 +14,7 @@ void Transform::Translate(const glm::vec3 amount) {
 void Transform::Rotate(const glm::vec3 amount) {
     this->rotation += amount;
 
-    glm::quat qX = glm::angleAxis(amount.x, RIGHT_VECTOR);
-    glm::quat qY = glm::angleAxis(amount.y, UP_VECTOR);
-    glm::quat qZ = glm::angleAxis(amount.z, FORWARD_VECTOR);
-    glm::quat change = qX * qY * qZ;
-
+    glm::quat change(this->rotation);
     this->orientation = glm::normalize(change * this->orientation);
 }
 
@@ -31,7 +27,7 @@ void Transform::OrientedRotate(const glm::vec3 amount) {
 
     glm::quat qX = glm::angleAxis(amount.x, this->orientation * RIGHT_VECTOR);
     glm::quat qY = glm::angleAxis(amount.y, this->orientation * UP_VECTOR);
-    glm::quat qZ = glm::angleAxis(amount.z, this->orientation * FORWARD_VECTOR);
+    glm::quat qZ = glm::angleAxis(amount.z, this->orientation * glm::vec3(0.0, 0.0, 1.0)); // Z axis not Forward
     glm::quat change = qX * qY * qZ;
 
     this->orientation = glm::normalize(change * this->orientation);
@@ -46,14 +42,8 @@ void Transform::SetTranslation(const glm::vec3 new_translation) {
 }
 
 void Transform::SetRotation(const glm::vec3 new_rotation) {
-    this->rotation = new_rotation;
-
-    glm::quat qX = glm::angleAxis(new_rotation.x, RIGHT_VECTOR);
-    glm::quat qY = glm::angleAxis(new_rotation.y, UP_VECTOR);
-    glm::quat qZ = glm::angleAxis(new_rotation.z, FORWARD_VECTOR);
-    glm::quat change = qX * qY * qZ;
-
-    this->orientation = glm::normalize(change);
+    this->orientation = glm::normalize(glm::quat(new_rotation));
+    this->rotation = glm::eulerAngles(this->orientation);
 }
 
 void Transform::SetOrientation(const glm::quat new_orientation) {

@@ -82,5 +82,7 @@ int main(int argCount, char **argValues) {
     // Terminating program
     os.MakeCurrent();
     os.Terminate();
+
+    jparser.Serialize("assets/tests/", "transforms.json", trillek::TransformMap::GetInstance());
     return 0;
 }

@@ -47,7 +47,7 @@ namespace trillek {
         // If we have a valid type id retrieved from within resource system, then registtration was valid.
         // We are using the compile time ID in this instance incase it is changed in source. Normally this
         // woulnd't be used and, instead, would be obtained from the script or other loader.
-        ASSERT_TRUE(ResourceMap::Create(reflection::GetTypeID<TextFile>(), "test", props));
+        ASSERT_TRUE(ResourceMap::Create(reflection::GetTypeName<TextFile>(), "test", props));
 
         // We must make sure to remove the resource each time as resource system is a singleton and the
         // resource will persist.
@@ -79,7 +79,7 @@ namespace trillek {
         // If we have a valid type id retrieved from within resource system, then registtration was valid.
         // We are using the compile time ID in this instance incase it is changed in source. Normally this
         // woulnd't be used and, instead, would be obtained from the script or other loader.
-        ASSERT_FALSE(ResourceMap::Create(0, "test", props));
+        ASSERT_FALSE(ResourceMap::Create("", "test", props));
 
         // We must make sure to remove the resource each time as resource system is a singleton and the
         // resource will persist.
