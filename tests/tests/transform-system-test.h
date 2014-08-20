@@ -187,10 +187,10 @@ namespace {
         EXPECT_FLOAT_EQ(final_orientation.z, orientation.z);
         EXPECT_FLOAT_EQ(final_orientation.w, orientation.w);
 
-        transform.SetRotation(glm::vec3(5.0f, 5.0f, 5.0f));
+        transform.SetRotation(glm::vec3(glm::radians(5.0), glm::radians(5.0), glm::radians(5.0)));
         orientation = transform.GetOrientation();
 
-        final_orientation = glm::quat(glm::vec3(5.0f, 5.0f, 5.0f));
+        final_orientation = glm::quat(glm::vec3(glm::radians(5.0), glm::radians(5.0), glm::radians(5.0)));
 
         EXPECT_FLOAT_EQ(final_orientation.x, orientation.x);
         EXPECT_FLOAT_EQ(final_orientation.y, orientation.y);
