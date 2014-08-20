@@ -222,21 +222,39 @@ void OBJ::PopulateMeshGroups() {
         for (size_t i = 0, j = 0; i < vgroup->verts.size(); ++i) {
             Triangle face;
             Vertex v0;
-            v0.position = this->verticies[vgroup->verts[i].verts[0] - 1];
-            v0.normal = this->normals[vgroup->norms[i].verts[0] - 1];
-            v0.uv = this->uvs[vgroup->uvs[i].verts[0] - 1];
+            if (vgroup->verts[i].verts[0] > 0 && vgroup->verts[i].verts[0] < this->verticies.size()) {
+                v0.position = this->verticies[vgroup->verts[i].verts[0] - 1];
+            }
+            if (vgroup->norms[i].verts[0] > 0 && vgroup->norms[i].verts[0] < this->normals.size()) {
+                v0.normal = this->normals[vgroup->norms[i].verts[0] - 1];
+            }
+            if (vgroup->uvs[i].verts[0] > 0 && vgroup->uvs[i].verts[0] < this->normals.size()) {
+                v0.uv = this->uvs[vgroup->uvs[i].verts[0] - 1];
+            }
             mesh->verts.push_back(v0);
             face.verts[0] = j++;
             Vertex v1;
-            v1.position = this->verticies[vgroup->verts[i].verts[1] - 1];
-            v1.normal = this->normals[vgroup->norms[i].verts[1] - 1];
-            v1.uv = this->uvs[vgroup->uvs[i].verts[1] - 1];
+            if (vgroup->verts[i].verts[1] > 0 && vgroup->verts[i].verts[1] < this->verticies.size()) {
+                v1.position = this->verticies[vgroup->verts[i].verts[1] - 1];
+            }
+            if (vgroup->norms[i].verts[1] > 0 && vgroup->norms[i].verts[1] < this->normals.size()) {
+                v1.normal = this->normals[vgroup->norms[i].verts[1] - 1];
+            }
+            if (vgroup->uvs[i].verts[1] > 0 && vgroup->uvs[i].verts[1] < this->normals.size()) {
+                v1.uv = this->uvs[vgroup->uvs[i].verts[1] - 1];
+            }
             mesh->verts.push_back(v1);
             face.verts[1] = j++;
             Vertex v2;
-            v2.position = this->verticies[vgroup->verts[i].verts[2] - 1];
-            v2.normal = this->normals[vgroup->norms[i].verts[2] - 1];
-            v2.uv = this->uvs[vgroup->uvs[i].verts[2] - 1];
+            if (vgroup->verts[i].verts[2] > 0 && vgroup->verts[i].verts[2] < this->verticies.size()) {
+                v2.position = this->verticies[vgroup->verts[i].verts[2] - 1];
+            }
+            if (vgroup->norms[i].verts[2] > 0 && vgroup->norms[i].verts[2] < this->normals.size()) {
+                v2.normal = this->normals[vgroup->norms[i].verts[2] - 1];
+            }
+            if (vgroup->uvs[i].verts[2] > 0 && vgroup->uvs[i].verts[2] < this->normals.size()) {
+                v2.uv = this->uvs[vgroup->uvs[i].verts[2] - 1];
+            }
             mesh->verts.push_back(v2);
             face.verts[2] = j++;
             mesh->tris.push_back(face);
@@ -257,7 +275,9 @@ void OBJ::PopulateMeshGroups() {
         if (this->mesh_groups[i]->verts.size() < this->meshes[i]->verts.size()) {
             this->mesh_groups[i]->verts.resize(this->meshes[i]->verts.size());
         }
-        this->mesh_groups[i]->textures.push_back(this->materials[this->meshes[i]->shader]->diffuseMap);
+        if (this->meshes[i]->shader != "") {
+            this->mesh_groups[i]->textures.push_back(this->materials[this->meshes[i]->shader]->diffuseMap);
+        }
         for (size_t j = 0; j < this->meshes[i]->verts.size(); ++j) {
             VertexData vdata;
             vdata.position = this->meshes[i]->verts[j].position;
