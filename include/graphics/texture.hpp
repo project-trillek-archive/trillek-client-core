@@ -25,6 +25,11 @@ public:
      */
     Texture(const resource::PixelBuffer &);
 
+    /**
+     * \brief new texture instance from an image pointer
+     */
+    Texture(std::weak_ptr<resource::PixelBuffer>);
+
     // no copying (although it could be done)
     Texture(const Texture &) = delete;
     Texture& operator=(const Texture &) = delete;
@@ -44,6 +49,16 @@ public:
      * \return GLuint the GL texture ID
      */
     GLuint GetID() { return texture_id; }
+
+    /**
+     * \return true if the texture was created dynamic
+     */
+    bool IsDynamic() { return !source_ptr.expired(); }
+
+    /**
+     * Called by the RenderSystem to update dynamic textures
+     */
+    void Update();
 
     /**
      * \brief create a texture from an image
@@ -86,7 +101,7 @@ public:
     bool Initialize(const std::vector<Property> &properties) { return true; }
 protected:
     GLuint texture_id;
-
+    std::weak_ptr<resource::PixelBuffer> source_ptr;
 };
 
 } // graphics

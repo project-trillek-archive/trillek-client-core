@@ -1,5 +1,7 @@
 
 #include "graphics/texture.hpp"
+#include "resources/pixel-buffer.hpp"
+#include <memory>
 
 namespace trillek {
 namespace graphics {
@@ -11,6 +13,24 @@ Texture::~Texture() {
 Texture::Texture(const resource::PixelBuffer & image) {
     texture_id = 0;
     Load(image);
+}
+
+Texture::Texture(std::weak_ptr<resource::PixelBuffer> pbp) : source_ptr(pbp) {
+    texture_id = 0;
+    auto locked_ptr = pbp.lock();
+    if(locked_ptr) {
+        Load(*locked_ptr.get());
+    }
+}
+
+void Texture::Update() {
+    std::shared_ptr<resource::PixelBuffer> locked_ptr = source_ptr.lock();
+    if(locked_ptr) {
+        if(locked_ptr->IsDirty()) {
+            // update texture
+            locked_ptr->Validate();
+        }
+    }
 }
 
 Texture::Texture(Texture && other) {
@@ -57,9 +77,20 @@ void Texture::Load(const resource::PixelBuffer & image) {
     if(nullptr == pixdata) {
         return;
     }
+    GLint magfilter = GL_LINEAR;
+    for(auto &metaprop : image.meta) {
+        if(metaprop.GetName() == "mag-filter") {
+            if(metaprop.Is<std::string>()) {
+                std::string filtermode = metaprop.Get<std::string>();
+                if(filtermode == "nearest") {
+                    magfilter = GL_NEAREST;
+                }
+            }
+        }
+    }
     glBindTexture(GL_TEXTURE_2D, texture_id);
     CheckGLError();
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magfilter);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     CheckGLError();
     glTexImage2D(GL_TEXTURE_2D, 0, gformat, image.Width(), image.Height(), 0, gformat, GL_UNSIGNED_BYTE, pixdata);

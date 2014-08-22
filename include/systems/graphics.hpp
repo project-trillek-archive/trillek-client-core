@@ -292,6 +292,9 @@ private:
     // A list of the lights in the system. Stored as a pair (entity ID, LightBase).
     std::list<std::pair<id_t, std::shared_ptr<LightBase>>> alllights;
 
+    // A list of all dynamic textures in the system
+    std::list<std::weak_ptr<Texture>> dyn_textures;
+
     // map IDs to cameras
     std::map<id_t, std::shared_ptr<CameraBase>> cameras;
 
@@ -309,6 +312,12 @@ private:
     std::list<MaterialGroup> material_groups;
     std::shared_future<std::shared_ptr<const std::map<unsigned int,const Transform*>>> updated_transforms;
 };
+
+/**
+ * \brief Adds a graphics Texture to the system.
+ */
+template<>
+void RenderSystem::Add(const std::string & instancename, std::shared_ptr<Texture> instanceptr);
 
 /**
  * \brief Adds a renderable component to the system.

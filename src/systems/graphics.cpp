@@ -310,6 +310,15 @@ void RenderSystem::RenderScene() const {
     glViewport(c_view->viewport.x, c_view->viewport.y, c_view->viewport.z, c_view->viewport.w);
 
     if(activerender) {
+        for(auto texitem = dyn_textures.begin(); texitem != dyn_textures.end(); texitem++) {
+            if(texitem->expired()) {
+                // TODO: generate a remove request
+            }
+            else {
+                auto texptr = texitem->lock();
+                texptr->Update();
+            }
+        }
         for(auto& cmditem : activerender->render_commands) {
             if(!cmditem.resolved && !cmditem.resolve_error) {
                 auto resolve = list_resolvers.find(cmditem.cmd);
@@ -759,6 +768,15 @@ void RenderSystem::SetViewportSize(const unsigned int width, const unsigned int 
         0.1f,
         10000.0f
         );
+}
+
+template<>
+void RenderSystem::Add(const std::string & instancename, std::shared_ptr<Texture> instanceptr) {
+    unsigned int type_id = reflection::GetTypeID<Texture>();
+    if(instanceptr->IsDynamic()) {
+        dyn_textures.push_back(instanceptr);
+    }
+    graphics_instances[type_id][instancename] = instanceptr;
 }
 
 template<>
