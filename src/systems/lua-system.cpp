@@ -10,6 +10,10 @@ int luaopen_LuaSys(lua_State*);
 LuaSystem::LuaSystem() {
     event::Dispatcher<KeyboardEvent>::GetInstance()->Subscribe(this);
     this->event_handlers[reflection::GetTypeID<KeyboardEvent>()];
+    event::Dispatcher<MouseBtnEvent>::GetInstance()->Subscribe(this);
+    this->event_handlers[reflection::GetTypeID<MouseBtnEvent>()];
+    event::Dispatcher<MouseMoveEvent>::GetInstance()->Subscribe(this);
+    this->event_handlers[reflection::GetTypeID<MouseMoveEvent>()];
 }
 LuaSystem::~LuaSystem() { }
 
@@ -45,9 +49,9 @@ void LuaSystem::HandleEvents(const frame_tp& timepoint) {
     last_tp = timepoint;
     // Call the Update method from Lua. A time delta is passed in.
     if (this->L) {
-        lua_getglobal(L, "Update");
-        lua_pushnumber(L, delta.count() * 1.0E-9);
-        lua_pcall(L, 1, 0, 0);
+        //lua_getglobal(L, "Update");
+        //lua_pushnumber(L, delta.count() * 1.0E-9);
+        //lua_pcall(L, 1, 0, 0);
     }
 }
 
@@ -70,6 +74,46 @@ void LuaSystem::Notify(const KeyboardEvent* key_event) {
             }
             lua_pushnumber(L, key_event->key);
             lua_pcall(L, 2, 0, 0);
+        }
+    }
+}
+
+void LuaSystem::Notify(const MouseBtnEvent* mousebtn_event) {
+    if (this->event_handlers.find(reflection::GetTypeID<MouseBtnEvent>()) != this->event_handlers.end()) {
+        for (auto handler : this->event_handlers[reflection::GetTypeID<MouseBtnEvent>()]) {
+            lua_getglobal(L, handler.c_str());
+            if (mousebtn_event->action == MouseBtnEvent::DOWN) {
+                lua_pushstring(L, "Down");
+            }
+            else if (mousebtn_event->action == MouseBtnEvent::UP) {
+                lua_pushstring(L, "Up");
+            }
+
+            if (mousebtn_event->button == MouseBtnEvent::LEFT) {
+                lua_pushstring(L, "Left");
+            }
+            else if (mousebtn_event->button == MouseBtnEvent::RIGHT) {
+                lua_pushstring(L, "Right");
+            }
+            else if (mousebtn_event->button == MouseBtnEvent::MIDDLE) {
+                lua_pushstring(L, "Middle");
+            }
+            lua_pcall(L, 2, 0, 0);
+        }
+    }
+}
+
+void LuaSystem::Notify(const MouseMoveEvent* mousemove_event) {
+    if (this->event_handlers.find(reflection::GetTypeID<MouseMoveEvent>()) != this->event_handlers.end()) {
+        for (auto handler : this->event_handlers[reflection::GetTypeID<MouseMoveEvent>()]) {
+            lua_getglobal(L, handler.c_str());
+            lua_pushnumber(L, mousemove_event->new_x);
+            lua_pushnumber(L, mousemove_event->new_y);
+            lua_pushnumber(L, mousemove_event->old_x);
+            lua_pushnumber(L, mousemove_event->old_y);
+            lua_pushnumber(L, mousemove_event->norm_x);
+            lua_pushnumber(L, mousemove_event->norm_y);
+            lua_pcall(L, 6, 0, 0);
         }
     }
 }

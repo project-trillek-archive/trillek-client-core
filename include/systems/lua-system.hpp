@@ -23,7 +23,9 @@ namespace script {
 typedef int (LuaRegisterFunction)(lua_State*);
 
 class LuaSystem : public SystemBase,
-    public event::Subscriber<KeyboardEvent> {
+    public event::Subscriber<KeyboardEvent>,
+    public event::Subscriber<MouseBtnEvent>,
+    public event::Subscriber<MouseMoveEvent> {
 public:
     LuaSystem();
     ~LuaSystem();
@@ -84,9 +86,20 @@ public:
     /**
      * \brief Handles keyboard events.
      *
-     * This method calls the physics system SetForce method after each event.
      */
     void Notify(const KeyboardEvent* key_event);
+
+    /**
+     * \brief Handles mouse button events.
+     *
+     */
+    void Notify(const MouseBtnEvent* mousebtn_event);
+
+    /**
+     * \brief Handles mouse move events.
+     *
+     */
+    void Notify(const MouseMoveEvent* mousemove_event);
 
     /**
      * \brief Registers a script event handler
