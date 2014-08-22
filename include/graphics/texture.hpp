@@ -66,6 +66,11 @@ public:
     void Load(const resource::PixelBuffer &);
 
     /**
+     * \brief create a texture from raw image data
+     */
+    void Load(const uint8_t *, GLuint width, GLuint height);
+
+    /**
      * \brief create a blank texture RGB or RGBA format
      */
     void Generate(GLuint width, GLuint height, bool usealpha);
