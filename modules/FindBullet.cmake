@@ -18,10 +18,10 @@ ENDIF (BULLET_INCLUDE_DIR)
 
 FIND_PATH(BULLET_INCLUDE_DIR  bullet/btBulletDynamicsCommon.h)
 INCLUDE_DIRECTORIES ("${BULLET_INCLUDE_DIR}/bullet")
-IF(APPLE)
-	# Certain parts of the code specify the bullet/ prefix when including bullet headers.
-	INCLUDE_DIRECTORIES ("${BULLET_INCLUDE_DIR}")
-ENDIF(APPLE)
+
+# Certain parts of the code specify the bullet/ prefix when including bullet headers.
+INCLUDE_DIRECTORIES ("${BULLET_INCLUDE_DIR}")
+
 FIND_LIBRARY(BULLET_SOFTBODY_LIBRARY  NAMES BulletSoftBody PATH_SUFFIXES lib64 )
 FIND_LIBRARY(BULLET_DYNAMICS_LIBRARY  NAMES BulletDynamics PATH_SUFFIXES lib64 )
 FIND_LIBRARY(BULLET_COLLISION_LIBRARY NAMES BulletCollision PATH_SUFFIXES lib64 )

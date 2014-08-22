@@ -80,6 +80,7 @@ private:
     bool multisample_texture;
     bool clearonuse;
     bool customsize;
+    bool shadowcompare;
     float clearvalues[4];
     int clearstencil;
     unsigned int width;
@@ -154,8 +155,8 @@ private:
 } // namespace graphics
 
 namespace reflection {
-TRILLEK_MAKE_IDTYPE_NAME(graphics::RenderAttachment, "attachment", 402)
-TRILLEK_MAKE_IDTYPE_NAME(graphics::RenderLayer, "layer", 403)
+TRILLEK_MAKE_IDTYPE_NAME(graphics::RenderAttachment, "attachment", 403)
+TRILLEK_MAKE_IDTYPE_NAME(graphics::RenderLayer, "layer", 404)
 } // namespace reflection
 
 } // namespace trillek

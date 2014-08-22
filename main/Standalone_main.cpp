@@ -30,7 +30,7 @@ int main(int argCount, char **argValues) {
     trillek::TrillekGame::GetPhysicsSystem().Start();
 
     trillek::util::JSONPasrser jparser;
-    
+
     if (!jparser.Parse("assets/tests/sample.json")) {
         std::cerr << "Error loading JSON configuration file." << std::endl;
     }
@@ -76,4 +76,4 @@ int main(int argCount, char **argValues) {
 
     jparser.Serialize("assets/tests/", "transforms.json", trillek::TransformMap::GetInstance());
     return 0;
-} 
+}

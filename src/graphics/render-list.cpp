@@ -2,6 +2,7 @@
 #include "graphics/render-list.hpp"
 #include <iostream>
 #include <map>
+#include "logging.hpp"
 
 namespace trillek {
 namespace graphics {
@@ -20,8 +21,7 @@ bool RenderList::Serialize(rapidjson::Document& document) {
 
 bool RenderList::Parse(const std::string &object_name, const rapidjson::Value& node) {
     if(!node.IsArray()) {
-        // TODO use logger
-        std::cerr << "[WARNING] Invalid render list - expected array\n";
+        LOGMSGC(WARNING) << "Invalid render list - expected array";
         return false;
     }
     std::map<std::string, RenderCmd> commandtype;
@@ -96,8 +96,7 @@ bool RenderList::Parse(const std::string &object_name, const rapidjson::Value& n
             render_commands.push_back(RenderCommandItem(rtypeval, std::move(rparam), std::move(rprops)));
         }
         else {
-            // TODO use logger
-            std::cerr << "[WARNING] Invalid render list entry\n";
+            LOGMSGC(WARNING) << "Invalid render list entry";
         }
     }
     return true;

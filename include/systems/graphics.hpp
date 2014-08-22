@@ -12,6 +12,7 @@
 #include <future>
 #include <iostream>
 #include "trillek.hpp"
+#include "type-id.hpp"
 #include "trillek-scheduler.hpp"
 #include "component-factory.hpp"
 #include "systems/system-base.hpp"
@@ -21,6 +22,8 @@
 #include "graphics/render-layer.hpp"
 #include "graphics/texture.hpp"
 #include <map>
+#include "systems/dispatcher.hpp"
+#include "os.hpp"
 
 namespace trillek {
 
@@ -51,7 +54,9 @@ struct MaterialGroup {
     std::list<TextureGroup> texture_groups;
 };
 
-class RenderSystem : public SystemBase, public util::Parser {
+class RenderSystem : public SystemBase, public util::Parser,
+    public event::Subscriber<KeyboardEvent>
+{
 public:
 
     RenderSystem();
@@ -94,7 +99,7 @@ public:
 
     /** \brief Renders post processing passes for the scene.
      */
-    void RenderPostPass() const;
+    void RenderPostPass(std::shared_ptr<Shader>) const;
 
     /**
      * \brief Causes an update in the system based on the change in time.
@@ -230,6 +235,19 @@ public:
     // returns an entity ID
     id_t GetActiveCameraID() const { return camera_id; }
 
+    void Notify(const KeyboardEvent* key_event) {
+        switch(key_event->action) {
+        case KeyboardEvent::KEY_DOWN:
+            switch (key_event->key) {
+            case GLFW_KEY_F10:
+                debugmode = (debugmode & ~3) | ((debugmode + 1) & 3);
+                break;
+            }
+            break;
+        default:
+            break;
+        }
+    }
 private:
 
     template<class CT>
@@ -252,6 +270,7 @@ private:
     void UpdateModelMatrices();
 
     int gl_version[3];
+    int debugmode;
     bool frame_drop;
     uint32_t frame_drop_count;
     ViewMatrixSet vp_center;
@@ -273,6 +292,9 @@ private:
     // A list of the lights in the system. Stored as a pair (entity ID, LightBase).
     std::list<std::pair<id_t, std::shared_ptr<LightBase>>> alllights;
 
+    // A list of all dynamic textures in the system
+    std::list<std::weak_ptr<Texture>> dyn_textures;
+
     // map IDs to cameras
     std::map<id_t, std::shared_ptr<CameraBase>> cameras;
 
@@ -292,6 +314,12 @@ private:
 };
 
 /**
+ * \brief Adds a graphics Texture to the system.
+ */
+template<>
+void RenderSystem::Add(const std::string & instancename, std::shared_ptr<Texture> instanceptr);
+
+/**
  * \brief Adds a renderable component to the system.
  */
 template<>
@@ -308,6 +336,11 @@ bool RenderSystem::AddEntityComponent(const id_t entity_id, std::shared_ptr<Came
 
 
 } // End of graphics
+
+namespace reflection {
+TRILLEK_MAKE_IDTYPE(graphics::RenderSystem, 400)
+} // namespace reflection
+
 } // End of trillek
 
 #endif

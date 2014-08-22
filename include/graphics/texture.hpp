@@ -11,7 +11,7 @@ namespace graphics {
 
 class Texture : public GraphicsBase {
 public:
-    Texture() : texture_id(0) {}
+    Texture() : texture_id(0), compare(false) {}
     virtual ~Texture();
 
     // required to implement
@@ -24,6 +24,11 @@ public:
      * \brief new texture instance from image
      */
     Texture(const resource::PixelBuffer &);
+
+    /**
+     * \brief new texture instance from an image pointer
+     */
+    Texture(std::weak_ptr<resource::PixelBuffer>);
 
     // no copying (although it could be done)
     Texture(const Texture &) = delete;
@@ -46,9 +51,26 @@ public:
     GLuint GetID() { return texture_id; }
 
     /**
+     * \return true if the texture was created dynamic
+     */
+    bool IsDynamic() { return !source_ptr.expired(); }
+
+    /**
+     * Called by the RenderSystem to update dynamic textures
+     */
+    void Update();
+
+    void SetCompare(bool c) { compare = c; }
+
+    /**
      * \brief create a texture from an image
      */
     void Load(const resource::PixelBuffer &);
+
+    /**
+     * \brief create a texture from raw image data
+     */
+    void Load(const uint8_t *, GLuint width, GLuint height);
 
     /**
      * \brief create a blank texture RGB or RGBA format
@@ -86,13 +108,15 @@ public:
     bool Initialize(const std::vector<Property> &properties) { return true; }
 protected:
     GLuint texture_id;
-
+    bool compare;
+    std::weak_ptr<resource::PixelBuffer> source_ptr;
 };
 
 } // graphics
 
 namespace reflection {
-TRILLEK_MAKE_IDTYPE_NAME(graphics::Texture,"texture",400)
+TRILLEK_MAKE_IDTYPE_NAME(graphics::Texture,"texture",401)
+TRILLEK_MAKE_IDTYPE_NAME(std::shared_ptr<graphics::Texture>,"texture_ptr",601)
 } // End of reflection
 
 } // trillek
