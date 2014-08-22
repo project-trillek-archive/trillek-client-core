@@ -11,7 +11,7 @@ namespace graphics {
 
 class Texture : public GraphicsBase {
 public:
-    Texture() : texture_id(0) {}
+    Texture() : texture_id(0), compare(false) {}
     virtual ~Texture();
 
     // required to implement
@@ -60,6 +60,8 @@ public:
      */
     void Update();
 
+    void SetCompare(bool c) { compare = c; }
+
     /**
      * \brief create a texture from an image
      */
@@ -106,6 +108,7 @@ public:
     bool Initialize(const std::vector<Property> &properties) { return true; }
 protected:
     GLuint texture_id;
+    bool compare;
     std::weak_ptr<resource::PixelBuffer> source_ptr;
 };
 

@@ -80,6 +80,7 @@ private:
     bool multisample_texture;
     bool clearonuse;
     bool customsize;
+    bool shadowcompare;
     float clearvalues[4];
     int clearstencil;
     unsigned int width;

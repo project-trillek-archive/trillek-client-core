@@ -14,6 +14,7 @@ RenderAttachment::RenderAttachment() {
     this->multisample = false;
     this->clearonuse = false;
     this->multisample_texture = false;
+    this->shadowcompare = false;
     this->outputnumber = 0;
     this->clearstencil = 0;
     this->customsize = false;
@@ -34,6 +35,7 @@ RenderAttachment::RenderAttachment(RenderAttachment &&that) {
     this->attachtarget = that.attachtarget;
     this->multisample = that.multisample;
     this->multisample_texture = that.multisample_texture;
+    this->shadowcompare = that.shadowcompare;
     this->clearonuse = that.clearonuse;
     this->outputnumber = that.outputnumber;
     this->clearstencil = that.clearstencil;
@@ -53,6 +55,7 @@ RenderAttachment& RenderAttachment::operator=(RenderAttachment &&that) {
     this->attachtarget = that.attachtarget;
     this->multisample = that.multisample;
     this->multisample_texture = that.multisample_texture;
+    this->shadowcompare = that.shadowcompare;
     this->clearonuse = that.clearonuse;
     this->outputnumber = that.outputnumber;
     this->clearstencil = that.clearstencil;
@@ -196,6 +199,10 @@ bool RenderAttachment::Parse(const std::string &object_name, const rapidjson::Va
                 else if(format == "depth") {
                     this->attachtarget = GL_DEPTH_ATTACHMENT;
                 }
+                else if(format == "depth-shadow") {
+                    this->attachtarget = GL_DEPTH_ATTACHMENT;
+                    this->shadowcompare = true;
+                }
                 else if(format == "stencil") {
                     this->attachtarget = GL_STENCIL_ATTACHMENT;
                 }
@@ -302,6 +309,7 @@ void RenderAttachment::Generate(int width, int height, int samplecount) {
             TrillekGame::GetGraphicSystem().Add(texturename, texture);
         }
     }
+    texture->SetCompare(this->shadowcompare);
     if(multisample) {
         if(multisample_texture) {
             switch(attachtarget) {
