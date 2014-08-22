@@ -17,29 +17,26 @@ public:
     OBJ() { }
     ~OBJ() { }
 
-    struct Vertex {
-        Vertex() : uv(0.0f, 0.0f) { }
-        glm::vec2 uv; // Texture coordinates
-        glm::vec3 position; // Calculated position (cached for later use)
-        glm::vec3 normal; // Calculated normal (cached for later use)
-    };
-
-    struct Triangle {
-        Triangle() {
-            this->verts[0] = 0; verts[1] = 0; verts[2] = 0;
+    // OBJ Helper struct for face vertex data indicies.
+    struct Face {
+        Face() {
+            this->pos[0] = 0; this->pos[1] = 0; this->pos[2] = 0;
+            this->uv[0] = 0; this->uv[1] = 0; this->uv[2] = 0;
+            this->norm[0] = 0; this->norm[1] = 0; this->norm[2] = 0;
         }
-        int verts[3]; // index
+        unsigned int pos[3]; // index
+        unsigned int uv[3]; // index
+        unsigned int norm[3]; // index
     };
 
     // OBJ Helper struct for storing vertex groups
     struct VertexGroup {
         std::string name;
         std::string mtl;
-        std::vector<Triangle> verts;
-        std::vector<Triangle> uvs;
-        std::vector<Triangle> norms;
+        std::vector<Face> faces;
     };
 
+    // MTL Helper struct describing mtl files
     struct MTL {
         glm::vec3 ka;
         glm::vec3 kd;
@@ -51,13 +48,6 @@ public:
         std::string diffuseMap;
         std::string specularMap;
         std::string normalMap;
-    };
-
-    // Holds information about each mesh inside the file.
-    struct Mesh {
-        std::string shader; // MTR or texture filename.
-        std::vector<Vertex> verts;
-        std::vector<Triangle> tris;
     };
 
     /**
@@ -104,10 +94,9 @@ public:
     }
 private:
     std::string fname; // Relative filename
-    std::vector<std::unique_ptr<Mesh>> meshes;
-    std::list<std::shared_ptr<VertexGroup>> vertexGroups;
+    std::vector<std::shared_ptr<VertexGroup>> vertexGroups;
 
-    std::vector<glm::vec3> verticies;
+    std::vector<glm::vec3> positions;
     std::vector<glm::vec3> normals;
     std::vector<glm::vec2> uvs;
     std::map<std::string, std::shared_ptr<MTL>> materials;

@@ -147,7 +147,7 @@ bool OBJ::Parse() {
         else if (identifier == "v") {
             glm::vec3 vert;
             ss >> vert.x; ss >> vert.y; ss >> vert.z;
-            this->verticies.push_back(vert);
+            this->positions.push_back(vert);
         }
         else if (identifier == "vt") {
             glm::vec2 uv;
@@ -177,7 +177,7 @@ bool OBJ::Parse() {
             }
         }
         else if (identifier == "f") {
-            Triangle vert, uv, norm;
+            Face face;
             std::string faceLine;
             std::getline(ss, faceLine);
             // Check if we have 3 vertex indicies per face vertex.
@@ -189,21 +189,17 @@ bool OBJ::Parse() {
                 // Replace the / separators with spaces for stringstream ouput.
                 std::replace(faceLine.begin(), faceLine.end(), '/', ' ');
                 std::stringstream face_ss(faceLine);
-                face_ss >> vert.verts[0]; face_ss >> uv.verts[0]; face_ss >> norm.verts[0];
-                face_ss >> vert.verts[1]; face_ss >> uv.verts[1]; face_ss >> norm.verts[1];
-                face_ss >> vert.verts[2]; face_ss >> uv.verts[2]; face_ss >> norm.verts[2];
+                face_ss >> face.pos[0]; face_ss >> face.uv[0]; face_ss >> face.norm[0];
+                face_ss >> face.pos[1]; face_ss >> face.uv[1]; face_ss >> face.norm[1];
+                face_ss >> face.pos[2]; face_ss >> face.uv[2]; face_ss >> face.norm[2];
             }
             else {
                 std::stringstream face_ss(faceLine);
                 // There is only 1 vertex index per face vertex.
-                face_ss >> vert.verts[0]; face_ss >> vert.verts[1]; face_ss >> vert.verts[2];
-                uv.verts[0] = -1; uv.verts[1] = -1; uv.verts[2] = -1;
-                norm.verts[0] = -1; norm.verts[1] = -1; norm.verts[2] = -1;
+                face_ss >> face.pos[0]; face_ss >> face.pos[1]; face_ss >> face.pos[2];
             }
             if (currentVGroup) {
-                currentVGroup->verts.push_back(vert);
-                currentVGroup->uvs.push_back(uv);
-                currentVGroup->norms.push_back(norm);
+                currentVGroup->faces.push_back(face);
             }
         }
     }
@@ -216,54 +212,8 @@ bool OBJ::Parse() {
 }
 
 void OBJ::PopulateMeshGroups() {
-    for (auto vgroup : this->vertexGroups) {
-        auto mesh = std::make_unique<Mesh>();
-        mesh->shader = vgroup->mtl;
-        for (size_t i = 0, j = 0; i < vgroup->verts.size(); ++i) {
-            Triangle face;
-            Vertex v0;
-            if (vgroup->verts[i].verts[0] > 0 && vgroup->verts[i].verts[0] <= this->verticies.size()) {
-                v0.position = this->verticies[vgroup->verts[i].verts[0] - 1];
-            }
-            if (vgroup->norms[i].verts[0] > 0 && vgroup->norms[i].verts[0] <= this->normals.size()) {
-                v0.normal = this->normals[vgroup->norms[i].verts[0] - 1];
-            }
-            if (vgroup->uvs[i].verts[0] > 0 && vgroup->uvs[i].verts[0] <= this->normals.size()) {
-                v0.uv = this->uvs[vgroup->uvs[i].verts[0] - 1];
-            }
-            mesh->verts.push_back(v0);
-            face.verts[0] = j++;
-            Vertex v1;
-            if (vgroup->verts[i].verts[1] > 0 && vgroup->verts[i].verts[1] <= this->verticies.size()) {
-                v1.position = this->verticies[vgroup->verts[i].verts[1] - 1];
-            }
-            if (vgroup->norms[i].verts[1] > 0 && vgroup->norms[i].verts[1] <= this->normals.size()) {
-                v1.normal = this->normals[vgroup->norms[i].verts[1] - 1];
-            }
-            if (vgroup->uvs[i].verts[1] > 0 && vgroup->uvs[i].verts[1] <= this->normals.size()) {
-                v1.uv = this->uvs[vgroup->uvs[i].verts[1] - 1];
-            }
-            mesh->verts.push_back(v1);
-            face.verts[1] = j++;
-            Vertex v2;
-            if (vgroup->verts[i].verts[2] > 0 && vgroup->verts[i].verts[2] <= this->verticies.size()) {
-                v2.position = this->verticies[vgroup->verts[i].verts[2] - 1];
-            }
-            if (vgroup->norms[i].verts[2] > 0 && vgroup->norms[i].verts[2] <= this->normals.size()) {
-                v2.normal = this->normals[vgroup->norms[i].verts[2] - 1];
-            }
-            if (vgroup->uvs[i].verts[2] > 0 && vgroup->uvs[i].verts[2] <= this->normals.size()) {
-                v2.uv = this->uvs[vgroup->uvs[i].verts[2] - 1];
-            }
-            mesh->verts.push_back(v2);
-            face.verts[2] = j++;
-            mesh->tris.push_back(face);
-        }
-        this->meshes.push_back(std::move(mesh));
-    }
-
-    if (this->mesh_groups.size() < this->meshes.size()) {
-        this->mesh_groups.resize(this->meshes.size());
+    if (this->mesh_groups.size() < this->vertexGroups.size()) {
+        this->mesh_groups.resize(this->vertexGroups.size());
         for (auto& mgruop : this->mesh_groups) {
             if (!mgruop) {
                 mgruop = std::make_shared<MeshGroup>();
@@ -271,28 +221,47 @@ void OBJ::PopulateMeshGroups() {
         }
     }
 
-    for (size_t i = 0; i < this->meshes.size(); ++i) {
-        if (this->mesh_groups[i]->verts.size() < this->meshes[i]->verts.size()) {
-            this->mesh_groups[i]->verts.resize(this->meshes[i]->verts.size());
+    for (size_t v = 0; v < this->vertexGroups.size(); ++v) {
+        auto vgroup = this->vertexGroups[v];
+        auto mgruop = this->mesh_groups[v];
+        if (mgruop->verts.size() < (vgroup->faces.size() * 3)) {
+            mgruop->verts.resize(vgroup->faces.size() * 3);
         }
-        if (this->meshes[i]->shader != "") {
-            this->mesh_groups[i]->textures.push_back(this->materials[this->meshes[i]->shader]->diffuseMap);
+        for (size_t i = 0, j = 0; i < vgroup->faces.size(); ++i) {
+            Face face;
+            if (vgroup->faces[i].pos[0] > 0 && vgroup->faces[i].pos[0] <= this->positions.size()) {
+                mgruop->verts[j].position = this->positions[vgroup->faces[i].pos[0] - 1];
+            }
+            if (vgroup->faces[i].uv[0] > 0 && vgroup->faces[i].uv[0] <= this->normals.size()) {
+                mgruop->verts[j].uv = this->uvs[vgroup->faces[i].uv[0] - 1];
+            }
+            if (vgroup->faces[i].norm[0] > 0 && vgroup->faces[i].norm[0] <= this->normals.size()) {
+                mgruop->verts[j].normal = this->normals[vgroup->faces[i].norm[0] - 1];
+            }
+            mgruop->indicies.push_back(j++);
+            if (vgroup->faces[i].pos[1] > 0 && vgroup->faces[i].pos[1] <= this->positions.size()) {
+                mgruop->verts[j].position = this->positions[vgroup->faces[i].pos[1] - 1];
+            }
+            if (vgroup->faces[i].uv[1] > 0 && vgroup->faces[i].uv[1] <= this->normals.size()) {
+                mgruop->verts[j].uv = this->uvs[vgroup->faces[i].uv[1] - 1];
+            }
+            if (vgroup->faces[i].norm[1] > 0 && vgroup->faces[i].norm[1] <= this->normals.size()) {
+                mgruop->verts[j].normal = this->normals[vgroup->faces[i].norm[1] - 1];
+            }
+            mgruop->indicies.push_back(j++);
+            if (vgroup->faces[i].pos[2] > 0 && vgroup->faces[i].pos[2] <= this->positions.size()) {
+                mgruop->verts[j].position = this->positions[vgroup->faces[i].pos[2] - 1];
+            }
+            if (vgroup->faces[i].uv[2] > 0 && vgroup->faces[i].uv[2] <= this->normals.size()) {
+                mgruop->verts[j].uv = this->uvs[vgroup->faces[i].uv[2] - 1];
+            }
+            if (vgroup->faces[i].norm[2] > 0 && vgroup->faces[i].norm[2] <= this->normals.size()) {
+                mgruop->verts[j].normal = this->normals[vgroup->faces[i].norm[2] - 1];
+            }
+            mgruop->indicies.push_back(j++);
         }
-        for (size_t j = 0; j < this->meshes[i]->verts.size(); ++j) {
-            VertexData vdata;
-            vdata.position = this->meshes[i]->verts[j].position;
-            vdata.uv = this->meshes[i]->verts[j].uv;
-            vdata.normal = this->meshes[i]->verts[j].normal;
-
-            this->mesh_groups[i]->verts[j] = vdata;
-        }
-    }
-
-    for (size_t i = 0; i < this->meshes.size(); ++i) {
-        for (size_t j = 0; j < this->meshes[i]->tris.size(); ++j) {
-            this->mesh_groups[i]->indicies.push_back(this->meshes[i]->tris[j].verts[0]);
-            this->mesh_groups[i]->indicies.push_back(this->meshes[i]->tris[j].verts[1]);
-            this->mesh_groups[i]->indicies.push_back(this->meshes[i]->tris[j].verts[2]);
+        if (this->materials.find(vgroup->mtl) != this->materials.end()) {
+            mgruop->textures.push_back(this->materials[vgroup->mtl]->diffuseMap);
         }
     }
 }
