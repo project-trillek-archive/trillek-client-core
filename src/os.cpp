@@ -104,6 +104,10 @@ void OS::Terminate() {
     glfwTerminate();
 }
 
+void OS::SetWindowShouldClose() {
+    glfwSetWindowShouldClose(this->window, GL_TRUE);
+}
+
 bool OS::Closing() {
     return glfwWindowShouldClose(this->window) > 0;
 }
