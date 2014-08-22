@@ -222,37 +222,37 @@ void OBJ::PopulateMeshGroups() {
         for (size_t i = 0, j = 0; i < vgroup->verts.size(); ++i) {
             Triangle face;
             Vertex v0;
-            if (vgroup->verts[i].verts[0] > 0 && vgroup->verts[i].verts[0] < this->verticies.size()) {
+            if (vgroup->verts[i].verts[0] > 0 && vgroup->verts[i].verts[0] <= this->verticies.size()) {
                 v0.position = this->verticies[vgroup->verts[i].verts[0] - 1];
             }
-            if (vgroup->norms[i].verts[0] > 0 && vgroup->norms[i].verts[0] < this->normals.size()) {
+            if (vgroup->norms[i].verts[0] > 0 && vgroup->norms[i].verts[0] <= this->normals.size()) {
                 v0.normal = this->normals[vgroup->norms[i].verts[0] - 1];
             }
-            if (vgroup->uvs[i].verts[0] > 0 && vgroup->uvs[i].verts[0] < this->normals.size()) {
+            if (vgroup->uvs[i].verts[0] > 0 && vgroup->uvs[i].verts[0] <= this->normals.size()) {
                 v0.uv = this->uvs[vgroup->uvs[i].verts[0] - 1];
             }
             mesh->verts.push_back(v0);
             face.verts[0] = j++;
             Vertex v1;
-            if (vgroup->verts[i].verts[1] > 0 && vgroup->verts[i].verts[1] < this->verticies.size()) {
+            if (vgroup->verts[i].verts[1] > 0 && vgroup->verts[i].verts[1] <= this->verticies.size()) {
                 v1.position = this->verticies[vgroup->verts[i].verts[1] - 1];
             }
-            if (vgroup->norms[i].verts[1] > 0 && vgroup->norms[i].verts[1] < this->normals.size()) {
+            if (vgroup->norms[i].verts[1] > 0 && vgroup->norms[i].verts[1] <= this->normals.size()) {
                 v1.normal = this->normals[vgroup->norms[i].verts[1] - 1];
             }
-            if (vgroup->uvs[i].verts[1] > 0 && vgroup->uvs[i].verts[1] < this->normals.size()) {
+            if (vgroup->uvs[i].verts[1] > 0 && vgroup->uvs[i].verts[1] <= this->normals.size()) {
                 v1.uv = this->uvs[vgroup->uvs[i].verts[1] - 1];
             }
             mesh->verts.push_back(v1);
             face.verts[1] = j++;
             Vertex v2;
-            if (vgroup->verts[i].verts[2] > 0 && vgroup->verts[i].verts[2] < this->verticies.size()) {
+            if (vgroup->verts[i].verts[2] > 0 && vgroup->verts[i].verts[2] <= this->verticies.size()) {
                 v2.position = this->verticies[vgroup->verts[i].verts[2] - 1];
             }
-            if (vgroup->norms[i].verts[2] > 0 && vgroup->norms[i].verts[2] < this->normals.size()) {
+            if (vgroup->norms[i].verts[2] > 0 && vgroup->norms[i].verts[2] <= this->normals.size()) {
                 v2.normal = this->normals[vgroup->norms[i].verts[2] - 1];
             }
-            if (vgroup->uvs[i].verts[2] > 0 && vgroup->uvs[i].verts[2] < this->normals.size()) {
+            if (vgroup->uvs[i].verts[2] > 0 && vgroup->uvs[i].verts[2] <= this->normals.size()) {
                 v2.uv = this->uvs[vgroup->uvs[i].verts[2] - 1];
             }
             mesh->verts.push_back(v2);
