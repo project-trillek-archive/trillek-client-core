@@ -112,12 +112,12 @@ namespace {
         EXPECT_FLOAT_EQ(rotation.y, 1.0f);
         EXPECT_FLOAT_EQ(rotation.z, 1.0f);
 
-        transform.SetRotation(glm::vec3(5.0f, 5.0f, 5.0f));
+        transform.SetRotation(glm::vec3(glm::radians(5.0), glm::radians(5.0), glm::radians(5.0)));
         rotation = transform.GetRotation();
 
-        EXPECT_FLOAT_EQ(rotation.x, 5.0f);
-        EXPECT_FLOAT_EQ(rotation.y, 5.0f);
-        EXPECT_FLOAT_EQ(rotation.z, 5.0f);
+        EXPECT_FLOAT_EQ(rotation.x, glm::radians(5.0));
+        EXPECT_FLOAT_EQ(rotation.y, glm::radians(5.0));
+        EXPECT_FLOAT_EQ(rotation.z, glm::radians(5.0));
     }
 
     TEST(TransformTest, GetScale) {
@@ -176,45 +176,11 @@ namespace {
         EXPECT_FLOAT_EQ(final_orientation.z, orientation.z);
         EXPECT_FLOAT_EQ(final_orientation.w, orientation.w);
     }
-    TEST(TransformTest, Orient) {
-        trillek::Transform transform(0);
-        transform.Rotate(glm::vec3(1.0f, 1.0f, 1.0f));
-        glm::quat orientation = transform.GetOrientation();
-
-        glm::quat qX = glm::angleAxis(1.0f, RIGHT_VECTOR);
-        glm::quat qY = glm::angleAxis(1.0f, UP_VECTOR);
-        glm::quat qZ = glm::angleAxis(1.0f, FORWARD_VECTOR);
-        glm::quat final_orientation = qX * qY * qZ;
-        final_orientation = glm::normalize(final_orientation);
-
-        EXPECT_FLOAT_EQ(final_orientation.x, orientation.x);
-        EXPECT_FLOAT_EQ(final_orientation.y, orientation.y);
-        EXPECT_FLOAT_EQ(final_orientation.z, orientation.z);
-        EXPECT_FLOAT_EQ(final_orientation.w, orientation.w);
-
-        qX = glm::angleAxis(1.0f, RIGHT_VECTOR);
-        qY = glm::angleAxis(1.0f, UP_VECTOR);
-        qZ = glm::angleAxis(1.0f, FORWARD_VECTOR);
-        final_orientation = glm::normalize(final_orientation * (qX * qY * qZ));
-
-        transform.Rotate(glm::vec3(1.0f, 1.0f, 1.0f));
-        orientation = transform.GetOrientation();
-
-        EXPECT_FLOAT_EQ(final_orientation.x, orientation.x);
-        EXPECT_FLOAT_EQ(final_orientation.y, orientation.y);
-        EXPECT_FLOAT_EQ(final_orientation.z, orientation.z);
-        EXPECT_FLOAT_EQ(final_orientation.w, orientation.w);
-    }
     TEST(TransformTest, SetOrientation) {
         trillek::Transform transform(0);
         transform.Rotate(glm::vec3(1.0f, 1.0f, 1.0f));
         glm::quat orientation = transform.GetOrientation();
-
-        glm::quat qX = glm::angleAxis(1.0f, RIGHT_VECTOR);
-        glm::quat qY = glm::angleAxis(1.0f, UP_VECTOR);
-        glm::quat qZ = glm::angleAxis(1.0f, FORWARD_VECTOR);
-        glm::quat final_orientation = qX * qY * qZ;
-        final_orientation = glm::normalize(final_orientation);
+        glm::quat final_orientation(glm::vec3(1.0f, 1.0f, 1.0f));
 
         EXPECT_FLOAT_EQ(final_orientation.x, orientation.x);
         EXPECT_FLOAT_EQ(final_orientation.y, orientation.y);
@@ -224,11 +190,7 @@ namespace {
         transform.SetRotation(glm::vec3(5.0f, 5.0f, 5.0f));
         orientation = transform.GetOrientation();
 
-        qX = glm::angleAxis(5.0f, RIGHT_VECTOR);
-        qY = glm::angleAxis(5.0f, UP_VECTOR);
-        qZ = glm::angleAxis(5.0f, FORWARD_VECTOR);
-        final_orientation = qX * qY * qZ;
-        final_orientation = glm::normalize(final_orientation);
+        final_orientation = glm::quat(glm::vec3(5.0f, 5.0f, 5.0f));
 
         EXPECT_FLOAT_EQ(final_orientation.x, orientation.x);
         EXPECT_FLOAT_EQ(final_orientation.y, orientation.y);
