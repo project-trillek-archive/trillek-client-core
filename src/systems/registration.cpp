@@ -12,6 +12,7 @@
 
 #include "resources/md5mesh.hpp"
 #include "resources/md5anim.hpp"
+#include "resources/obj.hpp"
 #include "resources/pixel-buffer.hpp"
 #include "resources/text-file.hpp"
 
@@ -57,6 +58,7 @@ void util::JSONPasrser::RegisterTypes() {
 void resource::ResourceMap::RegisterTypes() {
     RegisterResourceType<resource::TextFile>();
     RegisterResourceType<resource::MD5Mesh>();
+    RegisterResourceType<resource::OBJ>();
     RegisterResourceType<resource::PixelBuffer>();
     RegisterResourceType<resource::MD5Anim>();
 }
