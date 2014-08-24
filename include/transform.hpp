@@ -117,6 +117,9 @@ public:
      */
     void MarkAsModified();
 
+    unsigned int GetEntityID() const {
+        return this->entity_id;
+    }
 private:
     glm::vec3 translation;
     glm::vec3 rotation;

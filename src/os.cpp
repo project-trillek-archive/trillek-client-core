@@ -211,7 +211,15 @@ void OS::DispatchCharacterEvent(const unsigned int uchar) {
 }
 
 void OS::DispatchMouseMoveEvent(const double x, const double y) {
-    // TODO: Dispatch a mouse move event.
+    MouseMoveEvent mmov_event = {
+        static_cast<double>(x) / this->client_width,
+        static_cast<double>(y) / this->client_height,
+        static_cast<int>(this->old_mouse_x),
+        static_cast<int>(this->old_mouse_y),
+        static_cast<int>(x),
+        static_cast<int>(y)
+    };
+    event::Dispatcher<MouseMoveEvent>::GetInstance()->NotifySubscribers(&mmov_event);
 
     // If we are in mouse lock we will snap the mouse to the middle of the screen.
     if (this->mouse_lock) {
@@ -226,28 +234,24 @@ void OS::DispatchMouseMoveEvent(const double x, const double y) {
 }
 
 void OS::DispatchMouseButtonEvent(const int button, const int action, const int mods) {
+    MouseBtnEvent mbtn_event;
     if (action == GLFW_PRESS) {
-        if (button == GLFW_MOUSE_BUTTON_LEFT) {
-            // TODO: Dispatch a left mouse button down event.
-        }
-        else if (button == GLFW_MOUSE_BUTTON_RIGHT) {
-            // TODO: Dispatch a right mouse button down event.
-        }
-        else if (button == GLFW_MOUSE_BUTTON_MIDDLE) {
-            // TODO: Dispatch a middle mouse button down event.
-        }
+        mbtn_event.action = MouseBtnEvent::DOWN;
     }
-    else if (action == GLFW_RELEASE) {
-        if (button == GLFW_MOUSE_BUTTON_LEFT) {
-            // TODO: Dispatch a left mouse button up event.
-        }
-        else if (button == GLFW_MOUSE_BUTTON_RIGHT) {
-            // TODO: Dispatch a right mouse button up event.
-        }
-        else if (button == GLFW_MOUSE_BUTTON_MIDDLE) {
-            // TODO: Dispatch a middle mouse button up event.
-        }
+    else {
+        mbtn_event.action = MouseBtnEvent::UP;
     }
+    if (button == GLFW_MOUSE_BUTTON_LEFT) {
+        mbtn_event.button = MouseBtnEvent::LEFT;
+    }
+    else if (button == GLFW_MOUSE_BUTTON_RIGHT) {
+        mbtn_event.button = MouseBtnEvent::RIGHT;
+    }
+    else if (button == GLFW_MOUSE_BUTTON_MIDDLE) {
+        mbtn_event.button = MouseBtnEvent::MIDDLE;
+    }
+    event::Dispatcher<MouseBtnEvent>::GetInstance()->NotifySubscribers(&mbtn_event);
+
 }
 
 void OS::ToggleMouseLock() {
