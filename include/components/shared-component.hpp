@@ -36,6 +36,11 @@ public:
     }
 
     template<Component type>
+    typename type_trait<type>::value_type GetCopy(id_t entity_id) {
+        return Map<type>().Map().at(entity_id)->Get<typename type_trait<type>::value_type>();
+    }
+
+    template<Component type>
     std::shared_ptr<const typename type_trait<type>::value_type> GetSharedPtr(id_t entity_id) {
         const auto& ptr = std::const_pointer_cast<Container>(Map<type>().Map().at(entity_id));
         return Container::GetSharedPtr<const typename type_trait<type>::value_type>(ptr);
