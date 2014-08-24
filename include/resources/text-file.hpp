@@ -74,8 +74,8 @@ private:
 
 namespace reflection {
 
-template <> inline constexpr const char* GetTypeName<resource::TextFile>() { return "Text"; }
-template <> inline constexpr unsigned int GetTypeID<resource::TextFile>() { return 1000; }
+template <> inline const char* GetTypeName<resource::TextFile>() { return "Text"; }
+template <> inline unsigned int GetTypeID<resource::TextFile>() { return 1000; }
 
 } // End of reflection
 } // End of trillek

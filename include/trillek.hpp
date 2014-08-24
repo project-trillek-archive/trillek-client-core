@@ -46,8 +46,8 @@ namespace reflection {
 
 // Template methods that can be used for reflection.
 // To use them just call GetTypeName<MyType>() to retrieve the name for the specified type.
-template<class TYPE> constexpr const char* GetTypeName(void) { return "UNKNOWN"; }
-template<class TYPE> constexpr unsigned int GetTypeID(void) { return ~0; }
+template<class TYPE> const char* GetTypeName(void) { return "UNKNOWN"; }
+template<class TYPE> unsigned int GetTypeID(void) { return ~0; }
 // function to get the name of the handler of a packet type
 template <uint32_t MAJOR,uint32_t MINOR> constexpr const char* GetNetworkHandler(void) {}
 

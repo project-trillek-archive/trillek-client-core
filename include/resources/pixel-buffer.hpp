@@ -124,8 +124,8 @@ protected:
 
 namespace reflection {
 
-template <> inline constexpr const char* GetTypeName<resource::PixelBuffer>() { return "Image"; }
-template <> inline constexpr unsigned int GetTypeID<resource::PixelBuffer>() { return 1003; }
+template <> inline const char* GetTypeName<resource::PixelBuffer>() { return "Image"; }
+template <> inline unsigned int GetTypeID<resource::PixelBuffer>() { return 1003; }
 
 } // reflection
 } // trillek

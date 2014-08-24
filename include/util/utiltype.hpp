@@ -326,12 +326,13 @@ inline uint32_t Ctz<uint64_t>(uint64_t value) {
 #endif
 
 template<class T>
-constexpr unsigned int Log2Bin();
+inline unsigned int Log2Bin();
 
 template<>
-constexpr unsigned int Log2Bin<uint32_t>() { return 5; };
+inline unsigned int Log2Bin<uint32_t>() { return 5; };
+
 template<>
-constexpr unsigned int Log2Bin<uint64_t>() { return 6; };
+inline unsigned int Log2Bin<uint64_t>() { return 6; };
 
 template<class T>
 struct is_shared_ptr : std::false_type {};

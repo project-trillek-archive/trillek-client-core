@@ -15,10 +15,10 @@
     \
     namespace reflection {\
     template <>\
-    inline constexpr const char* GetTypeName<std::integral_constant<component::Component,component::Component::enumerator>>()\
+    inline const char* GetTypeName<std::integral_constant<component::Component,component::Component::enumerator>>()\
                 { return name; };\
     template <>\
-    inline constexpr unsigned int GetTypeID<std::integral_constant<component::Component,component::Component::enumerator>>()\
+    inline unsigned int GetTypeID<std::integral_constant<component::Component,component::Component::enumerator>>()\
                 { return static_cast<uint32_t>(component::Component::enumerator); };\
     }
 
