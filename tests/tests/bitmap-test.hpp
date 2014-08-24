@@ -60,6 +60,8 @@ public:
         return 0;
     }
 
+    std::vector<bool> refA, refB, refResult;
+
 private:
     template<class T>
     void operate(BitMap<T>& a, BitMap<T>& b, const std::function<bool(bool,bool)>& operation) {
@@ -72,7 +74,6 @@ private:
         }
     }
 
-    std::vector<bool> refA, refB, refResult;
     unsigned long int seed = (unsigned long int) std::chrono::system_clock::now().time_since_epoch().count();
     std::default_random_engine random{seed};
 };
@@ -106,6 +107,12 @@ TEST_F(BitMapTest, BitMapAND) {
         BitMap<uint32_t> b((size_t) next(2500));
         Populate(a, b);
         EXPECT_TRUE(Compare(a,b,a & b,[](bool a,bool b) { return a && b; }));
+        for (int i = 0; i < a.size(); ++i) {
+            ASSERT_EQ(refA[i], (bool) a[i]) << "error at " << i;
+        }
+        for (int i = 0; i < b.size(); ++i) {
+            ASSERT_EQ(refB[i], (bool) b[i]) << "error at " << i;
+        }
     }
 }
 
@@ -115,6 +122,12 @@ TEST_F(BitMapTest, BitMapOR) {
         BitMap<uint32_t> b((size_t) next(2500));
         Populate(a, b);
         EXPECT_TRUE(Compare(a,b,a | b,[](bool a,bool b) { return a || b; }));
+        for (int i = 0; i < a.size(); ++i) {
+            ASSERT_EQ(refA[i], (bool) a[i]) << "error at " << i;
+        }
+        for (int i = 0; i < b.size(); ++i) {
+            ASSERT_EQ(refB[i], (bool) b[i]) << "error at " << i;
+        }
     }
 }
 
@@ -124,6 +137,12 @@ TEST_F(BitMapTest, BitMapXOR) {
         BitMap<uint32_t> b((size_t) next(2500));
         Populate(a, b);
         EXPECT_TRUE(Compare(a,b,a ^ b,[](bool lhs,bool rhs) { return !( lhs && rhs ) && ( lhs || rhs ); }));
+        for (int i = 0; i < a.size(); ++i) {
+            ASSERT_EQ(refA[i], (bool) a[i]) << "error at " << i;
+        }
+        for (int i = 0; i < b.size(); ++i) {
+            ASSERT_EQ(refB[i], (bool) b[i]) << "error at " << i;
+        }
     }
 }
 
@@ -135,6 +154,9 @@ TEST_F(BitMapTest, BitMapANDCompound) {
         auto backup = a;
         a &= b;
         EXPECT_TRUE(Compare(backup,b,a,[](bool a,bool b) { return a && b; }));
+        for (int i = 0; i < b.size(); ++i) {
+            ASSERT_EQ(refB[i], (bool) b[i]) << "error at " << i;
+        }
     }
 }
 
@@ -146,6 +168,9 @@ TEST_F(BitMapTest, BitMapORCompound) {
         auto backup = a;
         a |= b;
         EXPECT_TRUE(Compare(backup,b,a,[](bool a,bool b) { return a || b; }));
+        for (int i = 0; i < b.size(); ++i) {
+            ASSERT_EQ(refB[i], (bool) b[i]) << "error at " << i;
+        }
     }
 }
 
@@ -157,6 +182,9 @@ TEST_F(BitMapTest, BitMapXORCompound) {
         auto backup = a;
         a ^= b;
         EXPECT_TRUE(Compare(backup,b,a,[](bool lhs,bool rhs) { return !( lhs && rhs ) && ( lhs || rhs ); }));
+        for (int i = 0; i < b.size(); ++i) {
+            ASSERT_EQ(refB[i], (bool) b[i]) << "error at " << i;
+        }
     }
 }
 
@@ -167,6 +195,7 @@ TEST_F(BitMapTest, BitMapNOT) {
     b = ~a;
     for (int i = 0; i < a.size(); ++i) {
         ASSERT_NE((bool) b[i], (bool) a[i]) << "error at " << i << " size is " << b.size();
+        ASSERT_EQ(refA[i], (bool) a[i]) << "error at " << i;
     }
 }
 

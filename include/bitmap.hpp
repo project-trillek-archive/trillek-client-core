@@ -4,7 +4,6 @@
 #include <vector>
 #include <stdexcept>
 #include <memory>
-#include <bitset>
 #include "util/utiltype.hpp"
 #include "logging.hpp"
 
@@ -283,20 +282,29 @@ private:
         auto middle_right = std::max(last_left.first_block, first_right.last_block);
         std::vector<T> result;
         result.reserve(right - left);
-        for (size_t j = 0; j < middle_left - left; ++j) {
-            result[j] = operation(first_left.bitarray.at(j), first_right.def_value);
+        auto first_size = middle_left - left;
+        auto last_size = right - middle_right;
+        for (size_t j = 0; j < first_size; ++j) {
+            result.push_back(operation(first_left.bitarray.at(j), last_left.def_value));
         }
-        for (size_t j = middle_right - left, k = last_right.bitarray.size() + middle_right - right; k < last_right.bitarray.size(); ++j, ++k) {
-            result[j] = operation(last_right.bitarray.at(k), last_left.def_value);
-        }
-        if (middle_left == last_left.first_block) {
-            for(size_t j = middle_left - left, k = 0 ; k < middle_right - middle_left; ++k, ++j) {
-                result[j] = operation(first_left.bitarray.at(j), last_left.bitarray.at(k));
+        if (first_size || last_size) {
+            if (middle_left == last_left.first_block) {
+                for(size_t j = first_size, k = 0 ; k < middle_right - middle_left; ++k, ++j) {
+                    result.push_back(operation(first_left.bitarray.at(j), last_left.bitarray.at(k)));
+                }
+            }
+            else if (first_size && last_size){
+                for(size_t k = 0 ; k < middle_right - middle_left; ++k) {
+                    result.push_back(operation(first_left.def_value, last_left.def_value));
+                }
             }
         }
+        for (size_t j = middle_right - left, k = last_right.bitarray.size() - last_size; k < last_right.bitarray.size(); ++j, ++k) {
+            result.push_back(operation(last_right.bitarray.at(k), first_right.def_value));
+        }
         a.def_value = operation(a.def_value, b.def_value);
-        a.first_block = left;
-        a.last_block = right;
+        a.first_block = first_size ? left : last_left.first_block;
+        a.last_block = last_size ? right : first_right.last_block;
         a.bsize = std::max(a.bsize, b.bsize);
         a.bitarray = std::move(result);
     }
