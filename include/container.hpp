@@ -43,14 +43,30 @@ public:
     Container(T value) : value_holder(new ValueHolder<T>(value)) { }
 
     /**
-     * \brief Retrieves the container value.
+     * \brief Retrieves the container value by reference.
      */
     template <class T>
-    T Get() const {
-        if(this->value_holder != nullptr) {
-            return static_cast<ValueHolder<T>*>(this->value_holder)->Get();
-        }
-        return T();
+    T& Get() {
+        return static_cast<ValueHolder<T>*>(this->value_holder)->Get();
+    }
+
+    /**
+     * \brief Retrieves the container value by const reference.
+     */
+    template <class T>
+    const T& Get() const {
+        return static_cast<ValueHolder<T>*>(this->value_holder)->Get();
+    }
+
+    /** \brief Create an alias to a shared pointer
+     *
+     * \param ct const std::shared_ptr<Container>& the original pointer
+     * \return std::shared_ptr<T> the alias
+     *
+     */
+    template<class T>
+    static std::shared_ptr<T> GetSharedPtr(const std::shared_ptr<Container>& ct) {
+        return std::shared_ptr<T>(ct,&ct->Get<T>());
     }
 
     bool IsEmpty() const {
@@ -109,7 +125,7 @@ private:
     class ValueHolder : public ValueHolderBase {
     public:
         ValueHolder(T value) : value(value), type_id(reflection::GetTypeID<T>()) { }
-        T Get() { return this->value; }
+        T& Get() { return this->value; }
         virtual unsigned GetType() const { return type_id; }
         virtual std::size_t GetSize() const { return sizeof(T); }
     private:

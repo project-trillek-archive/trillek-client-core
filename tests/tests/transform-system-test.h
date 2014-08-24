@@ -4,6 +4,7 @@
 #include "gtest/gtest.h"
 #include "gtest/gtest-spi.h"
 #include <string>
+#include <exception>
 
 #include "systems/transform-system.hpp"
 #include "transform.hpp"
@@ -11,33 +12,6 @@
 using namespace trillek;
 
 namespace {
-    TEST(TransformSystemTest, AddTransform) {
-        // Get the instance allocated, and then we can use the shortcut static mathods.
-        TransformMap::GetInstance();
-
-        auto transform = TransformMap::AddTransform(0);
-
-        EXPECT_TRUE(transform != nullptr);
-    }
-    TEST(TransformSystemTest, GetTransform) {
-        auto transform = TransformMap::GetTransform(0);
-
-        EXPECT_TRUE(transform != nullptr);
-    }
-    TEST(TransformSystemTest, AddExistingTransform) {
-        auto transform = TransformMap::GetTransform(0);
-        auto transform2 = TransformMap::AddTransform(0);
-
-        EXPECT_TRUE(transform == transform2);
-    }
-    TEST(TransformSystemTest, RemoveTransform) {
-        TransformMap::RemoveTransform(0);
-
-        auto transform = TransformMap::GetTransform(0);
-
-        EXPECT_TRUE(transform == nullptr);
-    }
-
     TEST(TransformTest, GetTranslation) {
         trillek::Transform transform(0);
         glm::vec3 translation = transform.GetTranslation();

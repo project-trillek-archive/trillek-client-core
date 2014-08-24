@@ -13,7 +13,7 @@ before_install:
     - sudo dpkg -i playdeb_0.3-1~getdeb1_all.deb
     # No ppa for GLFW3 at this time. Compiling by hand!
     - sudo apt-get -qq install xorg-dev libglu1-mesa-dev
-    - git clone https://github.com/glfw/glfw.git
+    - git clone --depth=1 https://github.com/glfw/glfw.git
     - cd glfw
     - CMAKE_CXX_FLAGS=-fPIC CMAKE_C_FLAGS=-fPIC cmake -DCMAKE_INSTALL_PREFIX=/usr -DBUILD_SHARED_LIBS:bool=true .
     - sudo make install
@@ -29,6 +29,12 @@ install:
     - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
     # GLEW, GLM
     - sudo apt-get -q -y install libglew-dev libglm-dev
+    # Crypto++
+    - git submodule update --init --depth=1 crypto++
+    - cd crypto++
+    - sudo cmake CMakeLists.txt
+    - sudo make
+    - cd ..
     # OpenAL, Vorbis and OGG
     - sudo apt-get -q -y install libogg-dev libvorbis-dev libopenal-dev libalure-dev
     # Bullet
@@ -47,7 +53,7 @@ before_script:
     - mkdir build
     - mv assets build
     - cd build
-    - cmake -DTCC_BUILD_TESTS=True ..
+    - cmake -DTCC_BUILD_TESTS=True -DTCC_TEST_NETWORK_DISABLE=True -DTRILLEK_BUILD_DEPENDENCY=True ..
 script:
     - make
     - mv assets bin

@@ -1,3 +1,4 @@
+#if defined(_CLIENT_) || defined(_STANDALONE_)
 
 #include "graphics/render-layer.hpp"
 #include "graphics/texture.hpp"
@@ -648,3 +649,5 @@ bool RenderLayer::Parse(const std::string &object_name, const rapidjson::Value& 
 
 } // namespace graphics
 } // namespace trillek
+
+#endif

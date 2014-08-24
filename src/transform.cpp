@@ -70,9 +70,4 @@ glm::quat Transform::GetOrientation() const {
 glm::vec3 Transform::GetScale() const {
     return this->scale;
 }
-
-void Transform::MarkAsModified() {
-    TransformMap::GetUpdatedTransforms().Insert(this->entity_id, this);
-};
-
 } // End of trillek

@@ -1,3 +1,4 @@
+#if defined(_CLIENT_) || defined(_STANDALONE_)
 #include "opengl.hpp"
 #include <iostream>
 #include "logging.hpp"
@@ -27,3 +28,4 @@ GLenum ShowGLError(const char * file, int line) {
     }
     return error_no;
 }
+#endif // defined(_CLIENT_) || defined(_STANDALONE_)

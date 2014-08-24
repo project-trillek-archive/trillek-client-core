@@ -1,6 +1,8 @@
 build/
 lib/
 bin/
+libkqueue/
+netport/
 .gitattributes
 
 ## Vim

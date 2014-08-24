@@ -13,6 +13,8 @@ static glm::vec3 RIGHT_VECTOR(1.0f, 0.0f, 0.0f);
 
 class Transform {
 public:
+    Transform() : Transform(0) {};
+
     Transform(unsigned int entity_id);
     /**
      * \brief Translates by the provided amount relative to the current translation.
@@ -111,11 +113,6 @@ public:
      * \return glm::vec3 The current scale.
      */
     glm::vec3 GetScale() const;
-
-    /** \brief Mark the transform as modified during the current frame
-     *
-     */
-    void MarkAsModified();
 
     unsigned int GetEntityID() const {
         return this->entity_id;

@@ -14,17 +14,17 @@ namespace reflection {
 
 // some macros to make definitions a bit easier to read
 #define TRILLEK_MAKE_IDTYPE(a,b) \
-    template<> inline const char* GetTypeName<a>() { return #a; } \
-    template<> inline const unsigned int GetTypeID<a>() { return b; }
+    template<> inline constexpr const char* GetTypeName<a>() { return #a; } \
+    template<> inline constexpr unsigned int GetTypeID<a>() { return b; }
 
 #define TRILLEK_MAKE_IDTYPE_NAME(a,n,b) \
-    template<> inline const char* GetTypeName<a>() { return n; } \
-    template<> inline const unsigned int GetTypeID<a>() { return b; }
+    template<> inline constexpr const char* GetTypeName<a>() { return n; } \
+    template<> inline constexpr unsigned int GetTypeID<a>() { return b; }
 
 // define something in a namespace, without the namespace in the type name
 #define TRILLEK_MAKE_IDTYPE_NS(ns,a,b) \
-    template<> inline const char* GetTypeName<ns::a>() { return #a; } \
-    template<> inline const unsigned int GetTypeID<ns::a>() { return b; }
+    template<> inline constexpr const char* GetTypeName<ns::a>() { return #a; } \
+    template<> inline constexpr unsigned int GetTypeID<ns::a>() { return b; }
 
 // various generic types
 TRILLEK_MAKE_IDTYPE(void, 0)

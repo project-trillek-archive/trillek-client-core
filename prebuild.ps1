@@ -6,6 +6,9 @@ new-item lib\x86\Debug -type directory
 new-item lib\include -type directory
 new-item build -type directory
 
+# Get Crypto++
+git submodule update --init --depth 1 -- .\crypto++
+
 # Get GLEW
 Start-FileDownload 'http://softlayer-ams.dl.sourceforge.net/project/glew/glew/1.10.0/glew-1.10.0-win32.zip'
 7z -y x glew-1.10.0-win32.zip
@@ -33,8 +36,10 @@ Start-FileDownload 'http://googletest.googlecode.com/files/gtest-1.7.0.zip'
 7z -y x gtest-1.7.0.zip
 pushd
 Set-Location gtest-1.7.0
-cmake -G "Visual Studio 12" .
-msbuild gtest.sln /verbosity:minimal /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
+cmake -G "Visual Studio 12" -D CMAKE_BUILD_TYPE:String=Release .
+msbuild gtest.sln /p:Configuration=Release /verbosity:minimal /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
 popd
 move-item -path gtest-1.7.0\include\* -destination lib/include
-[Environment]::SetEnvironmentVariable("GTEST_ROOT", "C:\projects\trillek-client-core\gtest-1.7.0", "Machine")
+move-item -path gtest-1.7.0\Release\*.lib -destination lib/x86/Debug
+move-item -path gtest-1.7.0\Release\*.dll -destination lib/x86/Debug
+Get-ChildItem lib/x86/Release/*

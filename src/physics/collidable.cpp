@@ -1,8 +1,11 @@
 #include "physics/collidable.hpp"
 #include "transform.hpp"
-#include "systems/transform-system.hpp"
+#include "trillek-game.hpp"
+#include "components/shared-component.hpp"
+#include "systems/physics.hpp"
 #include "systems/resource-system.hpp"
 #include "resources/mesh.hpp"
+#include "logging.hpp"
 
 #include <bullet/BulletCollision/Gimpact/btGImpactShape.h>
 
@@ -29,6 +32,12 @@ std::unique_ptr<btTriangleMesh> GenerateTriangleMesh(std::shared_ptr<resource::M
     }
 
     return std::move(mesh);
+}
+
+Collidable::~Collidable() {
+    if (this->motion_state) {
+        delete this->motion_state;
+    }
 }
 
 bool Collidable::Initialize(const std::vector<Property> &properties) {
@@ -64,9 +73,7 @@ bool Collidable::Initialize(const std::vector<Property> &properties) {
     }
 
     SetEntity(entity_id);
-    if (!this->entity_transform) {
-        return false;
-    }
+    auto& entity_transform = TrillekGame::GetSharedComponent().Get<component::Component::Transform>(entity_id);
 
     if (shape == "capsule") {
         this->shape = std::move(std::unique_ptr<btCollisionShape>(new btCapsuleShape(this->radius, this->height)));
@@ -78,10 +85,11 @@ bool Collidable::Initialize(const std::vector<Property> &properties) {
         this->mesh_file = resource::ResourceMap::Get<resource::Mesh>(mesh_name);
         this->mesh = GenerateTriangleMesh(this->mesh_file);
         if (!this->mesh) {
+            LOGMSGC(ERROR) << "Can't load static_mesh " << mesh_file;
             return false;
         }
 
-        auto scale = this->entity_transform->GetScale();
+        auto scale = entity_transform.GetScale();
         auto mesh_shape = std::unique_ptr<btScaledBvhTriangleMeshShape>(
             new btScaledBvhTriangleMeshShape(
             new btBvhTriangleMeshShape(this->mesh.get(), true), btVector3(scale.x, scale.y, scale.z)));
@@ -94,10 +102,11 @@ bool Collidable::Initialize(const std::vector<Property> &properties) {
         this->mesh_file = resource::ResourceMap::Get<resource::Mesh>(mesh_name);
         this->mesh = GenerateTriangleMesh(this->mesh_file);
         if (!this->mesh) {
+            LOGMSGC(ERROR) << "Can't load dynamic_mesh " << mesh_file;
             return false;
         }
 
-        auto scale = this->entity_transform->GetScale();
+        auto scale = entity_transform.GetScale();
 
         auto mesh_shape = std::unique_ptr<btGImpactMeshShape>(new btGImpactMeshShape(this->mesh.get()));
         mesh_shape->setLocalScaling(btVector3(scale.x, scale.y, scale.z));
@@ -106,18 +115,16 @@ bool Collidable::Initialize(const std::vector<Property> &properties) {
     }
 
     if (!this->shape) {
+        LOGMSGC(ERROR) << "Can't initialize shape: unknown type " << shape;
         return false;
     }
     return InitializeRigidBody();
 }
 
 void Collidable::SetEntity(unsigned int entity_id) {
-    this->entity_transform = TransformMap::GetTransform(entity_id);
-    if(!this->entity_transform) {
-        return;
-    }
-    auto pos = this->entity_transform->GetTranslation();
-    auto orientation = this->entity_transform->GetOrientation();
+    auto& entity_transform = TrillekGame::GetSharedComponent().Get<component::Component::Transform>(entity_id);
+    auto pos = entity_transform.GetTranslation();
+    auto orientation = entity_transform.GetOrientation();
     this->motion_state = new btDefaultMotionState(btTransform(
         btQuaternion(orientation.x, orientation.y, orientation.z, orientation.w), btVector3(pos.x, pos.y, pos.z)));
 }
@@ -132,6 +139,7 @@ bool Collidable::InitializeRigidBody() {
     this->body = std::move(std::unique_ptr<btRigidBody>(new btRigidBody(fallRigidBodyCI)));
 
     if (!this->body) {
+        LOGMSGC(ERROR) << "Bullet constructor returned a null body";
         return false;
     }
 
@@ -143,21 +151,9 @@ bool Collidable::InitializeRigidBody() {
     // Prevent objects from rotating from physics system.
     this->body->setAngularFactor(btVector3(0, 0, 0));
 
+    TrillekGame::GetPhysicsSystem().AddBodyToWorld(this->body.get());
+
     return true;
-}
-
-void Collidable::UpdateTransform() {
-    if (!this->motion_state && !this->entity_transform) {
-        return;
-    }
-    btTransform transform;
-    this->motion_state->getWorldTransform(transform);
-
-    auto pos = transform.getOrigin();
-    auto rot = transform.getRotation();
-    this->entity_transform->SetTranslation(glm::vec3(pos.x(), pos.y(), pos.z()));
-    this->entity_transform->SetOrientation(glm::quat(rot.w(), rot.x(), rot.y(), rot.z()));
-    this->entity_transform->MarkAsModified();
 }
 
 /* Removed since we don't have to push transforms into the simulation but to apply forces

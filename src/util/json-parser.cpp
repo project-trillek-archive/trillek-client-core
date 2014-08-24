@@ -130,9 +130,13 @@ void JSONPasrser::Serialize(const std::string& out_directory, const std::string&
     }
 }
 
-std::map<std::string, std::shared_ptr<Parser>> JSONPasrser::parsers;
+std::map<std::string, Parser*> JSONPasrser::parsers;
 
 void JSONPasrser::RegisterParser(std::shared_ptr<Parser> parser) {
+    parsers[parser->GetNodeTypeName()] = parser.get();
+}
+
+void JSONPasrser::RegisterParser(Parser* parser) {
     parsers[parser->GetNodeTypeName()] = parser;
 }
 
