@@ -7,10 +7,6 @@
 #include <cstring>
 #include "controllers/network/network.hpp"
 #include "controllers/network/packet-handler.hpp"
-#include "net/network.h"
-
-// define a synonym for NetPort network namespace
-namespace netport = network;
 
 // size of the VMAc tag
 #define VMAC_SIZE			8
@@ -89,7 +85,7 @@ public:
      *
      */
     template<class U=Frame>
-    Message(const netport::socket_t fd = -1, const ConnectionData* const cx_data = nullptr) :
+    Message(const int fd = -1, const ConnectionData* const cx_data = nullptr) :
             cx_data(cx_data),
             fd(fd), packet_size(sizeof(U)),
             data(std::vector<char>(sizeof(U) + sizeof(msg_tail))) {};
@@ -210,15 +206,15 @@ private:
     };
 
     const ConnectionData* CxData() const { return cx_data; };
-    netport::socket_t FileDescriptor() const { return fd; };
+    int FileDescriptor() const { return fd; };
 
-    void Send(netport::socket_t fd, unsigned char major, unsigned char minor,
+    void Send(int fd, unsigned char major, unsigned char minor,
         const std::function<void(unsigned char*,const unsigned char*,size_t)>& hasher,
         unsigned char* tagptr,
         unsigned int tag_size,
         unsigned int tail_size);
 
-    void SendMessageNoVMAC(netport::socket_t fd, unsigned char major, unsigned char minor);
+    void SendMessageNoVMAC(int fd, unsigned char major, unsigned char minor);
 
     /** \brief Append data to the message using the copy method of the object
      *
@@ -242,7 +238,7 @@ private:
     std::vector<char> data;
     uint32_t packet_size;
     const ConnectionData* const cx_data;
-    const netport::socket_t fd;
+    const int fd;
 };
 
 // Declare specialized template functions.

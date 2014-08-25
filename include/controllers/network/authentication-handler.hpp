@@ -106,10 +106,10 @@ struct AuthInitPacket {
 };
 
 struct GetSaltTaskRequest {
-    GetSaltTaskRequest(netport::socket_t fd, char login[LOGIN_FIELD_SIZE]) : fd(fd), login(login) {};
+    GetSaltTaskRequest(int fd, char login[LOGIN_FIELD_SIZE]) : fd(fd), login(login) {};
     SendSaltPacket packet;
     char* login;
-    netport::socket_t fd;
+    int fd;
 };
 
 namespace packet_handler {

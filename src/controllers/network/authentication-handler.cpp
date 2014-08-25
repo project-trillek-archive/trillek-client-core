@@ -95,7 +95,9 @@ void Authentication::CheckKeyExchange(const trillek_list<std::shared_ptr<Message
             continue;
         }
         // change state to SHARE_KEY and return the TCPConnection unique_ptr
-        auto cnx = req->CxData()->ConnectionAccept();
+        // TODO: replace by raknet
+//        auto cnx = req->CxData()->ConnectionAccept();
+        int cnx = 0;
         if (cnx) {
             auto checker_key = recv_packet->VMAC_BuildHasher(key);
             // TODO: Hard coded entity #id
@@ -113,8 +115,10 @@ void Authentication::CheckKeyExchange(const trillek_list<std::shared_ptr<Message
             reply_packet << eid;
 			LOGMSG(DEBUG) << "Authentication OK";
             NetworkNode::AddEntity(entity_id, std::move(cnx));
+/*
             server.Poller()->Create(
                     req->FileDescriptor(),reinterpret_cast<void*>(cx_data));
+*/
             reply_packet.Send(req->fd, NET_MSG, AUTH_KEY_REPLY,
                     cx_data->Hasher(), reply_packet.Tail<unsigned char*>(),
                     VMAC_SIZE, VMAC_SIZE);

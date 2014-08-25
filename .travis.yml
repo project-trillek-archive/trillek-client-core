@@ -53,7 +53,7 @@ before_script:
     - mkdir build
     - mv assets build
     - cd build
-    - cmake -DTCC_BUILD_TESTS=True -DTCC_TEST_NETWORK_DISABLE=True -DTRILLEK_BUILD_DEPENDENCY=True ..
+    - cmake -DTCC_BUILD_TESTS=True -DTCC_TEST_NETWORK_DISABLE=True ..
 script:
     - make
     - mv assets bin

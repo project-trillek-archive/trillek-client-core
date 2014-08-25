@@ -30,7 +30,7 @@ public:
      * cxdata_ptr const ConnectionData* const a pointer on an object storing
      * some data on the connection
      */
-    Frame_req(const netport::socket_t fd, size_t length_total, const ConnectionData* const cxdata_ptr);
+    Frame_req(const int fd, size_t length_total, const ConnectionData* const cxdata_ptr);
 
     // delete copy constructor and assignment for zero-copy guarantee
     Frame_req(Frame_req&) = delete;
@@ -66,7 +66,7 @@ public:
     uint32_t length_requested;
     uint32_t length_got;
     size_t length_total;
-    const netport::socket_t fd;
+    const int fd;
 private:
 #if defined(_MSC_VER)
     std::chrono::nanoseconds expiration_time;

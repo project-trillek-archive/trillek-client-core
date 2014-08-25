@@ -37,7 +37,7 @@ void Frame_req::CheckIntegrityTag<SERVER>() const {
         });
 }
 
-Frame_req::Frame_req(const netport::socket_t fd, size_t length_total, const ConnectionData* const cxdata_ptr) :
+Frame_req::Frame_req(const int fd, size_t length_total, const ConnectionData* const cxdata_ptr) :
     fd(fd), reassembled_frames_list(),
     length_total(length_total),
     length_requested(sizeof(Frame_hdr)),

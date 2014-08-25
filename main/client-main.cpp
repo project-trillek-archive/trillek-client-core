@@ -73,7 +73,6 @@ int main(int argCount, char **argValues) {
                    std::ref(systems));
 
     // Start the client network layer
-    trillek::TrillekGame::GetNetworkClient().Initialize();
     trillek::TrillekGame::GetNetworkClient().SetTCPHandler<trillek::network::CLIENT>();
 
     // Start the server network layer and connect the client to the server

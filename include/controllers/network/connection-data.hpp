@@ -4,8 +4,6 @@
 #include <atomic>
 #include "controllers/network/network.hpp"
 
-using network::TCPConnection;
-
 namespace trillek { namespace network {
 
 /** \brief This object is attached to each socket
@@ -18,9 +16,8 @@ public:
      * \param connection the connection instance
      *
      */
-    ConnectionData(const unsigned char state, TCPConnection&& connection) :
+    ConnectionData(const unsigned char state) :
         _auth_state(state),
-        _connection(std::move(connection)),
         _id(0) {};
 
     /** \brief Constructor
@@ -121,11 +118,13 @@ public:
      */
     id_t Id() const { return _id; };
 
+
     /** \brief Get the instance of TCPConnection
      *
      * \return TCPConnection the connexion
      *
      */
+/*
     TCPConnection ConnectionAccept() const {
         unsigned char key_exchange_state = AUTH_KEY_EXCHANGE;
         unsigned char share_key_state = AUTH_SHARE_KEY;
@@ -135,10 +134,11 @@ public:
         }
         return {};
     };
+*/
 
 private:
     // connection write is protected by _auth_state single-threaded transition. no read
-    mutable TCPConnection _connection;
+//    mutable TCPConnection _connection;
     mutable std::atomic<unsigned char> _auth_state;
     static const std::vector<unsigned char> _states;
     const id_t _id;

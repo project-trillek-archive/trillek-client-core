@@ -8,11 +8,9 @@
 #include <algorithm>
 #include "trillek.hpp"
 #include "controllers/network/network.hpp"
-#include "controllers/network/io-poller.hpp"
 #include "atomic-queue.hpp"
 #include "controllers/network/message.hpp"
 #include "controllers/network/authentication-handler.hpp"
-#include "net/network.h"
 #include "controllers/network/frame-request.hpp"
 #include "controllers/network/packet-handler-templates.hpp"
 
@@ -39,8 +37,6 @@ namespace trillek { namespace network {
 class IOPoller;
 class GetSaltTaskRequest;
 
-using namespace netport;
-
 namespace packet_handler {
 class PacketHandler;
 }
@@ -58,8 +54,6 @@ public:
 
     NetworkController();
     virtual ~NetworkController() {};
-
-    void Initialize() throw (std::runtime_error);
 
     /** \brief Start the server to accept players
      *
@@ -131,7 +125,7 @@ private:
      * \param host const std::string& the host to bind
      *
      */
-    netport::TCPConnection Listener(const std::string& host, unsigned short port);
+//    netport::TCPConnection Listener(const std::string& host, unsigned short port);
 
     /** \brief Set the hasher functor that will be used to add a tag to each packet sent
      *
@@ -183,8 +177,6 @@ private:
     const AtomicQueue<std::shared_ptr<Message>>* const GetAuthenticatedCheckedFrameQueue() const { return &auth_checked_frame_req; };
     const AtomicQueue<std::shared_ptr<Frame_req>>* const GetPublicRawFrameReqQueue() const { return &pub_rawframe_req; };
     const AtomicQueue<std::shared_ptr<Message>>* const GetPublicReassembledFrameQueue() const { return &pub_frame_req; };
-
-    const IOPoller* const Poller() const { return &poller; };
 
     /** \brief Handle the network events in a non-blocking way
      *
@@ -241,7 +233,7 @@ private:
      * \return void
      *
      */
-    void CloseConnection(const socket_t fd, const ConnectionData* cx_data) const;
+    void CloseConnection(const int fd, const ConnectionData* cx_data) const;
 
 
     /** \brief Close an uncomplete connection, i.e known by the network but not the game
@@ -249,7 +241,7 @@ private:
      * \param fd const int the file descriptor
      *
      */
-    void RemoveConnection(const socket_t fd) const;
+    void RemoveConnection(const int fd) const;
 
     /** \brief Return the public key used to check packets received from the server
      *
@@ -278,13 +270,6 @@ private:
      */
     id_t EntityID() const { return entity_id; };
 
-    // the listening socket, static because all threads must read it
-    static TCPConnection server_socket;
-    socket_t server_handle;
-
-    // instance of the kqueue
-    const IOPoller poller;
-
     // instance of the authentication handler
     const Authentication authentication;
 
@@ -307,7 +292,6 @@ private:
 
     // members for client only
     mutable std::atomic_uint_least32_t auth_state;
-    network::TCPConnection cnx;
     // used to observe the connection process result from another thread
     mutable std::condition_variable is_connected;
     // mutex associated with the unique_lock
@@ -346,8 +330,8 @@ private:
 
             auto current_size = req->length_got;
             int len;
-
-            len = network::recv(req->fd, reinterpret_cast<char*>(buffer) + current_size, target_size - current_size);
+// TODO: replace by raknet
+//            len = network::recv(req->fd, reinterpret_cast<char*>(buffer) + current_size, target_size - current_size);
             if(len < 0) {
 //					LOG_ERROR << "(" << sched_getcpu() << ") Could not read data";
                 continue;
@@ -369,7 +353,8 @@ private:
                 req->length_requested = target_size;
                 frame->Resize<NONE>(length - sizeof(msg_hdr));
                 buffer = reinterpret_cast<char*>(frame->FrameHeader());
-                len = network::recv(req->fd, reinterpret_cast<char*>(buffer) + current_size, target_size - current_size);
+// TODO: replace by raknet
+//                len = network::recv(req->fd, reinterpret_cast<char*>(buffer) + current_size, target_size - current_size);
                 if (len < 0) {
 //						LOG_ERROR << "(" << sched_getcpu() << ") Could not read data";
                     continue;
@@ -416,7 +401,6 @@ private:
                     req->CheckIntegrityTag<checkAuth>();
                     // We unlock the socket and allow again events on this socket
                     req->CxData()->ReleaseConnection();
-                    poller.Watch(req->fd);
 
 //						LOG_DEBUG << "(" << sched_getcpu() << ") Moving " << req->reassembled_frames_list.size() << " messages with a total of " << req->length_got << " bytes to queue";
                     // Put the messages in the queue for next step

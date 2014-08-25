@@ -11,7 +11,7 @@
 #include "tests/CryptoTest.h"
 
 #ifndef NO_NETWORK
-#include "tests/NetworkControllerTest.h"
+//#include "tests/NetworkControllerTest.h"
 #endif
 
 #include "tests/ResourceSystemTest.h"

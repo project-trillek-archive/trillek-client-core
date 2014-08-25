@@ -2,9 +2,8 @@
 
 #include <chrono>
 #include <cstring>
-#include <sys/event.h>
-#include "net/network.h"
 #include <typeinfo>
+#include <iostream>
 #include "composites/network-node.hpp"
 #include "controllers/network/ESIGN-signature.hpp"
 #include "controllers/network/network-controller-templates.hpp"
@@ -15,15 +14,7 @@ using namespace network;
 namespace trillek {
 namespace network {
 
-TCPConnection NetworkController::server_socket;
-
 NetworkController::NetworkController() {};
-
-void NetworkController::Initialize() throw (std::runtime_error) {
-    if (! poller.Initialize()) {
-        throw std::runtime_error("Could not initialize kqueue !");
-    }
-};
 
 bool NetworkController::Server_Start(const std::string& host, unsigned short port) {
     auto esign_hasher = std::make_shared<cryptography::ESIGN_Signature>();
@@ -31,7 +22,7 @@ bool NetworkController::Server_Start(const std::string& host, unsigned short por
     esign_hasher->Initialize();
     SetServerPublicKey(esign_hasher->PublicKey());
     SetHasher(esign_hasher->Hasher());
-
+/*
     // start to listen
     auto s = Listener(host, port);
     if (! s) {
@@ -41,29 +32,10 @@ bool NetworkController::Server_Start(const std::string& host, unsigned short por
     server_handle = s.get_handle();
     server_socket = std::move(s);
     poller.CreatePermanent(server_socket.get_handle());
+*/
     auto tr = std::make_shared<TaskRequest<chain_t>>(handle_events);
     TrillekGame::GetScheduler().Queue(tr);
     return true;
-}
-
-TCPConnection NetworkController::Listener(const std::string& host, uint16_t port) {
-    TCPConnection server;
-    if (! server.init(NETA_IPv4)) {
-//			LOG_ERROR << "Could not open socket !";
-        return {};
-    }
-
-    NetworkAddress address(host, port);
-    if (! server.bind(address)) {
-//			LOG_ERROR << "Could not bind address !";
-        return {};
-    }
-
-    if (! server.listen(5)) {
-//			LOG_ERROR << "Could not listen on port !";
-        return {};
-    }
-    return server;
 }
 
 bool NetworkController::Connect(const std::string& host, uint16_t port,
@@ -72,7 +44,7 @@ bool NetworkController::Connect(const std::string& host, uint16_t port,
     TrillekGame::GetScheduler().Queue(tr);
 
     authentication.SetPassword(password);
-
+/*
     cnx = TCPConnection();
     NetworkAddress address(host, port);
     if (! cnx.init(address)) {
@@ -84,10 +56,11 @@ bool NetworkController::Connect(const std::string& host, uint16_t port,
     }
     auto fd = cnx.get_handle();
     poller.Create(fd, reinterpret_cast<void*>(new ConnectionData(AUTH_INIT, TCPConnection())));
-
+*/
     Message packet{};
     std::strncpy(packet.Content<AuthInitPacket, char>(), login.c_str(), LOGIN_FIELD_SIZE - 1);
-    packet.SendMessageNoVMAC(fd, NET_MSG, AUTH_INIT);
+    int guuid = 0;
+    packet.SendMessageNoVMAC(guuid, NET_MSG, AUTH_INIT);
     SetAuthState(AUTH_INIT);
     std::unique_lock<std::mutex> locker(connecting);
     while (AuthState() != AUTH_SHARE_KEY && AuthState() != AUTH_NONE) {
@@ -106,12 +79,14 @@ bool NetworkController::Connect(const std::string& host, uint16_t port,
 int NetworkController::HandleEvents() const {
     trillek_list<std::shared_ptr<Frame_req>> temp_public;
     trillek_list<std::shared_ptr<Frame_req>> temp_auth;
+    bool a = false, b = false;
+/*
     std::vector<struct kevent> evList(EVENT_LIST_SIZE);
     auto nev = Poller()->Poll(evList);
     if (nev < 0) {
         std::cout << "(" << sched_getcpu() << ") Error when polling event" << std::endl;
     }
-    bool a = false, b = false;
+
     for (auto i=0; i<nev; i++) {
         auto fd = evList[i].ident;
         if (evList[i].flags & EV_EOF) {
@@ -124,7 +99,7 @@ int NetworkController::HandleEvents() const {
             }
             continue;
         }
-        if (evList[i].flags & EV_ERROR) {   /* report any error */
+        if (evList[i].flags & EV_ERROR) {
             std::cout << "EV_ERROR: " << evList[i].data << std::endl;
             continue;
         }
@@ -165,6 +140,7 @@ int NetworkController::HandleEvents() const {
             }
         }
     }
+*/
     if(a) {
         // if we got data from unauthenticated clients, push the public reassemble task
         GetPublicRawFrameReqQueue()->PushList(std::move(temp_public));
@@ -183,22 +159,19 @@ int NetworkController::HandleEvents() const {
 }
 
 void NetworkController::RemoveClientConnection() const {
-    auto fd = cnx.get_handle();
-    poller.Delete(fd);
-    network::close(fd);
+//    network::close(fd);
     SetAuthState(AUTH_NONE);
     is_connected.notify_all();
 }
 
-void NetworkController::RemoveConnection(socket_t fd) const {
-    poller.Delete(fd);
+void NetworkController::RemoveConnection(int fd) const {
     std::cout << "closing" << std::endl;
-    network::close(fd);
+//    network::close(fd);
     SetAuthState(AUTH_NONE);
     is_connected.notify_all();
 }
 
-void NetworkController::CloseConnection(const socket_t fd, const ConnectionData* cx_data) const {
+void NetworkController::CloseConnection(const int fd, const ConnectionData* cx_data) const {
     RemoveConnection(fd);
     NetworkNode::RemoveEntity(cx_data->Id());
     delete cx_data;

@@ -22,15 +22,7 @@ SET(TCC_BUILD_TESTS CACHE BOOL "Parse the tests directory")
 SET(TRILLEK_BUILD_CLIENT CACHE BOOL "Build the client")
 SET(TRILLEK_BUILD_SERVER CACHE BOOL "Build the server")
 SET(TRILLEK_BUILD_STANDALONE ON CACHE BOOL "Build the standalone binary")
-SET(TRILLEK_BUILD_DEPENDENCY OFF CACHE BOOL "Build the embedded dependencies")
 SET(TCC_TEST_NETWORK_DISABLE OFF CACHE BOOL "Disable the network unit test")
-
-### download repo from github and build libkqueue
-INCLUDE(Buildlibkqueue)
-
-### download repo from github and build NetPort
-set(BUILD_SHARED_LIBS TRUE CACHE INTERNAL "Build shared NetPort" FORCE)
-INCLUDE(BuildNetPort)
 
 # find all source files in the src directory
 FILE(GLOB_RECURSE TCC_SRC "src/*.cpp")
@@ -196,11 +188,6 @@ FOREACH(MAIN_CPP ${TCC_MAIN_CPP})
         # this other form is only supported in new versions of cmake
         #target_compile_definitions(${T_NAME} PRIVATE ${BUILDTARGET})
 
-        IF(TRILLEK_BUILD_DEPENDENCY)
-            # We must build all dependencies before linking
-            ADD_DEPENDENCIES(${T_NAME} libkqueue netport)
-        ENDIF(TRILLEK_BUILD_DEPENDENCY)
-
         # Link the executable to all required libraries
         TARGET_LINK_LIBRARIES(${T_NAME} ${${T_NAME}_LIBS})
     ENDIF(BUILDTARGET)
@@ -220,11 +207,6 @@ if(TCC_BUILD_TESTS)
     ELSE(TCC_TEST_NETWORK_DISABLE)
         SET_PROPERTY(TARGET TCCTests PROPERTY COMPILE_DEFINITIONS _CLIENT_ _SERVER_ APPEND)
     ENDIF(TCC_TEST_NETWORK_DISABLE)
-
-    IF(TRILLEK_BUILD_DEPENDENCY)
-    # We must build all dependencies before linking
-        ADD_DEPENDENCIES(TCCTests libkqueue netport)
-    ENDIF(TRILLEK_BUILD_DEPENDENCY)
 
     TARGET_LINK_LIBRARIES(TCCTests ${GTEST_LIBRARIES} ${Trillek_Standalone_LIBS})
 endif(TCC_BUILD_TESTS)
