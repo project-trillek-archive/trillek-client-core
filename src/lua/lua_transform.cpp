@@ -32,7 +32,7 @@ int ComputeVelocityVector(lua_State* L) {
 static luaL_Reg Transform_table[] =
 {
     { "Get", Traansform_get },
-    { NULL, NULL }
+    { nullptr, nullptr } // table end marker
 };
 
 static luaL_Reg Transform_metatable[] =
@@ -47,6 +47,7 @@ static luaL_Reg Transform_metatable[] =
     { "get_rotation", luaU_get<Transform, glm::vec3, &Transform::GetRotation> },
     { "get_scale", luaU_get<Transform, glm::vec3, &Transform::GetScale> },
     { "compute_velocity_vector", &ComputeVelocityVector },
+    { nullptr, nullptr } // table end marker
 };
 
 int luaopen_Transform(lua_State* L) {

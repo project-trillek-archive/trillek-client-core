@@ -30,14 +30,14 @@ int CallWindowShouldClose(lua_State* L) {
 static luaL_Reg OS_table[] =
 {
     { "Get", OS_get },
-    { NULL, NULL }
+    { nullptr, nullptr } // table end marker
 };
 
 static luaL_Reg OS_metatable[] =
 {
     { "ToggleMouseLock", ToggleMouseLock },
     { "Terminate", CallWindowShouldClose },
-    { NULL, NULL }
+    { nullptr, nullptr } // table end marker
 };
 
 int luaopen_OSSys(lua_State* L) {
