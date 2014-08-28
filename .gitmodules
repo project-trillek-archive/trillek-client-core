@@ -4,3 +4,7 @@
 [submodule "cryptopp"]
 	path = crypto++
 	url = https://github.com/catageek/cryptopp
+[submodule "raknet"]
+	path = raknet
+	url = https://github.com/OculusVR/RakNet.git
+	ignore = dirty

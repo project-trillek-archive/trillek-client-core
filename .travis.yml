@@ -29,6 +29,12 @@ install:
     - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
     # GLEW, GLM
     - sudo apt-get -q -y install libglew-dev libglm-dev
+    # Raknet
+    - git submodule update --init --depth=1 raknet
+    - cd raknet
+    - sudo cmake CMakeLists.txt
+    - sudo make
+    - cd ..
     # Crypto++
     - git submodule update --init --depth=1 crypto++
     - cd crypto++
