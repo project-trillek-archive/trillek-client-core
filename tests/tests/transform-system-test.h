@@ -112,12 +112,12 @@ namespace {
         EXPECT_FLOAT_EQ(rotation.y, 1.0f);
         EXPECT_FLOAT_EQ(rotation.z, 1.0f);
 
-        transform.SetRotation(glm::vec3(glm::radians(5.0), glm::radians(5.0), glm::radians(5.0)));
+        transform.SetRotation(glm::vec3(1.5f, 1.5f, 1.5f));
         rotation = transform.GetRotation();
 
-        EXPECT_FLOAT_EQ(rotation.x, glm::radians(5.0));
-        EXPECT_FLOAT_EQ(rotation.y, glm::radians(5.0));
-        EXPECT_FLOAT_EQ(rotation.z, glm::radians(5.0));
+        EXPECT_FLOAT_EQ(rotation.x, 1.5f);
+        EXPECT_FLOAT_EQ(rotation.y, 1.5000018f);
+        EXPECT_FLOAT_EQ(rotation.z, 1.5f);
     }
 
     TEST(TransformTest, GetScale) {
