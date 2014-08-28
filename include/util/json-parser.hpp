@@ -77,7 +77,7 @@ public:
      * \param[in] const std::string& fname The filename of where to serialize the JSON.
      * \return void
      */
-    void Serialize(const std::string& out_directory, const std::string& fname);
+    void Serialize(const std::string& out_directory, const std::string& fname, std::shared_ptr<Parser> parser);
 
     /**
      * \brief Registers a serializer type.

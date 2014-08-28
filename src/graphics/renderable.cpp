@@ -10,6 +10,8 @@
 #include "graphics/shader.hpp"
 #include "graphics/animation.hpp"
 
+#include <sstream>
+
 namespace trillek {
 namespace graphics {
 
@@ -49,10 +51,23 @@ void Renderable::UpdateBufferGroups() {
             if (!texture) {
                 std::vector<Property> props;
                 props.push_back(Property("filename", texture_name));
-                auto pixel_data = resource::ResourceMap::Create<resource::PixelBuffer>(texture_name, props);
+                std::stringstream name;
+                if (this->dyn_textures) {
+                    name << this->entity_id << "_" << texture_name;
+                }
+                else {
+                    name << texture_name;
+                }
+
+                auto pixel_data = resource::ResourceMap::Create<resource::PixelBuffer>(name.str(), props);
                 if (pixel_data) {
-                    texture = std::make_shared<Texture>(*pixel_data.get());
-                    TrillekGame::GetGraphicSystem().Add(texture_name, texture);
+                    if (this->dyn_textures) {
+                        texture = std::make_shared<Texture>(pixel_data);
+                    }
+                    else {
+                        texture = std::make_shared<Texture>(*pixel_data.get());
+                    }
+                    TrillekGame::GetGraphicSystem().Add(name.str(), texture);
                 }
             }
 
@@ -149,6 +164,7 @@ bool Renderable::Initialize(const std::vector<Property> &properties) {
     std::string mesh_name;
     std::string shader_name;
     std::string animation_name;
+    this->dyn_textures = true;
     for (const Property& p : properties) {
         std::string name = p.GetName();
         if (name == "mesh") {
@@ -159,6 +175,12 @@ bool Renderable::Initialize(const std::vector<Property> &properties) {
         }
         else if (name == "animation") {
             animation_name = p.Get<std::string>();
+        }
+        else if (name == "dynamic_textures") {
+            this->dyn_textures = p.Get<bool>();
+        }
+        else if (name == "entity_id") {
+            this->entity_id = p.Get<unsigned int>();
         }
     }
 

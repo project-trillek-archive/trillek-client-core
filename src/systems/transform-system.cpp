@@ -54,7 +54,7 @@ bool TransformMap::Serialize(rapidjson::Document& document) {
         scale_element.AddMember("x", scale.x, document.GetAllocator());
         scale_element.AddMember("y", scale.y, document.GetAllocator());
         scale_element.AddMember("z", scale.z, document.GetAllocator());
-        transform_object.AddMember("scale", scale_element, document.GetAllocator()); 
+        transform_object.AddMember("scale", scale_element, document.GetAllocator());
 
         std::string id = std::to_string(entity_transform.first);
         rapidjson::Value entity_id(id.c_str(), id.length(), document.GetAllocator());

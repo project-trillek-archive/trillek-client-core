@@ -2,6 +2,7 @@
 #include "resources/text-file.hpp"
 #include <iostream>
 #include <fstream>
+#include "logging.hpp"
 
 namespace trillek {
 namespace graphics {
@@ -68,8 +69,8 @@ void Shader::SetOutputBinding(ShaderOutputType outtype) {
     case ShaderOutputType::DEFAULT_TARGETS:
     default:
         // Setup output for multiple render targets
-        glBindFragDataLocation(program, 0, "out_Color"); CheckGLError();
-        glBindFragDataLocation(program, 1, "out_Normal"); CheckGLError();
+        glBindFragDataLocation(program, 0, "out_col"); CheckGLError();
+        glBindFragDataLocation(program, 1, "out_norm"); CheckGLError();
         glBindFragDataLocation(program, 2, "out_Depth"); CheckGLError();
         break;
     }
@@ -98,7 +99,7 @@ bool Shader::LinkProgram() {
         glGetProgramiv(program, GL_INFO_LOG_LENGTH, &infoLogLength);
         GLchar *infoLog = new GLchar[infoLogLength];
         glGetProgramInfoLog(program, infoLogLength, NULL, infoLog);
-        std::cerr << "Shader Link: " << infoLog << '\n';
+        LOGMSGC(ERROR) << "Shader Link: " << infoLog;
         delete[] infoLog;
         linkok = false;
     }
@@ -187,8 +188,7 @@ bool Shader::ParseDefines(std::string &defstring, const rapidjson::Value& node) 
         }
         else {
             // invalid
-            // TODO use a logger
-            std::cerr << "[ERROR] Invalid shader define\n";
+            LOGMSGC(ERROR) << "Invalid shader define";
             return false;
         }
     }
@@ -199,8 +199,7 @@ bool Shader::Parse(const std::string &shader_name, const rapidjson::Value& node)
     std::string globdefines;
 
     if(!node.IsObject()) {
-        // TODO use logger
-        std::cerr << "[WARNING] Invalid shader entry\n";
+        LOGMSGC(WARNING) << "Invalid shader entry";
         return false;
     }
     for(auto shade_param_itr = node.MemberBegin();
@@ -236,8 +235,7 @@ bool Shader::Parse(const std::string &shader_name, const rapidjson::Value& node)
                             }
                         }
                         else {
-                            // TODO use a logger
-                            std::cerr << "[ERROR] Invalid define section\n";
+                            LOGMSGC(ERROR) << "Invalid define section";
                         }
                     }
                     else if(ssec_name == "src" || ssec_name == "source") {
@@ -248,13 +246,11 @@ bool Shader::Parse(const std::string &shader_name, const rapidjson::Value& node)
                                 shadertext = textdata->GetText();
                             }
                             else {
-                                // TODO use a logger
-                                std::cerr << "[WARNING] Shader source not loaded\n";
+                                LOGMSGC(WARNING) << "Shader source not loaded";
                             }
                         }
                         else {
-                            // TODO use a logger
-                            std::cerr << "[ERROR] Invalid source section\n";
+                            LOGMSGC(ERROR) << "Invalid source section";
                         }
                     }
                     else if(ssec_name == "src-file" || ssec_name == "filename") {
@@ -267,13 +263,11 @@ bool Shader::Parse(const std::string &shader_name, const rapidjson::Value& node)
                                 shadertext = textdata.GetText();
                             }
                             else {
-                                // TODO use a logger
-                                std::cerr << "[WARNING] Shader source not loaded\n";
+                                LOGMSGC(WARNING) << "Shader source not loaded";
                             }
                         }
                         else {
-                            // TODO use a logger
-                            std::cerr << "[ERROR] Invalid source section\n";
+                            LOGMSGC(ERROR) << "Invalid source section";
                         }
                     }
                 }
@@ -285,8 +279,7 @@ bool Shader::Parse(const std::string &shader_name, const rapidjson::Value& node)
                     LoadFromStrings(param_scan->second, shadersrc);
                 }
                 else {
-                    // TODO use a logger
-                    std::cerr << "[WARNING] Empty shader definition\n";
+                    LOGMSGC(WARNING) << "Empty shader definition";
                 }
             }
             else if(param_name == "define") {
@@ -304,15 +297,13 @@ bool Shader::Parse(const std::string &shader_name, const rapidjson::Value& node)
                     }
                     else {
                         // invalid
-                        // TODO use a logger
-                        std::cerr << "[ERROR] Invalid output definition\n";
+                        LOGMSGC(ERROR) << "Invalid output definition";
                         return false;
                     }
                 }
             }
             else {
-                // TODO use a logger
-                std::cerr << "[WARNING] Unknown shader parameter\n";
+                LOGMSGC(WARNING) << "[WARNING] Unknown shader parameter";
             }
         }
     }
@@ -345,7 +336,7 @@ void Shader::LoadFromStrings(ShaderType type, const std::vector<std::string> &so
         glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &log_length);
         GLchar *info_log = new GLchar[log_length];
         glGetShaderInfoLog(shader, log_length, NULL, info_log);
-        std::cerr << "Shader Compile: " << info_log << '\n';
+        LOGMSGC(ERROR) << "Shader Compile: " << info_log;
         delete[] info_log;
     }
     shaders.push_back(shader);
@@ -370,7 +361,7 @@ void Shader::LoadFromString(ShaderType type, const std::string &source) {
         glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &log_length);
         GLchar *info_log = new GLchar[log_length];
         glGetShaderInfoLog(shader, log_length, NULL, info_log);
-        std::cerr << "Shader Compile: " << info_log << '\n';
+        LOGMSGC(ERROR) << "Shader Compile: " << info_log;
         delete[] info_log;
     }
     CheckGLError();

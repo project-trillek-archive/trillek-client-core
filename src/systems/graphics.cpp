@@ -13,6 +13,7 @@
 #include "graphics/animation.hpp"
 #include "graphics/light.hpp"
 #include "graphics/render-list.hpp"
+#include "logging.hpp"
 
 namespace trillek {
 namespace graphics {
@@ -30,13 +31,20 @@ const int* RenderSystem::Start(const unsigned int width, const unsigned int heig
     //glGetIntegerv(GL_SHADING_LANGUAGE_VERSION, &this->gl_version[3]);
     CheckGLError();
     int opengl_version = gl_version[0] * 100 + gl_version[1] * 10;
+    debugmode = 0;
+
+    // Subscribe to events
+    event::Dispatcher<KeyboardEvent>::GetInstance()->Subscribe(this);
 
     if(opengl_version < 300) {
-        std::cerr << "[FATAL-GRAPHICS] OpenGL version (" << opengl_version << ") less than required minimum (300)\n";
+        LOGMSGC(FATAL) << "OpenGL version (" << opengl_version << ") less than required minimum (300)";
         assert(opengl_version >= 300);
     }
     if(opengl_version < 330) {
-        std::cerr << "[WARNING-GRAPHICS] OpenGL version (" << opengl_version << ") less than recommended (330)\n";
+        LOGMSGC(WARNING) << "OpenGL version (" << opengl_version << ") less than recommended (330)";
+    }
+    else {
+        LOGMSGC(INFO) << "OpenGL version (" << opengl_version << ')';
     }
 
     SetViewportSize(width, height);
@@ -131,14 +139,12 @@ bool RenderSystem::Parse(rapidjson::Value& node) {
             auto typefunc = parser_functions.find(section_type);
             if(typefunc != parser_functions.end()) {
                 if(!typefunc->second(type_itr->value)) {
-                    // TODO use logger
-                    std::cerr << "[ERROR] Graphics parsing failed\n";
+                    LOGMSGC(ERROR) << "Graphics parsing failed";
                     return false;
                 }
             }
             else {
-                // TODO use logger
-                std::cerr << "[INFO] RenderSystem::Parse - skipping \"" << section_type << "\" section\n";
+                LOGMSGC(INFO) << "RenderSystem::Parse - skipping \"" << section_type << "\" section";
             }
         }
         return true;
@@ -179,10 +185,17 @@ void RenderSystem::RegisterListResolvers() {
             }
             else if(rentype == "post") {
                 rlist.run_values.push_back(Container((long)3));
+                for(auto pitr = rlist.load_properties.begin(); pitr != rlist.load_properties.end(); pitr++) {
+                    if(pitr->GetName() == "shader" && pitr->Is<std::string>()) {
+                        auto shader_ptr = rensys.Get<Shader>(pitr->Get<std::string>());
+                        if(shader_ptr) {
+                            rlist.run_values.push_back(Container(shader_ptr));
+                        }
+                    }
+                }
             }
             else {
-                // TODO use logger
-                std::cerr << "[ERROR-GRAPHICS] Invalid render method\n";
+                LOGMSGON(ERROR, rensys) << "Invalid render method";
                 return false;
             }
         }
@@ -202,8 +215,7 @@ void RenderSystem::RegisterListResolvers() {
             rlist.run_values.push_back(Container(true));
             auto layerptr = rensys.Get<RenderLayer>(rlist.cmdvalue.Get<std::string>());
             if(!layerptr) {
-                // TODO use logger
-                std::cerr << "[ERROR-GRAPHICS] Layer not found: " << rlist.cmdvalue.Get<std::string>() << '\n';
+                LOGMSGON(ERROR, rensys) << "Layer not found: " << rlist.cmdvalue.Get<std::string>();
                 return false;
             }
             rlist.run_values.push_back(Container(layerptr));
@@ -222,8 +234,7 @@ void RenderSystem::RegisterListResolvers() {
             rlist.run_values.push_back(Container(true));
             auto layerptr = rensys.Get<RenderLayer>(rlist.cmdvalue.Get<std::string>());
             if(!layerptr) {
-                // TODO use logger
-                std::cerr << "[ERROR-GRAPHICS] Layer not found: " << rlist.cmdvalue.Get<std::string>() << '\n';
+                LOGMSGON(ERROR, rensys) << "Layer not found: " << rlist.cmdvalue.Get<std::string>();
                 return false;
             }
             rlist.run_values.push_back(Container(layerptr));
@@ -250,8 +261,7 @@ void RenderSystem::RegisterListResolvers() {
                 if(prop.Is<std::string>()) {
                     target = rensys.Get<RenderLayer>(prop.Get<std::string>());
                     if(!target) {
-                        // TODO use logger
-                        std::cerr << "[ERROR-GRAPHICS] Layer not found: " << prop.Get<std::string>() << '\n';
+                        LOGMSGON(ERROR, rensys) << "Layer not found: " << prop.Get<std::string>();
                         return false;
                     }
                 }
@@ -300,6 +310,15 @@ void RenderSystem::RenderScene() const {
     glViewport(c_view->viewport.x, c_view->viewport.y, c_view->viewport.z, c_view->viewport.w);
 
     if(activerender) {
+        for(auto texitem = dyn_textures.begin(); texitem != dyn_textures.end(); texitem++) {
+            if(texitem->expired()) {
+                // TODO: generate a remove request
+            }
+            else {
+                auto texptr = texitem->lock();
+                texptr->Update();
+            }
+        }
         for(auto& cmditem : activerender->render_commands) {
             if(!cmditem.resolved && !cmditem.resolve_error) {
                 auto resolve = list_resolvers.find(cmditem.cmd);
@@ -307,10 +326,7 @@ void RenderSystem::RenderScene() const {
                     cmditem.run_values.clear();
                     if(!resolve->second(cmditem)) {
                         cmditem.resolve_error = true;
-                        // should probably log some warning/error
-                        // since this item may not be able to render
-                        // TODO use logging system instead
-                        std::cerr << "[ERROR-GRAPHICS] Parsing render command failed\n";
+                        LOGMSGC(ERROR) << "Parsing render command failed";
                         break;
                     }
                     cmditem.resolved = true;
@@ -331,7 +347,8 @@ void RenderSystem::RenderScene() const {
                 break;
             case RenderCmd::RENDER:
             {
-                switch(cmditem.run_values.front().Get<long>()) {
+                auto val_itr = cmditem.run_values.begin();
+                switch(val_itr->Get<long>()) {
                 case 0:
                     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
                     glEnable(GL_DEPTH_TEST);
@@ -349,10 +366,19 @@ void RenderSystem::RenderScene() const {
                     RenderLightingPass(c_view->view_matrix, &inv_proj[0][0]);
                     break;
                 case 3:
+                {
+                    std::shared_ptr<Shader> postshader;
                     glDisable(GL_MULTISAMPLE);
                     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
                     glDisable(GL_DEPTH_TEST);
-                    RenderPostPass();
+
+                    for(val_itr++; val_itr != cmditem.run_values.end(); val_itr++) {
+                        if(val_itr->Is<std::shared_ptr<Shader>>()) {
+                            postshader = val_itr->Get<std::shared_ptr<Shader>>();
+                        }
+                    }
+                    RenderPostPass(postshader);
+                }
                     break;
                 default:
                     break;
@@ -521,7 +547,7 @@ void RenderSystem::RenderColorPass(const float *view_matrix, const float *proj_m
 }
 
 void RenderSystem::RenderDepthOnlyPass(const float *view_matrix, const float *proj_matrix) const {
-    // TODO Similar to color pass but without textures and everything uses a depth shader
+    // Similar to color pass but without textures and everything uses a depth shader
     // This is intended for shadow map passes or the like
     if(!depthpassshader) {
         return;
@@ -542,30 +568,14 @@ void RenderSystem::RenderDepthOnlyPass(const float *view_matrix, const float *pr
         glm::perspective(3.1415f*0.5f, 1.f, 0.5f, 10000.f)
         * glm::lookAt(lightpos, lightpos-UP_VECTOR, FORWARD_VECTOR);
     glm::mat4x4 invlight_matrix = glm::inverse(light_matrix);
-    glm::mat4x4 invview_matrix = glm::inverse(*(const glm::mat4x4*)view_matrix);
     CheckGLError();
     glUniform3f(depthpassshader->Uniform("light_pos"), lightpos.x, lightpos.y, lightpos.z);
     glUniformMatrix4fv(depthpassshader->Uniform("light_vp"), 1, GL_FALSE, (float*)&light_matrix);
-    glUniformMatrix4fv(depthpassshader->Uniform("light_ivp"), 1, GL_FALSE, (float*)&invview_matrix);
-    glUniformMatrix4fv(depthpassshader->Uniform("view"), 1, GL_FALSE, view_matrix);
-    glUniformMatrix4fv(depthpassshader->Uniform("projection"), 1, GL_FALSE, proj_matrix);
     CheckGLError();
     if(light->shadows) {
         light->depthmatrix = light_matrix;
     }
-    GLint layerloc;
-    layerloc = depthpassshader->Uniform("layer0");
-    if(layerloc > 0) glUniform1i(layerloc, 0);
-    CheckGLError();
-    layerloc = depthpassshader->Uniform("layer1");
-    if(layerloc > 0) glUniform1i(layerloc, 1);
-    CheckGLError();
-    layerloc = depthpassshader->Uniform("layer2");
-    if(layerloc > 0) glUniform1i(layerloc, 2);
-    CheckGLError();
-    layerloc = depthpassshader->Uniform("layer3");
-    if(layerloc > 0) glUniform1i(layerloc, 3);
-    CheckGLError();
+    glDrawBuffer(GL_NONE);
     GLint u_model_loc = depthpassshader->Uniform("model");
     GLint u_animatrix_loc = depthpassshader->Uniform("animation_matrix");
     GLint u_animate_loc = depthpassshader->Uniform("animated");
@@ -660,7 +670,7 @@ void RenderSystem::RenderLightingPass(const glm::mat4x4 &view_matrix, const floa
                 else if(activelight->shadows && lp_itr->GetName() == "shadow") {
                     shadowbuf = TrillekGame::GetGraphicSystem().Get<Texture>(lp_itr->Get<std::string>());
                     if(shadowbuf) {
-                        useshadow = 1;
+                        useshadow = 1 + debugmode;
                         glActiveTexture(GL_TEXTURE4);
                         glBindTexture(GL_TEXTURE_2D, shadowbuf->GetID());
                         glm::mat4x4 invviewshadow = activelight->depthmatrix * glm::inverse(view_matrix);
@@ -673,6 +683,7 @@ void RenderSystem::RenderLightingPass(const glm::mat4x4 &view_matrix, const floa
         }
     }
     glDisable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ZERO);
     // unbind when done
     glUseProgram(0);
     glBindVertexArray(0); CheckGLError();
@@ -684,7 +695,7 @@ void RenderSystem::UpdateModelMatrices() {
         transforms = *updated_transforms.get();
     }
     catch(std::future_error) {
-        std::cerr << "Render system missed a frame" << std::endl;
+        LOGMSGC(INFO) << "Render system missed a frame";
     }
     for (auto it = transforms.cbegin(); it != transforms.cend(); ++it) {
         const auto id = it->first;
@@ -703,8 +714,16 @@ void RenderSystem::UpdateModelMatrices() {
     }
 }
 
-void RenderSystem::RenderPostPass() const {
-
+void RenderSystem::RenderPostPass(std::shared_ptr<Shader> postshader) const {
+    postshader->Use();
+    glBindVertexArray(screenquad.vao); CheckGLError();
+    glUniform1i(postshader->Uniform("layer0"), 0);CheckGLError();
+    glUniform1i(postshader->Uniform("layer1"), 1);CheckGLError();
+    glUniform1i(postshader->Uniform("layer2"), 2);CheckGLError();
+    glUniform1i(postshader->Uniform("layer3"), 3);CheckGLError();
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);CheckGLError();
+    glBindVertexArray(0); CheckGLError();
+    Shader::UnUse();
 }
 
 void RenderSystem::RegisterStaticParsers() {
@@ -749,6 +768,15 @@ void RenderSystem::SetViewportSize(const unsigned int width, const unsigned int 
         0.1f,
         10000.0f
         );
+}
+
+template<>
+void RenderSystem::Add(const std::string & instancename, std::shared_ptr<Texture> instanceptr) {
+    unsigned int type_id = reflection::GetTypeID<Texture>();
+    if(instanceptr->IsDynamic()) {
+        dyn_textures.push_back(instanceptr);
+    }
+    graphics_instances[type_id][instancename] = instanceptr;
 }
 
 template<>
@@ -940,7 +968,7 @@ void RenderSystem::HandleEvents(const frame_tp& timepoint) {
     auto delta = now - last_tp;
     if(delta > std::chrono::nanoseconds(66666666ll)) {
         if(!this->frame_drop) {
-            std::cerr << "[GRAPHICS] Time lag " << (delta.count() - 16666666) * 1.0E-9 << " > 50 milliseconds\n";
+            LOGMSGC(INFO) << "Time lag " << (delta.count() - 16666666) * 1.0E-9 << " > 50 milliseconds";
             this->frame_drop_count = 0;
         }
         this->frame_drop = true;
@@ -948,7 +976,7 @@ void RenderSystem::HandleEvents(const frame_tp& timepoint) {
     }
     else {
         if(this->frame_drop) {
-            std::cerr << "[GRAPHICS] Dropped frames " << this->frame_drop_count << "\n";
+            LOGMSGC(INFO) << "Dropped frames " << this->frame_drop_count;
             this->frame_drop_count = 0;
         }
         this->frame_drop = false;
@@ -964,7 +992,7 @@ void RenderSystem::HandleEvents(const frame_tp& timepoint) {
         UpdateModelMatrices();
     }
     else {
-        std::cerr << "RenderSystem::HandleEvents() missed the publication of updated transforms" << std::endl;
+        LOGMSGC(INFO) << "HandleEvents() missed the publication of updated transforms";
     }
 };
 
