@@ -10,6 +10,8 @@
 #include "systems/sound-system.hpp"
 #include <cstddef>
 
+#include "systems/vcomputer-system.hpp"
+
 size_t gAllocatedSize = 0;
 
 int main(int argCount, char **argValues) {
@@ -58,6 +60,9 @@ int main(int argCount, char **argValues) {
 
     // Detach the window from the current thread
     os.DetachContext();
+
+    trillek::VComputerSystem cpu1;
+    systems.push(&cpu1);
 
     // start the scheduler in another thread
     std::thread tp(
