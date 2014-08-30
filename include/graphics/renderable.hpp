@@ -127,6 +127,10 @@ private:
     std::shared_ptr<Animation> animation;
 
     std::shared_ptr<Shader> shader;
+
+    bool dyn_textures; // Wether the textures for this renderable should be updated each frame or not.
+
+    id_t entity_id;
 };
 
 } // End of graphics

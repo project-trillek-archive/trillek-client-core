@@ -102,9 +102,27 @@ void Texture::Load(const uint8_t * image, GLuint width, GLuint height) {
     if(!texture_id) {
         return;
     }
+    using resource::ImageColorMode;
+    GLenum gformat;
+    switch (this->source_ptr.lock()->GetFormat()) {
+    case ImageColorMode::COLOR_RGBA:
+        gformat = GL_RGBA;
+        break;
+    case ImageColorMode::COLOR_RGB:
+        gformat = GL_RGB;
+        break;
+    case ImageColorMode::MONOCHROME_A:
+        gformat = GL_RG;
+        break;
+    case ImageColorMode::MONOCHROME:
+        gformat = GL_RED;
+        break;
+    default:
+        return;
+    }
     glBindTexture(GL_TEXTURE_2D, texture_id);
     CheckGLError();
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
+    glTexImage2D(GL_TEXTURE_2D, 0, gformat, width, height, 0, gformat, GL_UNSIGNED_BYTE, image);
 }
 void Texture::Generate(GLuint width, GLuint height, bool usealpha) {
     CheckGLError();

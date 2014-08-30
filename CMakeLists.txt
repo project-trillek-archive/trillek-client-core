@@ -132,6 +132,7 @@ SET(Backend_LIBS
     ${BULLET_DYNAMICS_LIBRARIES}
     ${BULLET_COLLISION_LIBRARIES}
     ${BULLET_LINEARMATH_LIBRARIES}
+    VCOMPUTER.lib
     )
 
 SET(Graphics_LIBS
@@ -155,6 +156,8 @@ SET(Trillek_Standalone_LIBS ${Trillek_Client_LIBS})
 IF (MSVC) # Visual C++
     SET(Trillek_Server_LIBS ${Trillek_Server_LIBS} ${Graphics_LIBS})
 ENDIF (MSVC)
+
+ADD_SUBDIRECTORY (${CMAKE_SOURCE_DIR}/trillek-vcomputer-module)
 
 FOREACH(MAIN_CPP ${TCC_MAIN_CPP})
     GET_FILENAME_COMPONENT(T_NAME ${MAIN_CPP} NAME_WE)
