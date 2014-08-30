@@ -4,6 +4,8 @@
 [submodule "cryptopp"]
 	path = crypto++
 	url = https://github.com/catageek/cryptopp
+	ignore = dirty
 [submodule "trillek-vcomputer-module"]
 	path = trillek-vcomputer-module
 	url = https://github.com/trillek-team/trillek-vcomputer-module
+	ignore = dirty
