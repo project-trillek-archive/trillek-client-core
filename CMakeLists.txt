@@ -132,7 +132,6 @@ SET(Backend_LIBS
     ${BULLET_DYNAMICS_LIBRARIES}
     ${BULLET_COLLISION_LIBRARIES}
     ${BULLET_LINEARMATH_LIBRARIES}
-    VCOMPUTER.lib
     )
 
 SET(Graphics_LIBS
@@ -158,6 +157,22 @@ IF (MSVC) # Visual C++
 ENDIF (MSVC)
 
 ADD_SUBDIRECTORY (${CMAKE_SOURCE_DIR}/trillek-vcomputer-module)
+#Dirty addition of vcomputer
+#TODO: make a cmake module
+IF (MSVC) # Visual C++
+    SET(Backend_LIBS
+        ${Backend_LIBS}
+        VCOMPUTER.lib
+        )
+ELSE (MSVC)
+    SET(Backend_LIBS
+        ${Backend_LIBS}
+        VCOMPUTER.so
+        )
+ENDIF (MSVC) # Visual C++
+
+INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/trillek-vcomputer-module/include")
+INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/trillek-vcomputer-module/src")
 
 FOREACH(MAIN_CPP ${TCC_MAIN_CPP})
     GET_FILENAME_COMPONENT(T_NAME ${MAIN_CPP} NAME_WE)
@@ -191,6 +206,8 @@ FOREACH(MAIN_CPP ${TCC_MAIN_CPP})
         # this other form is only supported in new versions of cmake
         #target_compile_definitions(${T_NAME} PRIVATE ${BUILDTARGET})
 
+	ADD_DEPENDENCIES(${T_NAME} VCOMPUTER)
+
         # Link the executable to all required libraries
         TARGET_LINK_LIBRARIES(${T_NAME} ${${T_NAME}_LIBS})
     ENDIF(BUILDTARGET)
@@ -204,6 +221,7 @@ if(TCC_BUILD_TESTS)
     # Set a preprocessor variable
     SET_PROPERTY(TARGET TCCTests PROPERTY COMPILE_DEFINITIONS _STANDALONE_ APPEND)
     #target_compile_definitions(TCCTests PRIVATE _STANDALONE_)
+    ADD_DEPENDENCIES(${TCCTests VCOMPUTER)
     IF(TCC_TEST_NETWORK_DISABLE)
         SET_PROPERTY(TARGET TCCTests PROPERTY COMPILE_DEFINITIONS NO_NETWORK APPEND)
         #target_compile_definitions(TCCTests PRIVATE NO_NETWORK)

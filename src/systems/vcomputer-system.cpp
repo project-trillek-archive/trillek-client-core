@@ -91,7 +91,7 @@ void VComputerSystem::RemoveDevice(const id_t entity_id, const unsigned int slot
 
 void VComputerSystem::HandleEvents(const frame_tp& timepoint) {
     static frame_tp last_tp;
-    this->delta = timepoint - last_tp;
+    this->delta = frame_unit(timepoint - last_tp);
     last_tp = timepoint;
     auto count = this->delta.count();
     for (auto& comp : this->computers) {
@@ -112,7 +112,7 @@ bool VComputerSystem::LoadROMFile(const id_t entity_id, std::string fname) {
         auto& vc = this->computers[entity_id].vc;
         int size = aux::LoadROM(fname, this->computers[entity_id].rom);
         if (size < 0) {
-            std::fprintf(stderr, "An error hapen when was reading the file %s\n", fname);
+            std::fprintf(stderr, "An error hapen when was reading the file %s\n", fname.c_str());
             return false;
         }
         this->computers[entity_id].rom_size = size;
@@ -139,7 +139,7 @@ void VComputerSystem::AddComponent(const id_t entity_id, std::shared_ptr<Compone
 void VComputerSystem::Notify(const KeyboardEvent* key_event) {
     switch (key_event->action) {
     case KeyboardEvent::KEY_DOWN:
-        this->gkeyb->SendKeyEvent(key_event->scancode, key_event->key, dev::gkeyboard::KEY_MODS::KEY_MOD_NONE);
+        this->gkeyb->SendKeyEvent(key_event->scancode, key_event->key, dev::gkeyboard::KEY_MODS::MOD_NONE);
     default:
         break;
     }
