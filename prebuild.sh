@@ -32,6 +32,7 @@ if [ -z "$BULLET_DOUBLE" ] ; then
     cd bullet
     wget https://bullet.googlecode.com/files/bullet-2.82-r2704.tgz
     tar -xzxf bullet-2.82-r2704.tgz
+    cd bullet-2.82-r2704
     cmake -DINSTALL_LIBS=on -DBUILD_SHARED_LIBS=on -DBUILD_DEMOS=off -DUSE_DOUBLE_PRECISION=on  .
     make
     sudo make install
