@@ -11,12 +11,12 @@ echo "Downloading GLEW and GLM"
 sudo apt-get -q -y install libglew-dev libglm-dev
 
 # Get Crypto++
-echo "Getting & compiling crypt++"
-git submodule update --init --depth 1 -- ./crypto++
-cd crypto++
-cmake CMakeLists.txt
-make
-cd $BUILD_PATH
+#echo "Getting & compiling crypt++"
+#git submodule update --init --depth 1 -- ./crypto++
+#cd crypto++
+#cmake CMakeLists.txt
+#make
+#cd $BUILD_PATH
 
 # OpenAL, Vorbis and OGG
 echo "OpenAL, Vorbis/OGG and Alure"
