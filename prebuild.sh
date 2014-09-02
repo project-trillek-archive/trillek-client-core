@@ -63,7 +63,8 @@ if [ -z "$GLFW_VERSION" ] ; then  # Should be >= 3
     sudo apt-get -qq install xorg-dev libglu1-mesa-dev
     git clone https://github.com/glfw/glfw.git
     cd glfw
-    CMAKE_CXX_FLAGS=-fPIC CMAKE_C_FLAGS=-fPIC cmake -DCMAKE_INSTALL_PREFIX=/usr -DBUILD_SHARED_LIBS:bool=true .
+    cmake CMAKE_CXX_FLAGS=-fPIC CMAKE_C_FLAGS=-fPIC cmake -DCMAKE_INSTALL_PREFIX=/usr -DBUILD_SHARED_LIBS:bool=true .
+    make
     sudo make install
 else
     echo "GLFW $GLFW_VERSION is installed "
