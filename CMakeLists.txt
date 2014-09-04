@@ -5,23 +5,73 @@ PROJECT(trillek-client-core)
 # Set the directory of cmake modules
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/modules")
 
+#Check if we can build with the current chaintool
+INCLUDE(SetCompilerFlags)
+
 # Put the executable in the bin folder
 SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
-
-# find all source files in the src directory
-FILE(GLOB_RECURSE TCC_SRC "src/*.cpp")
 
 # Put the main_XXX.cpp files into a filter
 FILE(GLOB TCC_MAIN_CPP "main/*.cpp")
 
+# LEGACY - Keep this so merges don't instantly break the build.
+# find all source files in the src directory
+FILE(GLOB_RECURSE TCC_SRC "src/*.cpp")
+
+# LEGACY - Keep this so merges don't instantly break the build.
 # find all the files in the includes directory
 FILE(GLOB_RECURSE TCC_INCLUDES "include/*.h" "include/*.hpp")
 
-#Check if we can build with the current chaintool
-INCLUDE(SetCompilerFlags)
+ADD_SUBDIRECTORY(engine)
 
+SET(TCC_INCLUDES ${TCC_INCLUDES}
+	${TCC_ENGINE_INCLUDES}
+	)
+
+SET(TCC_SRC ${TCC_SRC}
+	${TCC_ENGINE_SRC}
+	)
+
+SET(TCC_INCLUDE_DIRS
+	${TCC_ENGINE_INCLUDE_DIRS}
+	)
+
+SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} ${TCC_INCLUDE_DIRS})
+INCLUDE_DIRECTORIES("${TCC_INCLUDE_DIRS}")
+MESSAGE("DEBUG: Include Dirs = ${TCC_INCLUDE_DIRS}")
+
+# LEGACY - Keep these so merges don't instantly break the build.
 SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} ${CMAKE_SOURCE_DIR}/include/)
 INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/include/")
+
+# Configure Source Groups for IDEs
+# Constructs the source group from the relative path of the file.
+FUNCTION(CONFIGURE_SOURCE_GROUPS)
+	SET(REG_EXT "[^/]*([.]cpp|[.]c|[.]h|[.]hpp)$")
+	FILE(GLOB_RECURSE ALL_FILES "${CMAKE_SOURCE_DIR}/*.h" "${CMAKE_SOURCE_DIR}/*.hpp" "${CMAKE_SOURCE_DIR}/*.cpp" "${CMAKE_SOURCE_DIR}/*.mm")
+
+	FOREACH(AFILE ${ALL_FILES})
+		GET_FILENAME_COMPONENT(BASE_PATH "${AFILE}" PATH)
+
+		STRING(REPLACE ${CMAKE_SOURCE_DIR} "" BASE_RELATIVE_PATH ${BASE_PATH})
+		STRING(REPLACE "/" "\\\\" GROUP_PATH ${BASE_RELATIVE_PATH})
+
+		STRING(LENGTH ${GROUP_PATH} GROUP_PATH_LEN)
+		MATH(EXPR GROUP_PATH_LEN "${GROUP_PATH_LEN} - 2")
+		STRING(SUBSTRING ${GROUP_PATH} 2 ${GROUP_PATH_LEN} GROUP_PATH)
+
+		# source_group seems to not like being called multiple times with
+		# the same group path.  That is, source_group wants to know the
+		# complete list of files for a group the first time source_group
+		# is called with that group (at least for the Xcode generator).
+		# This workaround still calls source_group multiple times for
+		# each group but each time it includes the complete list of files
+		# for the group.
+		FILE(GLOB FILES_FOR_GROUP "${BASE_PATH}/*.h" "${BASE_PATH}/*.hpp" "${BASE_PATH}/*.cpp" "${BASE_PATH}/*.mm")
+		SOURCE_GROUP(${GROUP_PATH} FILES ${FILES_FOR_GROUP})
+	ENDFOREACH(AFILE)
+ENDFUNCTION(CONFIGURE_SOURCE_GROUPS)
+CONFIGURE_SOURCE_GROUPS()
 
 # If we are on windows add in the local search directories as well.
 IF (WIN32 AND NOT MINGW) # Windows
@@ -82,7 +132,7 @@ IF (APPLE) # Mac OSX
 	SET(CMAKE_OSX_DEPLOYMENT_TARGET 10.7)
 
 	# Need Core Foundation and libobjc.
-	SET(OSX_LIBRARIES "-framework CoreFoundation /usr/lib/libobjc.dylib")
+	SET(OSX_LIBRARIES "-framework Foundation -framework CoreFoundation /usr/lib/libobjc.dylib")
 ENDIF (APPLE)
 
 SET(TCC_BUILD_TESTS CACHE BOOL "Parse the tests directory")

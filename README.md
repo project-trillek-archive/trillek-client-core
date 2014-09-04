@@ -1,50 +1,74 @@
-trillek-client
+Feature - Core Infrastructure
 ==============
 
-Contributing
-===
+*DO NOT MERGE - DO NOT MERGE - DO NOT MERGE*
 
-The easiest way to contribute is to fork and experiment.  Coding standards and practices can be found [here](https://github.com/trillek-team/trillek-client-core/wiki/Coding-Standards).
+This branch lays the groundwork for the future growth of the TCC codebase by providing some core infrastructure for the engine and its client.  It also sets the standard for how the codebase will be organized in the future.
 
-Installing
-===
+## Codebase Organization
 
-To build Trillek from source you must have installed [CMake](http://www.cmake.org/) and one of the following compilers:
+After considering the issue further, I've decided to continue pressing for a grouped directory structure.  This will allow us to logically organize the code into modules.  Each module will have a root include that brings most, or all, of that modules *public* functionality into the current translation unit.  An example directory structure is shown below some of which is present in this branch:
 
-* GCC 4.8 or newer;
-* Clang 3.4 or newer (Xcode 5.1 or newer on OS X);
-* Visual Studio 2010 or newer;
+```
+Engine
+    |-Core
+    |    |- Core.h
+    |    |- Platform
+    |    |    |- Platform.h
+    |    |    |- PlatformInclude.h
+    |    |- PlatformBase
+    |    |- PlatformMac
+    |    |- (Other platform folders)
+    |    |- Container
+    |    |- Math
+    |    |- Misc
+    |    |    |- Build.h
+    |    |- ...
+    |-Renderer
+    |    |- Renderer.h
+    |    |- ...
+    |-...
+```
 
-Nightly binary distributions are not yet available.
+### Engine
 
-Dependencies
-------------
-Trillek depends on the following libraries:
+Parent of all the modules which live in the engine.  Even though we're not building a generic engine all engine specific code should go here.
 
-- [GLFW3](https://github.com/glfw/glfw)
-- [GLM](https://github.com/g-truc/glm)
-- [Bullet Physics](https://github.com/bulletphysics/bullet3) (builet with double precision)
-- [GLEW](https://github.com/nigels-com/glew)
-- [OpenAL](http://kcat.strangesoft.net/openal.html) (with OggVoribis support)
-- [Alure](http://kcat.strangesoft.net/alure.html)
-- [RapidJSON](https://github.com/miloyip/rapidjson)
+#### Core
 
-Getting The Code
-----------------
+Files pertinent to all parts of the engine.  This module depends on no other and most other modules will depend on it.  Contains platform and compiler abstractions, includes most of the system headers needed by the rest of the engine.  Custom containers and reusable building blocks should be here.
 
-To retrieve a copy of the Trillek code and assets, clone the repository and its submodules.
+* Misc/Build.h - Build options only.  Everything in this file is meant to be overridden by the build settings.
 
-	git clone https://github.com/trillek-team/trillek-client-core.git
-	cd trillek-client-core
-	git submodule update --init
+* Platform/Platform.h - Platform detection and compiler feature/intrinsic abstraction.  This file includes the platform header for each platform.
 
-Avoid using the **Download Zip** option on GitHub.  This will *not* download the [assets](https://github.com/trillek-team/trillek-assets) submodule.
+* Platform/PlatformIncludes.h - Most of the system header includes for the Core should be here or in a <Platform>PlatfromIncludes.h file in the specific platform's directory.
 
-Building
---------
+* Math - Any math related types or functions should be placed here.
 
-Platform specific build instructions are available on the Wiki.
+Add other folders for collections of files that are logically related and provide functionality that should live in the core.  If you're adding a one-off file, it should probably go in `Misc`.
 
-[Building on Windows](https://github.com/trillek-team/trillek-client-core/wiki/Building-on-Windows)
+Coalesce includes into `PlatformInclude.h`, `<Platform>PlatformInclude.h` or `Core.h`.  I'm not sure yet how core-level dependency includes (ex. GLM) should be handled.  Probably best to add them to `Core.h`.
 
-[Building on OS X](https://github.com/trillek-team/trillek-client-core/wiki/Building-On-OS-X)
+## Cmake Changes
+
+Each module directory has a CMakeLists.txt which exports variables containing the following to the parent CMakeLists.
+
+* Include Directories - Directories to be added to the include path.  This should include most sub-directories present in each module except for those that contain platform specific code.
+
+* Includes - All header files in the module.  Do not include platform specific headers unless we're building on the matching platform.
+
+* Sources - All source files in the module.  Do not include platform specific sources unless we're building on the matching platform.
+
+See Engine/Core/CMakeLists.txt for a template.
+
+When building for an IDE, the root CMakeLists will group all the files to match their on-disk structure.  This happens automatically.
+
+### Questions
+
+#### Why Add all the directories in each module to the Include Path?
+
+Because we couldn't have duplicate header names anyway.
+
+
+>>>>>>> Begin Core Infrastructure Feature
