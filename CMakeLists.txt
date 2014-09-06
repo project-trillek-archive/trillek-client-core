@@ -147,14 +147,6 @@ SET(Frontend_LIBS
     ${ALURE_LIBRARIES}
     ${OPENAL_LIBRARIES}
     )
-SET(Trillek_Server_LIBS ${Backend_LIBS})
-SET(Trillek_Client_LIBS ${Backend_LIBS} ${Frontend_LIBS})
-SET(Trillek_Standalone_LIBS ${Trillek_Client_LIBS})
-
-# Visio C++ needs GLFW for the clock
-IF (MSVC) # Visual C++
-    SET(Trillek_Server_LIBS ${Trillek_Server_LIBS} ${Graphics_LIBS})
-ENDIF (MSVC)
 
 ADD_SUBDIRECTORY (${CMAKE_SOURCE_DIR}/trillek-vcomputer-module)
 #Dirty addition of vcomputer
@@ -167,12 +159,21 @@ IF (MSVC) # Visual C++
 ELSE (MSVC)
     SET(Backend_LIBS
         ${Backend_LIBS}
-        VCOMPUTER.so
+	VCOMPUTER
         )
 ENDIF (MSVC) # Visual C++
 
 INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/trillek-vcomputer-module/include")
 INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/trillek-vcomputer-module/src")
+
+SET(Trillek_Server_LIBS ${Backend_LIBS})
+SET(Trillek_Client_LIBS ${Backend_LIBS} ${Frontend_LIBS})
+SET(Trillek_Standalone_LIBS ${Trillek_Client_LIBS})
+
+# Visio C++ needs GLFW for the clock
+IF (MSVC) # Visual C++
+    SET(Trillek_Server_LIBS ${Trillek_Server_LIBS} ${Graphics_LIBS})
+ENDIF (MSVC)
 
 FOREACH(MAIN_CPP ${TCC_MAIN_CPP})
     GET_FILENAME_COMPONENT(T_NAME ${MAIN_CPP} NAME_WE)
