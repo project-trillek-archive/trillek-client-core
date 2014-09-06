@@ -28,6 +28,9 @@ const int* RenderSystem::Start(const unsigned int width, const unsigned int heig
     // Use the GL3 way to get the version number
     glGetIntegerv(GL_MAJOR_VERSION, &this->gl_version[0]);
     glGetIntegerv(GL_MINOR_VERSION, &this->gl_version[1]);
+    std::string glsl_string((char*)glGetString(GL_SHADING_LANGUAGE_VERSION));
+    std::string glren_string((char*)glGetString(GL_RENDERER));
+    std::string glver_string((char*)glGetString(GL_VERSION));
     //glGetIntegerv(GL_SHADING_LANGUAGE_VERSION, &this->gl_version[3]);
     CheckGLError();
     int opengl_version = gl_version[0] * 100 + gl_version[1] * 10;
@@ -36,15 +39,18 @@ const int* RenderSystem::Start(const unsigned int width, const unsigned int heig
     // Subscribe to events
     event::Dispatcher<KeyboardEvent>::GetInstance()->Subscribe(this);
 
+    LOGMSGC(INFO) << "GLSL version " << glsl_string;
+    LOGMSGC(INFO) << "OpenGL renderer " << glren_string;
+    LOGMSGC(INFO) << "OpenGL version " << glver_string;
     if(opengl_version < 300) {
-        LOGMSGC(FATAL) << "OpenGL version (" << opengl_version << ") less than required minimum (300)";
+        LOGMSGC(FATAL) << "OpenGL context (" << opengl_version << ") less than required minimum (300)";
         assert(opengl_version >= 300);
     }
     if(opengl_version < 330) {
-        LOGMSGC(WARNING) << "OpenGL version (" << opengl_version << ") less than recommended (330)";
+        LOGMSGC(WARNING) << "OpenGL context (" << opengl_version << ") less than recommended (330)";
     }
     else {
-        LOGMSGC(INFO) << "OpenGL version (" << opengl_version << ')';
+        LOGMSGC(INFO) << "OpenGL context (" << opengl_version << ')';
     }
 
     SetViewportSize(width, height);
