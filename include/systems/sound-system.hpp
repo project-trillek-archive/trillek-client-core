@@ -13,7 +13,7 @@
 #include <iostream>
 #include <unordered_map>
 #include "transform.hpp"
-
+#include "type-id.hpp"
 #include "util/json-parser.hpp"
 #include "systems/system-base.hpp"
 #include "systems/dispatcher.hpp"
@@ -150,6 +150,12 @@ private:
 }; // end of class System
 
 } // end of namespace sound
+
+namespace reflection {
+TRILLEK_MAKE_IDTYPE(sound::Sound, 801)
+TRILLEK_MAKE_IDTYPE(sound::System, 800)
+} // namespace reflection
+
 } // end of namespace trillek
 
 #endif // SOUND_SYSTEM_HPP_INCLUDED
