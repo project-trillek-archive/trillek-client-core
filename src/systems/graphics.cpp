@@ -639,6 +639,9 @@ void RenderSystem::RenderLightingPass(const glm::mat4x4 &view_matrix, const floa
         if(l_sshadow_loc > 0) glUniform1i(l_sshadow_loc, 4);
         glUniformMatrix4fv(lightingshader->Uniform("inv_proj"), 1, GL_FALSE, inv_proj_matrix);
     }
+    else {
+        return;
+    }
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE);
     for (auto& clight : this->alllights) {

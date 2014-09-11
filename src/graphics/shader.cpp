@@ -212,9 +212,11 @@ bool Shader::Parse(const std::string &shader_name, const rapidjson::Value& node)
             if(param_scan != Shader::shaderclass.end()) {
                 auto textdata = resource::ResourceMap::Get<resource::TextFile>(param_val);
                 if(textdata) {
+                    std::string shadertext = textdata->GetText();
                     std::vector<std::string> shadersrc;
+                    shadersrc.push_back(Shader::VersionPrePass(shadertext));
                     shadersrc.push_back(globdefines);
-                    shadersrc.push_back(textdata->GetText());
+                    shadersrc.push_back(shadertext);
                     LoadFromStrings(param_scan->second, shadersrc);
                 }
             }
@@ -273,6 +275,7 @@ bool Shader::Parse(const std::string &shader_name, const rapidjson::Value& node)
                 }
                 if(shadertext.length() > 0) {
                     std::vector<std::string> shadersrc;
+                    shadersrc.push_back(Shader::VersionPrePass(shadertext));
                     shadersrc.push_back(globdefines);
                     shadersrc.push_back(sectiondefines);
                     shadersrc.push_back(shadertext);
@@ -303,11 +306,29 @@ bool Shader::Parse(const std::string &shader_name, const rapidjson::Value& node)
                 }
             }
             else {
-                LOGMSGC(WARNING) << "[WARNING] Unknown shader parameter";
+                LOGMSGC(WARNING) << "Unknown shader parameter: " << param_name;
             }
         }
     }
     return LinkProgram();
+}
+
+std::string Shader::VersionPrePass(std::string & source) {
+    size_t vpos = source.find("#version", 0);
+    if(vpos == std::string::npos) {
+        return std::string(); // #version directive not present in source
+    }
+    size_t epos = source.find('\n', vpos);
+    if(epos == std::string::npos) { // #version directive is only thing in source
+        std::string line(source);
+        source.clear();
+        line.append("\n");
+        return line;
+    }
+    std::string line = source.substr(vpos, epos - vpos);
+    line.append("\n");
+    source.erase(vpos, epos - vpos);
+    return line;
 }
 
 void Shader::LoadFromStrings(ShaderType type, const std::vector<std::string> &source) {
