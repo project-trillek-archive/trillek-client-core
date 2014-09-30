@@ -2,6 +2,7 @@
 #define OS_EVENT_HPP_INCLUDED
 
 #include "trillek.hpp"
+#include "type-id.hpp"
 
 namespace trillek {
 
@@ -26,6 +27,13 @@ struct MouseMoveEvent {
     int new_x, new_y; // Client space new x, y.
 };
 
+namespace reflection {
+
+TRILLEK_MAKE_IDTYPE_NAME(KeyboardEvent, "KeyboardEvent", 5000);
+TRILLEK_MAKE_IDTYPE_NAME(MouseBtnEvent, "MousedButtonEvent", 5001);
+TRILLEK_MAKE_IDTYPE_NAME(MouseMoveEvent, "MouseMoveEvent", 5002);
+
+} // namespace reflection
 } // namespace trillek
 
 #endif

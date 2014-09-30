@@ -65,6 +65,11 @@ public:
      */
     void UpdateTransform();
 
+    /**
+     * \brief Updates the current motion_state with the entity's transform.
+     */
+    void UpdateMotionState();
+
 private:
     double radius; // Used for sphere and capsule shape collidable.
     double height; // Used for capsule shape collidable.

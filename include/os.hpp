@@ -50,6 +50,14 @@ public:
     static void Terminate();
 
     /**
+     * \brief Calls glfwSetWindowShouldClose to close the window.
+     *
+     * This is used to close the main window from secondary threads.
+     * \return void
+     */
+    void SetWindowShouldClose();
+
+    /**
      * \brief Checks if the window is closing.
      *
      * \return bool True if the window is closing.

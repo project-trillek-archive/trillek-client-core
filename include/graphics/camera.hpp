@@ -1,20 +1,17 @@
 #ifndef CAMERA_HPP_INCLUDED
 #define CAMERA_HPP_INCLUDED
 
-#include "systems/dispatcher.hpp"
 #include "systems/transform-system.hpp"
 #include "component.hpp"
 #include "type-id.hpp"
 #include "transform.hpp"
 #include <memory>
-#include "os.hpp"
 
 namespace trillek {
 namespace graphics {
 
 class CameraBase :
-    public ComponentBase,
-    public event::Subscriber<KeyboardEvent> {
+    public ComponentBase {
 public:
     /**
      * \brief Activates this camera with the given entity ID.
@@ -28,7 +25,6 @@ public:
         this->entity_id = entity_id;
         this->entity_speed = 10.0f;
         this->entity_rotation_speed = 5.0f;
-        event::Dispatcher<KeyboardEvent>::GetInstance()->Subscribe(this);
         this->camera_transform = TransformMap::GetTransform(entity_id);
     }
 
@@ -37,7 +33,6 @@ public:
      */
     void Deactivate() {
         this->active = false;
-        event::Dispatcher<KeyboardEvent>::GetInstance()->Unsubscribe(this);
         this->camera_transform = nullptr;
     }
 

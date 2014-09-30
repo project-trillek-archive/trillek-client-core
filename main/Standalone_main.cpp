@@ -56,6 +56,15 @@ int main(int argCount, char **argValues) {
     // register the sound system
     systems.push(&trillek::TrillekGame::GetSoundSystem());
 
+    // Start Lua system.
+    trillek::TrillekGame::GetLuaSystem().Start();
+
+    // Load a test file/main Lua file.
+    trillek::TrillekGame::GetLuaSystem().LoadFile("assets/scripts/test.lua");
+
+    // register the Lua system.
+    systems.push(&trillek::TrillekGame::GetLuaSystem());
+
     // Detach the window from the current thread
     os.DetachContext();
 
