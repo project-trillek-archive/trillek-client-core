@@ -34,14 +34,14 @@ int LuaSys_Subscribe(lua_State* L) {
 static luaL_Reg LuaSystable[] =
 {
     { "Get", LuaSys_Get },
-    { NULL, NULL }
+    { nullptr, nullptr } // table end marker
 };
 
 static luaL_Reg LuaSys_metatable[] =
 {
     { "LoadScriptFile", LuaSys_LoadFile },
     { "Subscribe", LuaSys_Subscribe },
-    { NULL, NULL }
+    { nullptr, nullptr } // table end marker
 };
 
 int luaopen_LuaSys(lua_State* L) {

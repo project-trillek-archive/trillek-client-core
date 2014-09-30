@@ -69,7 +69,7 @@ int SetGravity(lua_State* L) {
 static luaL_Reg Physics_table[] =
 {
     { "Get", Physics_get },
-    { NULL, NULL }
+    { nullptr, nullptr } // table end marker
 };
 
 static luaL_Reg Physics_metatable[] =
@@ -79,6 +79,7 @@ static luaL_Reg Physics_metatable[] =
     { "remove_force", RemoveForce },
     { "remove_torque", RemoveTorque },
     { "set_gravity", SetGravity },
+    { nullptr, nullptr } // table end marker
 };
 
 int luaopen_PhysSys(lua_State* L) {
