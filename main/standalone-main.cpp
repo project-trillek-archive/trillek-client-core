@@ -92,5 +92,6 @@ int main(int argCount, char **argValues) {
     // Terminating program
     os.MakeCurrent();
     os.Terminate();
+    std::cout << "Number of bytes not freed: " << gAllocatedSize << std::endl;
     return 0;
 }
