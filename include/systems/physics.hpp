@@ -14,7 +14,10 @@
 
 namespace trillek { namespace physics {
 
-struct VelocityStruct {
+ATTRIBUTE_ALIGNED16(struct) VelocityStruct {
+
+    BT_DECLARE_ALIGNED_ALLOCATOR();
+
     VelocityStruct() : linear(0,0,0), angular(0,0,0) {};
 
     template<class T>
