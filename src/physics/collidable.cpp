@@ -90,9 +90,9 @@ bool Collidable::Initialize(const std::vector<Property> &properties) {
         }
 
         auto scale = entity_transform.GetScale();
-        auto mesh_shape = std::unique_ptr<btScaledBvhTriangleMeshShape>(
-            new btScaledBvhTriangleMeshShape(
-            new btBvhTriangleMeshShape(this->mesh.get(), true), btVector3(scale.x, scale.y, scale.z)));
+        auto mesh_shape = std::unique_ptr<btBvhTriangleMeshShape>(
+            new btBvhTriangleMeshShape(this->mesh.get(), true));
+        mesh_shape->setLocalScaling(btVector3(scale.x, scale.y, scale.z));
         this->shape = std::move(mesh_shape);
 
         // Static BvhTriangleMehes must have a mass of 0.
