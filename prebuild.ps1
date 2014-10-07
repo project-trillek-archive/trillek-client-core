@@ -6,6 +6,9 @@ new-item lib\x86\Release -type directory
 new-item lib\include -type directory
 new-item build -type directory
 
+# Get Raknet
+git submodule update --init --depth 1 -- .\raknet
+
 # Get Crypto++
 git submodule update --init --depth 1 -- .\crypto++
 

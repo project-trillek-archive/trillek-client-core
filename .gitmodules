@@ -9,3 +9,7 @@
 	path = trillek-vcomputer-module
 	url = https://github.com/trillek-team/trillek-vcomputer-module
 	ignore = dirty
+[submodule "raknet"]
+	path = raknet
+	url = https://github.com/OculusVR/RakNet.git
+	ignore = dirty
