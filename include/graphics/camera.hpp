@@ -87,7 +87,7 @@ public:
      *
      * \return glm::mat4 The computed view matrix, or identity matrix if the camera's entity transform is null.
      */
-    virtual glm::mat4 GetViewMatrix() {};
+    virtual glm::mat4 GetViewMatrix() { return glm::mat4(1.0f); };
 protected:
     std::shared_ptr<const Transform> camera_transform;
     unsigned int entity_id;

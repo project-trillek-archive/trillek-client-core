@@ -291,7 +291,7 @@ inline int PopCount<uint64_t>(uint64_t value) {
     #if defined(__GNUG__)
         return __builtin_popcountll(value);
     #elif defined(_MSC_VER)
-        return __popcnt64(value);
+        return __popcnt(value);
     #endif
 }
 

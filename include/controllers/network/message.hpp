@@ -7,6 +7,7 @@
 #include <cstring>
 #include "controllers/network/network.hpp"
 #include "controllers/network/packet-handler.hpp"
+#include "trillek.hpp"
 
 // size of the VMAc tag
 #define VMAC_SIZE			8
@@ -72,7 +73,7 @@ struct Frame {
 class Message {
 public:
     friend class Authentication;
-    template<int Major,int Minor, TagType T> friend void packet_handler::PacketHandler::Process() const;
+    //template<int Major,int Minor, TagType T> friend void packet_handler::PacketHandler::Process() const;
     friend class NetworkController;
     friend class Frame_req;
 
@@ -186,7 +187,6 @@ public:
         return reinterpret_cast<Frame_hdr*>(data.data());
     };
 
-private:
     /** \brief Remove the VMAC tag
      *
      */

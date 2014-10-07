@@ -43,12 +43,12 @@ void Transform::SetTranslation(const glm::vec3 new_translation) {
 
 void Transform::SetRotation(const glm::vec3 new_rotation) {
     this->orientation = glm::normalize(glm::quat(new_rotation));
-    this->rotation = glm::eulerAngles(this->orientation);
+    //this->rotation = glm::eulerAngles(this->orientation);
 }
 
 void Transform::SetOrientation(const glm::quat new_orientation) {
     this->orientation = new_orientation;
-    this->rotation = glm::eulerAngles(this->orientation);
+    //this->rotation = glm::eulerAngles(this->orientation);
 }
 
 void Transform::SetScale(const glm::vec3 new_scale) {

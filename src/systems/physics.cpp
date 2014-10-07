@@ -52,8 +52,8 @@ void PhysicsSystem::HandleEvents(frame_tp timepoint) {
             auto& body = *Get<Component::Collidable>(entity_id).GetRigidBody();
             const auto& v = Get<Component::Velocity>(entity_id);
 
-            body.setLinearVelocity(v.linear + body.getGravity());
-            body.setAngularVelocity(v.angular);
+            body.setLinearVelocity(v.GetLinear() + body.getGravity());
+            body.setAngularVelocity(v.GetAngular());
         }
     );
     // Second moving entities with a combined velocity
@@ -66,11 +66,11 @@ void PhysicsSystem::HandleEvents(frame_tp timepoint) {
             const auto& ref_v = Get<Component::Velocity>(reference_id);
             auto& body = *Get<Component::Collidable>(reference_id).GetRigidBody();
             auto& transform = body.getCenterOfMassTransform();
-            auto combined_l = transform * v.linear;
-            combined_l += ref_v.linear;
+            auto combined_l = transform * v.GetLinear();
+            combined_l += ref_v.GetLinear();
             body.setLinearVelocity(combined_l + body.getGravity());
-            auto combined_a = transform * v.angular;
-            combined_a += ref_v.angular;
+            auto combined_a = transform * v.GetAngular();
+            combined_a += ref_v.GetAngular();
             body.setAngularVelocity(combined_a);
         }
     );

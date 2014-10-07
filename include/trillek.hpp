@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <list>
+#include <memory>
 #include "trillek-allocator.hpp"
 
 // make_unique will be in C++14. Implemented here since we're using C++11.
@@ -15,6 +16,8 @@ template<typename T, typename... Args>
 std::unique_ptr<T> make_unique(Args&&... args) {
     return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
+#else
+using std::make_unique;
 #endif
 
 
@@ -49,7 +52,7 @@ namespace reflection {
 template<class TYPE> const char* GetTypeName(void) { return "UNKNOWN"; }
 template<class TYPE> unsigned int GetTypeID(void) { return ~0; }
 // function to get the name of the handler of a packet type
-template <uint32_t MAJOR,uint32_t MINOR> constexpr const char* GetNetworkHandler(void) {}
+template <uint32_t MAJOR,uint32_t MINOR> const char* GetNetworkHandler(void) {}
 
 } // End of reflection
 } // End fo trillek

@@ -8,6 +8,7 @@
 
 #include "systems/system-base.hpp"
 #include "trillek-game.hpp"
+#include "os.hpp"
 #include "logging.hpp"
 
 namespace trillek {

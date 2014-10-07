@@ -9,13 +9,14 @@ using trillek::network::cryptography::VMAC_StreamHasher;
 
 class VMAC_StreamHasherTest: public ::testing::Test {
 public:
-    VMAC_StreamHasherTest() : tag(8), m("abc"), rfc_tag{
+    VMAC_StreamHasherTest() : tag(8), m("abc") {
+        rfc_tag = {
             "\x25\x76\xBE\x1C\x56\xD8\xB8\x1B",
             "\x2D\x37\x6C\xF5\xB1\x81\x3C\xE5",
             "\xE8\x42\x1F\x61\xD5\x73\xD2\x98",
             "\x44\x92\xDF\x6C\x5C\xAC\x1B\xBE",
-            "\x09\xBA\x59\x7D\xD7\x60\x11\x13"
-        } {};
+            "\x09\xBA\x59\x7D\xD7\x60\x11\x13" };
+    }
 
     void SetUp() {
         std::vector<byte> nonce(8);
