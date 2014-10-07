@@ -6,13 +6,6 @@
 #include "tests/AtomicQueueTest.h"
 #include "tests/AtomicMapTest.h"
 #include "tests/MapArrayTest.h"
-#include "tests/VMAC_StreamHasherTest.h"
-#include "tests/ESIGN_SignatureTest.h"
-#include "tests/CryptoTest.h"
-
-#ifndef NO_NETWORK
-//#include "tests/NetworkControllerTest.h"
-#endif
 
 #include "tests/ResourceSystemTest.h"
 #include "tests/UtilityTest.h"
