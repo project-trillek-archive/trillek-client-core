@@ -14,10 +14,7 @@
 
 namespace trillek { namespace physics {
 
-ATTRIBUTE_ALIGNED16(struct) VelocityStruct {
-
-    BT_DECLARE_ALIGNED_ALLOCATOR();
-
+struct VelocityStruct {
     VelocityStruct() : linear(0,0,0), angular(0,0,0) {};
 
     template<class T>
@@ -25,8 +22,16 @@ ATTRIBUTE_ALIGNED16(struct) VelocityStruct {
         :   linear(std::forward<T>(linear)),
             angular(std::forward<T>(angular)) {};
 
-    btVector3 linear;
-    btVector3 angular;
+    glm::vec3 linear;
+    glm::vec3 angular;
+    btVector3 GetLinear() const {
+        return std::move(btVector3(linear.x, linear.y, linear.z));
+    }
+    btVector3 GetAngular() const {
+        return std::move(btVector3(angular.x, angular.y, angular.z));
+    }
+    //btVector3 linear;
+    //btVector3 angular;
 };
 
 struct VelocityMaxStruct {

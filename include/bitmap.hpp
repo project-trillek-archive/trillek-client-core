@@ -231,7 +231,7 @@ public:
         }
         size_t sum = def_value ? first_block * BlockSize() : 0;
         const auto length = size();
-        const auto last_index = std::min(length, last_block * BlockSize());
+        const auto last_index = (std::min)(length, last_block * BlockSize());
         #if defined(__GNUG__) || defined(_MSC_VER)
             const auto start = bitarray.data();
             const auto end = start + ((last_index- first_block * BlockSize()) >> util::Log2Bin<T>());
@@ -262,7 +262,7 @@ public:
         return first_block;
     }
 
-    constexpr size_t BlockSize() {
+    size_t BlockSize() const {
         return (sizeof(T) << 3);
     }
 
@@ -380,7 +380,7 @@ public:
         return current_value;
     }
 
-    constexpr size_t BlockSize() {
+    size_t BlockSize() {
         return (sizeof(T) << 3);
     }
 

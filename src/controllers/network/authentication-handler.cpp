@@ -172,7 +172,7 @@ Message SendSaltPacket::GetKeyExchangePacket() {
     Crypto::GetRandom128(packet->alea);
     Crypto::VMAC64(packet->vmac, frame.Content<KeyExchangePacket,const byte>(),
              VMAC_MSG_SIZE, Authentication::GetSecretKey(), packet->nonce);
-    return frame;
+    return std::move(frame);
 }
 
 bool KeyExchangePacket::VerifyVMAC(const byte* key) const {
@@ -254,11 +254,11 @@ void PacketHandler::Process<NET_MSG,AUTH_KEY_REPLY, CLIENT>() const {
 } // network
 
 namespace reflection {
-template <> inline constexpr const char* GetNetworkHandler<NET_MSG,AUTH_INIT>(void) {
+template <> inline const char* GetNetworkHandler<NET_MSG,AUTH_INIT>(void) {
     return "AuthenticationHandler";
 }
 
-template <> inline constexpr const char* GetNetworkHandler<NET_MSG,AUTH_KEY_EXCHANGE>(void) {
+template <> inline const char* GetNetworkHandler<NET_MSG,AUTH_KEY_EXCHANGE>(void) {
     return "AuthenticationHandler";
 }
 } // reflection

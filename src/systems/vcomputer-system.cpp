@@ -139,7 +139,7 @@ void VComputerSystem::AddComponent(const id_t entity_id, std::shared_ptr<Compone
 void VComputerSystem::Notify(const KeyboardEvent* key_event) {
     switch (key_event->action) {
     case KeyboardEvent::KEY_DOWN:
-        this->gkeyb->SendKeyEvent(key_event->scancode, key_event->key, dev::gkeyboard::KEY_MODS::MOD_NONE);
+        this->gkeyb->SendKeyEvent(key_event->scancode, key_event->key, dev::gkeyboard::KEY_MODS::KEY_MOD_NONE);
     default:
         break;
     }

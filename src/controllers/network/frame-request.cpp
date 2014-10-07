@@ -1,6 +1,7 @@
 #include "controllers/network/frame-request.hpp"
 #include "controllers/network/network-controller.hpp"
 #include "trillek-game.hpp"
+#include "os.hpp"
 
 //TODO: Remove Visual Studio specific code
 // when a decent std::chrono implementation will be available

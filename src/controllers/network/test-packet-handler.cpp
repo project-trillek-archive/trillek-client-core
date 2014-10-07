@@ -34,7 +34,7 @@ void PacketHandler::Process<TEST_MSG,TEST_MSG, CLIENT>() const {
 } // network
 
 namespace reflection {
-template <> inline constexpr const char* GetNetworkHandler<TEST_MSG,TEST_MSG>(void) { return "TestPacketHandler"; }
+template <> inline const char* GetNetworkHandler<TEST_MSG,TEST_MSG>(void) { return "TestPacketHandler"; }
 }
 
 } // trillek

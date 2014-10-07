@@ -87,7 +87,6 @@ public:
     static std::shared_ptr<chain_t> GetAuthInitHandler() { return auth_init_handler; };
 
     int SendSalt() const;
-private:
 
     int RetrieveSalt() const;
     static const std::string& Password() { return password; };

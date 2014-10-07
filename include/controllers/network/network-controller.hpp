@@ -118,7 +118,6 @@ public:
         return packet_handler;
     };
 
-private:
     /** \brief The listener waits for connections and pass new connections
      * to the IncomingConnection
      *
