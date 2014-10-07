@@ -13,7 +13,6 @@
 #include "systems/transform-system.hpp"
 #include "systems/resource-system.hpp"
 #include "systems/physics.hpp"
-#include "controllers/network/network-controller.hpp"
 #include <cstddef>
 #include <iostream>
 
@@ -62,11 +61,11 @@ int main(int argCount, char **argValues) {
                    5,
                    std::ref(systems));
     // Start the server network layer and connect the client to the server
-    trillek::network::NetworkController &server = trillek::TrillekGame::GetNetworkServer();
+/*    trillek::network::NetworkController &server = trillek::TrillekGame::GetNetworkServer();
     server.SetTCPHandler<trillek::network::SERVER>();
     server.Server_Start("localhost", 7777);
     std::this_thread::sleep_for(std::chrono::seconds(1));
-
+*/
 #if defined(_MSC_VER)
     while (! os.Closing()) {
         os.OSMessageLoop();

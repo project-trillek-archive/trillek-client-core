@@ -9,7 +9,6 @@
 #include "systems/meta-engine-system.hpp"
 #include "systems/sound-system.hpp"
 #include "systems/graphics.hpp"
-#include "controllers/network/network-controller.hpp"
 #include <iostream>
 
 #include "systems/vcomputer-system.hpp"
@@ -78,13 +77,13 @@ int main(int argCount, char **argValues) {
                    std::ref(systems));
 
     // Start the client network layer
-    trillek::TrillekGame::GetNetworkClient().SetTCPHandler<trillek::network::CLIENT>();
+/*    trillek::TrillekGame::GetNetworkClient().SetTCPHandler<trillek::network::CLIENT>();
 
     // Start the server network layer and connect the client to the server
     if(! trillek::TrillekGame::GetNetworkClient().Connect("localhost", 7777, "my_login", "secret password")) {
         trillek::TrillekGame::NotifyCloseWindow();
     }
-
+*/
     while (! os.Closing()) {
         os.OSMessageLoop();
     }

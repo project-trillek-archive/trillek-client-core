@@ -11,9 +11,6 @@ class MetaEngineSystem;
 class FakeSystem;
 class OS;
 
-namespace network {
-class NetworkController;
-}
 namespace graphics {
 class RenderSystem;
 }
@@ -59,19 +56,6 @@ public:
      * \return FakeSystem& the fake system
      */
     static FakeSystem& GetFakeSystem() { return *fake_system.get(); }
-
-    /** \brief Get the client network controller
-     *
-     * \return NetworkController& the network controller
-     */
-    static network::NetworkController& GetNetworkClient() { return *network_system_client.get(); }
-
-    /** \brief Get the server network controller
-     *
-     * \return NetworkController& the network controller
-     */
-    static network::NetworkController& GetNetworkServer() { return *network_system.get(); }
-
 
     /** \brief Get the storage of shared components
      *
@@ -139,8 +123,6 @@ public:
 private:
 
     static std::unique_ptr<TrillekScheduler> scheduler;
-    static std::unique_ptr<network::NetworkController> network_system;
-    static std::unique_ptr<network::NetworkController> network_system_client;
     static std::unique_ptr<FakeSystem> fake_system;
     static std::unique_ptr<physics::PhysicsSystem> phys_sys;
     static std::unique_ptr<OS> glfw_os;
