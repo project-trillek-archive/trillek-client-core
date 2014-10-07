@@ -107,7 +107,7 @@ public:
      * If event handling need some batch processing, a task list must be
      * prepared and stored temporarily to be retrieved by RunBatch().
      */
-    virtual void HandleEvents(const frame_tp& timepoint);
+    virtual void HandleEvents(frame_tp timepoint);
 
     /** \brief Make all pre-update or post-update work.
      *
