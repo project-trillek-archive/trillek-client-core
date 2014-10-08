@@ -98,9 +98,9 @@ void SixDOFCamera::Notify(const KeyboardEvent* key_event) {
 
     glm::vec3 move_vector = this->camera_transform->GetOrientation() * direction_vector;
     auto v_ptr = std::allocate_shared<Container>(TrillekAllocator<Container>(), component::Velocity_type());
-    v_ptr->Get<component::Velocity_type>().linear = { move_vector.x, move_vector.y, move_vector.z };
+    v_ptr->Get<component::Velocity_type>().linear = glm::vec3(move_vector.x, move_vector.y, move_vector.z);
     glm::vec3 rotate_vector = this->camera_transform->GetOrientation() * rotation_vector;
-    v_ptr->Get<component::Velocity_type>().angular = { rotate_vector.x, rotate_vector.y, rotate_vector.z };
+    v_ptr->Get<component::Velocity_type>().angular = glm::vec3(rotate_vector.x, rotate_vector.y, rotate_vector.z);
     TrillekGame::GetPhysicsSystem().SetVelocity(this->entity_id, std::move(v_ptr));
 }
 
