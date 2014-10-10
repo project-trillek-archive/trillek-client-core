@@ -43,12 +43,32 @@ void Transform::SetTranslation(const glm::vec3 new_translation) {
 
 void Transform::SetRotation(const glm::vec3 new_rotation) {
     this->orientation = glm::normalize(glm::quat(new_rotation));
-    //this->rotation = glm::eulerAngles(this->orientation);
+    this->rotation.x = atan2(2.0f * (this->orientation.y * this->orientation.z +
+        this->orientation.w * this->orientation.x),
+        this->orientation.w * this->orientation.w - this->orientation.x *
+        this->orientation.x - this->orientation.y * this->orientation.y +
+        this->orientation.z * this->orientation.z);
+    this->rotation.y = glm::asin(-2.0f * (this->orientation.x * this->orientation.z - this->orientation.w * this->orientation.y));
+    this->rotation.z = atan2(2.0f * (this->orientation.x * this->orientation.y +
+        this->orientation.w * this->orientation.z),
+        this->orientation.w * this->orientation.w + this->orientation.x *
+        this->orientation.x - this->orientation.y * this->orientation.y -
+        this->orientation.z * this->orientation.z);
 }
 
 void Transform::SetOrientation(const glm::quat new_orientation) {
     this->orientation = new_orientation;
-    //this->rotation = glm::eulerAngles(this->orientation);
+    this->rotation.x = atan2(2.0f * (this->orientation.y * this->orientation.z +
+        this->orientation.w * this->orientation.x),
+        this->orientation.w * this->orientation.w - this->orientation.x *
+        this->orientation.x - this->orientation.y * this->orientation.y +
+        this->orientation.z * this->orientation.z);
+    this->rotation.y = glm::asin(-2.0f * (this->orientation.x * this->orientation.z - this->orientation.w * this->orientation.y));
+    this->rotation.z = atan2(2.0f * (this->orientation.x * this->orientation.y +
+        this->orientation.w * this->orientation.z),
+        this->orientation.w * this->orientation.w + this->orientation.x *
+        this->orientation.x - this->orientation.y * this->orientation.y -
+        this->orientation.z * this->orientation.z);
 }
 
 void Transform::SetScale(const glm::vec3 new_scale) {

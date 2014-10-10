@@ -86,12 +86,12 @@ namespace {
         EXPECT_FLOAT_EQ(rotation.y, 1.0f);
         EXPECT_FLOAT_EQ(rotation.z, 1.0f);
 
-        transform.SetRotation(glm::vec3(1.5f, 1.5f, 1.5f));
+        transform.SetRotation(glm::vec3(1.4f, 1.4f, 1.4f));
         rotation = transform.GetRotation();
 
-        EXPECT_FLOAT_EQ(rotation.x, 1.5f);
-        EXPECT_FLOAT_EQ(rotation.y, 1.5000018f);
-        EXPECT_FLOAT_EQ(rotation.z, 1.5f);
+        EXPECT_FLOAT_EQ(rotation.x, 1.4);
+        EXPECT_FLOAT_EQ(rotation.y, 1.4);
+        EXPECT_FLOAT_EQ(rotation.z, 1.4);
     }
 
     TEST(TransformTest, GetScale) {
