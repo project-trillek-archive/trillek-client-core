@@ -23,14 +23,18 @@ before_install:
     - wget https://rapidjson.googlecode.com/files/rapidjson-0.11.zip
     - unzip rapidjson-0.11.zip -d /tmp
     - sudo cp -r /tmp/rapidjson/include /usr
+    # Download GLM 9.5 from github
+    - wget https://github.com/g-truc/glm/archive/0.9.5.3.zip 
+    - unzip 0.9.5.3.zip -d /tmp
+    - sudo cp -r /tmp/glm-0.9.5.3/glm /usr/include
 install:
     # Install libstdv++ 4.8 and clang
     - sudo apt-get -qq install libstdc++-4.8-dev clang-3.3
     # Setup clang and gcc
     - if [ "$CXX" = "g++" ]; then sudo apt-get install -qq g++-4.8; fi
     - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
-    # GLEW, GLM
-    - sudo apt-get -q -y install libglew-dev libglm-dev
+    # GLEW
+    - sudo apt-get -q -y install libglew-dev
     # Raknet
     - git submodule update --init --depth=1 raknet
     - cd raknet
