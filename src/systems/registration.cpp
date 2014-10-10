@@ -60,12 +60,12 @@ void ComponentFactory::RegisterTypes() {
     auto& system = TrillekGame::GetSystemComponent();
     auto& system_value = TrillekGame::GetSystemValueComponent();
     RegisterComponentType(ComponentAdder<SYSTEM,Component::Collidable>(system));
-    //RegisterComponentType(ComponentAdder<SHARED,Component::Velocity>(shared));
-    //RegisterComponentType(ComponentAdder<SHARED,Component::VelocityMax>(shared));
+    RegisterComponentType(ComponentAdder<SHARED,Component::Velocity, bool>(shared));
+    RegisterComponentType(ComponentAdder<SHARED,Component::VelocityMax, bool>(shared));
     RegisterComponentType(ComponentAdder<SYSTEM,Component::ReferenceFrame,id_t>(system_value));
     RegisterComponentType(ComponentAdder<SYSTEM,Component::IsReferenceFrame,bool>(system_value));
     RegisterComponentType(ComponentAdder<SYSTEM,Component::CombinedVelocity>(system));
-    //RegisterComponentType(ComponentAdder<SHARED,Component::Transform>(shared));
+    RegisterComponentType(ComponentAdder<SHARED,Component::Transform, bool>(shared));
 #if defined(_CLIENT_) || defined(_STANDALONE_)
     RegisterComponentType<graphics::Renderable>();
     RegisterComponentType<graphics::LightBase>();

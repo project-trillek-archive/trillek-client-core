@@ -110,17 +110,17 @@ private:
     component::SystemValue& system;
 };
 
-template<component::Component C>
-class ComponentAdder<SHARED,C> {
+template<Component type>
+class ComponentAdder<SHARED, type, bool> {
 public:
     ComponentAdder(component::Shared& shared) : shared(shared) {};
 
     bool Create(id_t entity_id, const std::vector<Property> &properties) {
-        auto comp = CreateComponent<C>(entity_id, properties);
+        auto comp = CreateComponent<type>(entity_id, properties);
 
         if (comp) {
-            LOGMSG(DEBUG) << "Adding shared component " << reflection::GetTypeName<std::integral_constant<Component,C>>() << " to entity #" << entity_id;
-            shared.Map<C>().Insert(entity_id, std::move(comp));
+            LOGMSG(DEBUG) << "Adding shared component " << reflection::GetTypeName<std::integral_constant<Component, type>>() << " to entity #" << entity_id;
+            shared.Map<type>().Insert(entity_id, std::move(comp));
             return true;
         }
         return false;
