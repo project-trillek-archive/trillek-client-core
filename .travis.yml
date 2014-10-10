@@ -25,7 +25,7 @@ before_install:
     - sudo cp -r /tmp/rapidjson/include /usr
     # Download GLM 9.5 from github
     - wget https://github.com/g-truc/glm/archive/0.9.5.1.zip 
-    - unzip glm-0.9.5.1.zip -d /tmp
+    - unzip 0.9.5.1.zip -d /tmp
     - sudo cp -r /tmp/glm-0.9.5.1/glm /usr/include
 install:
     # Install libstdv++ 4.8 and clang
