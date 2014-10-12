@@ -2,7 +2,6 @@
 #define TRILLEKALLOCATOR_HPP_INCLUDED
 
 #include <cstddef>
-#include <stdlib.h>
 
 extern size_t gAllocatedSize;
 
@@ -59,14 +58,14 @@ public:
     pointer allocate(size_type n, const void* = 0) {
         size_type size = n * sizeof(value_type);
         gAllocatedSize += size;
-        return (pointer)::malloc(size);
+        return (pointer)::operator new(size);
     }
 
     /// Deallocate memory
     void deallocate(void* p, size_type n) {
         size_type size = n * sizeof(T);
         gAllocatedSize -= size;
-        ::free(p);
+        ::operator delete(p);
     }
 
     /// Call constructor

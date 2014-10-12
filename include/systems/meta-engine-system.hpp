@@ -9,7 +9,7 @@ class MetaEngineSystem : public SystemBase {
 
     void RunBatch() const override;
 
-    void HandleEvents(const frame_tp& timepoint) override;
+    void HandleEvents(frame_tp timepoint) override;
 
     void Terminate() override;
 };

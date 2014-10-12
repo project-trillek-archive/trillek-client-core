@@ -5,6 +5,7 @@
 #include "type-id.hpp"
 #include <memory>
 #include <sstream>
+#include <mutex>
 
 #define LOGMSG(ll) trillek::Logging::Log<trillek::L_##ll, trillek::Logging>()
 #define LOGMSGFOR(ll,x) trillek::Logging::Log<trillek::L_##ll, x>()
@@ -34,6 +35,7 @@ class Logging {
 private:
     Logging();
     static std::unique_ptr<Logging> instance;
+    std::mutex log_m;
     static Logging& GetInstance();
 public:
 

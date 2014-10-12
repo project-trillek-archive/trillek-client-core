@@ -85,9 +85,17 @@ public:
      * This method will call GetName() on the serializer to get its type name. If a type
      * with the same name exists it is overridden.
      * \param[in] std::shared_ptr<Parser> serializer The serializer to register.
-     * \return void
      */
     static void RegisterParser(std::shared_ptr<Parser> parser);
+
+    /**
+     * \brief Registers a serializer type.
+     *
+     * This method will call GetName() on the serializer to get its type name. If a type
+     * with the same name exists it is overridden.
+     * \param[in] const Parser& serializer The serializer to register.
+     */
+    static void RegisterParser(Parser* parser);
 
     /**
      * \brief Registers all parsers as defined in the method body.
@@ -100,7 +108,7 @@ public:
     static void RegisterTypes();
 private:
     std::list<std::shared_ptr<JSONDocument>> documents;
-    static std::map<std::string, std::shared_ptr<Parser>> parsers; // Mapping of node_type_name to parser
+    static std::map<std::string, Parser*> parsers; // Mapping of node_type_name to parser
 };
 
 } // End of json
