@@ -107,7 +107,7 @@ private:
 namespace reflection {
 
 template <> inline const char* GetTypeName<resource::OBJ>() { return "OBJ"; }
-template <> inline const unsigned int GetTypeID<resource::OBJ>() { return 1001; }
+template <> inline unsigned int GetTypeID<resource::OBJ>() { return 1001; }
 
 } // End of reflection
 } // End of trillek

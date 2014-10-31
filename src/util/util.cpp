@@ -70,6 +70,5 @@ std::ostream &operator<<(std::ostream &f, FourCC &o) {
     f << o.cdata[3];
     return f;
 }
-
 } // util
 } // trillek

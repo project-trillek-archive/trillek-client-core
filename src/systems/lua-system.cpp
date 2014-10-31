@@ -23,8 +23,6 @@ void LuaSystem::Start() {
     RegisterTypes();
 }
 
-void LuaSystem::AddComponent(const unsigned int entity_id, std::shared_ptr<ComponentBase> component) { }
-
 void LuaSystem::RegisterSystem(LuaRegisterFunction func) {
     if (this->L) {
         func(this->L);
@@ -43,7 +41,7 @@ bool LuaSystem::LoadFile(const std::string fname) {
     return true;
 }
 
-void LuaSystem::HandleEvents(const frame_tp& timepoint) {
+void LuaSystem::HandleEvents(frame_tp timepoint) {
     static frame_tp last_tp;
     this->delta = timepoint - last_tp;
     last_tp = timepoint;

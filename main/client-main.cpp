@@ -1,18 +1,25 @@
 #include "trillek-game.hpp"
 #include <queue>
 #include <thread>
-#include <chrono>
 #include "os.hpp"
 #include "util/json-parser.hpp"
 #include "systems/transform-system.hpp"
 #include "systems/resource-system.hpp"
+#include "systems/physics.hpp"
 #include "systems/meta-engine-system.hpp"
 #include "systems/sound-system.hpp"
-#include <cstddef>
+#include "systems/graphics.hpp"
+#include <iostream>
+
+#include "systems/vcomputer-system.hpp"
 
 size_t gAllocatedSize = 0;
 
 int main(int argCount, char **argValues) {
+    trillek::TrillekGame::Initialize();
+    #ifdef _CLIENT_
+    std::cout << "Starting Trillek client..." << std::endl;
+    #endif // _CLIENT_
     // create the window
     auto& os = trillek::TrillekGame::GetOS();
 #if __APPLE__
@@ -48,7 +55,7 @@ int main(int argCount, char **argValues) {
     std::queue<trillek::SystemBase*> systems;
 
     // register the fake system. Comment this to cancel
-//    systems.push(&trillek::TrillekGame::GetFakeSystem());
+//  systems.push(&trillek::TrillekGame::GetFakeSystem());
 
     // register the engine system, i.e graphics + physics
     systems.push(&trillek::TrillekGame::GetEngineSystem());
@@ -68,13 +75,25 @@ int main(int argCount, char **argValues) {
     // Detach the window from the current thread
     os.DetachContext();
 
+    trillek::VComputerSystem cpu1;
+    systems.push(&cpu1);
+
     // start the scheduler in another thread
     std::thread tp(
                    &trillek::TrillekScheduler::Initialize,
                    &trillek::TrillekGame::GetScheduler(),
                    5,
                    std::ref(systems));
-    while (!os.Closing()) {
+
+    // Start the client network layer
+/*    trillek::TrillekGame::GetNetworkClient().SetTCPHandler<trillek::network::CLIENT>();
+
+    // Start the server network layer and connect the client to the server
+    if(! trillek::TrillekGame::GetNetworkClient().Connect("localhost", 7777, "my_login", "secret password")) {
+        trillek::TrillekGame::NotifyCloseWindow();
+    }
+*/
+    while (! os.Closing()) {
         os.OSMessageLoop();
     }
     tp.join();

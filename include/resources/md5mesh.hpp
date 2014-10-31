@@ -136,7 +136,7 @@ private:
 namespace reflection {
 
 template <> inline const char* GetTypeName<resource::MD5Mesh>() { return "MD5Mesh"; }
-template <> inline const unsigned int GetTypeID<resource::MD5Mesh>() { return 1001; }
+template <> inline unsigned int GetTypeID<resource::MD5Mesh>() { return 1001; }
 
 } // End of reflection
 } // End of trillek

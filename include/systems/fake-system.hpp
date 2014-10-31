@@ -2,7 +2,7 @@
 #define FAKESYSTEM_H_INCLUDED
 
 #include "systems/system-base.hpp"
-#include <iostream>
+#include "logging.hpp"
 
 namespace trillek {
 
@@ -13,16 +13,16 @@ public:
     FakeSystem() {};
     virtual ~FakeSystem() {};
 
-    void HandleEvents(const frame_tp& timepoint) override {
-        std::cout << "handle events of frame " << timepoint.time_since_epoch().count() << std::endl;
+    void HandleEvents(frame_tp timepoint) override {
+        LOGMSGC(DEBUG) << "handle events of frame " << timepoint;
     };
 
     void RunBatch() const override {
-        std::cout << "run batch" << std::endl;
+        LOGMSGC(DEBUG) << "run batch";
     };
 
     void Terminate() override {
-        std::cout << "terminating" << std::endl;
+        LOGMSGC(DEBUG) << "terminating";
     };
 };
 }

@@ -5,6 +5,8 @@
 
 #include "trillek-game.hpp"
 
+#include "os.hpp"
+
 namespace trillek {
 namespace script {
 

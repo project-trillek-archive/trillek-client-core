@@ -1,15 +1,11 @@
-#include "systems/component-factory.hpp"
+#include "components/component-factory.hpp"
 #include "type-id.hpp"
+#include "trillek-game.hpp"
 
 namespace trillek {
 
 std::once_flag ComponentFactory::only_one;
-std::shared_ptr<ComponentFactory> ComponentFactory::instance = nullptr;
-std::map<std::string, unsigned int> ComponentFactory::component_type_id;
-std::map<unsigned int, std::function<std::shared_ptr<ComponentBase>(const unsigned int,
-    const std::vector<Property> &properties)>> ComponentFactory::factories;
-std::map<unsigned int, std::map<unsigned int, std::shared_ptr<ComponentBase>>> ComponentFactory::components;
-std::map<unsigned int, SystemBase*> ComponentFactory::systems;
+std::shared_ptr<ComponentFactory> ComponentFactory::instance;
 
 bool ComponentFactory::Serialize(rapidjson::Document& document) {
     rapidjson::Value component_node(rapidjson::kObjectType);
@@ -108,7 +104,6 @@ bool ComponentFactory::Parse(rapidjson::Value& node) {
                                     }
                                 }
                             }
-
                             if (!Create(component_type_id, entity_id, props)) {
                                 // TODO: Log an error about creating this component.
                             }
