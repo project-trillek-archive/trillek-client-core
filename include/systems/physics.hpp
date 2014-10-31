@@ -108,7 +108,7 @@ public:
      * \param const unsigned int entity_id The entity ID of the rigid body.
      * \param btVector3 f The rigid body's new gravity.
      */
-    void SetGravity(const unsigned int entity_id, const btVector3 f);
+    void SetGravity(const unsigned int entity_id, const btVector3& f);
 
     /** \brief Set a rigid body's gravity to the world's gravity.
      *
