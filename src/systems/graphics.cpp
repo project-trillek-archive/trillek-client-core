@@ -1,5 +1,6 @@
 #include "transform.hpp"
 #include "type-id.hpp"
+#include "trillek-game.hpp"
 #include "systems/graphics.hpp"
 #include "systems/resource-system.hpp"
 #include "systems/transform-system.hpp"
@@ -18,6 +19,7 @@
 namespace trillek {
 namespace graphics {
 
+#if defined(_CLIENT_) || defined(_STANDALONE_)
 RenderSystem::RenderSystem() : Parser("graphics") {
     multisample = false;
     this->frame_drop = false;
@@ -66,6 +68,7 @@ const int* RenderSystem::Start(const unsigned int width, const unsigned int heig
         this->camera = cam_ptr.lock(); // get the ptr to it
     }
     else {
+        LOGMSGC(INFO) << "No camera found, creating a camera id #0";
         // make one if none found
         this->camera_id = 0;
         this->camera = std::make_shared<SixDOFCamera>();
@@ -123,13 +126,6 @@ const int* RenderSystem::Start(const unsigned int width, const unsigned int heig
     return this->gl_version;
 }
 
-bool RenderSystem::Serialize(rapidjson::Document& document) {
-    rapidjson::Value resource_node(rapidjson::kObjectType);
-
-    document.AddMember("graphics", resource_node, document.GetAllocator());
-    return true;
-}
-
 bool RenderSystem::Parse(rapidjson::Value& node) {
     if(node.IsObject()) {
         // Iterate over types.
@@ -150,6 +146,13 @@ bool RenderSystem::Parse(rapidjson::Value& node) {
         return true;
     }
     return false;
+}
+
+bool RenderSystem::Serialize(rapidjson::Document& document) {
+    rapidjson::Value resource_node(rapidjson::kObjectType);
+
+    document.AddMember("graphics", resource_node, document.GetAllocator());
+    return true;
 }
 
 void RenderSystem::RegisterListResolvers() {
@@ -689,28 +692,33 @@ void RenderSystem::RenderLightingPass(const glm::mat4x4 &view_matrix, const floa
     glBindVertexArray(0); CheckGLError();
 }
 
-void RenderSystem::UpdateModelMatrices() {
-    std::map<unsigned int,const Transform*> transforms;
-    try {
-        transforms = *updated_transforms.get();
+inline void RenderSystem::UpdateModelMatrices(const frame_tp& timepoint) {
+    auto& transform_container = TrillekGame::GetSharedComponent()
+                                                .Map<Component::Transform>();
+    // since the data is published by the same thread, get the last published data
+    // first remove the transforms
+    auto& transform_map_neg = transform_container.GetLastNegativeCommit();
+    for (const auto& transform : transform_map_neg) {
+        this->model_matrices.erase(transform.first);
     }
-    catch(std::future_error) {
-        LOGMSGC(INFO) << "Render system missed a frame";
+    // second add the new ones
+    auto& transform_map_pos = transform_container.GetLastPositiveCommit();
+    // for each frame
+    for (const auto& transform_el : transform_map_pos) {
+        // for each modified transform in the frame
+        const auto id = transform_el.first;
+        const auto& transform = transform_el.second->Get<Transform>();
+        glm::mat4 model_matrix = glm::translate(transform.GetTranslation()) *
+            glm::mat4_cast(transform.GetOrientation()) *
+            glm::scale(transform.GetScale());
+        this->model_matrices[id] = std::move(model_matrix);
     }
-    for (auto it = transforms.cbegin(); it != transforms.cend(); ++it) {
-        const auto id = it->first;
-        const auto transform = it->second;
-        if (this->camera) {
-            if (id == this->camera_id) {
-                this->vp_center.view_matrix = this->camera->GetViewMatrix();
-//                this->model_matrices[id] = this->camera->GetViewMatrix();
-//                continue;
-            }
-        }
-        glm::mat4 model_matrix = glm::translate(transform->GetTranslation()) *
-            glm::mat4_cast(transform->GetOrientation()) *
-            glm::scale(transform->GetScale());
-        this->model_matrices[id] = model_matrix;
+    // Update the view matrix if necessary
+    if (transform_map_pos.count(this->GetActiveCameraID())) {
+        auto camera_transform = TrillekGame::GetSharedComponent()
+                .GetSharedPtr<Component::Transform>(this->GetActiveCameraID());
+        this->camera->UpdateTransform(std::move(camera_transform));
+        this->vp_center.view_matrix = this->camera->GetViewMatrix();
     }
 }
 
@@ -902,21 +910,26 @@ bool RenderSystem::AddEntityComponent(const id_t entity_id, std::shared_ptr<Rend
     return true;
 }
 
-void RenderSystem::AddComponent(const id_t entity_id, std::shared_ptr<ComponentBase> component) {
-
+void RenderSystem::AddDynamicComponent(const id_t entity_id, std::shared_ptr<Container> component) {
     int r;
     if(0 != (r = TryAddComponent<Renderable>(entity_id, component))) {
-        if(r < 0) return;
+        if(r < 0) {
+            LOGMSGC(ERROR) << "Could not add component Renderable";
+            return;
+        }
     }
     else if(0 != (r = TryAddComponent<LightBase>(entity_id, component))) {
-        if(r < 0) return;
+        if(r < 0) {
+            LOGMSGC(ERROR) << "Could not add component LightBase";
+            return;
+        }
     }
     else if(0 != (r = TryAddComponent<CameraBase>(entity_id, component))) {
-        if(r < 0) return;
+        if(r < 0) {
+            LOGMSGC(ERROR) << "Could not add component CameraBase";
+            return;
+        }
     }
-
-    // We mark the transform to force the initial model matrix creation.
-    TransformMap::GetTransform(entity_id)->MarkAsModified();
 }
 
 void RenderSystem::RemoveRenderable(const id_t entity_id) {
@@ -962,13 +975,13 @@ void RenderSystem::RemoveRenderable(const id_t entity_id) {
     }
 }
 
-void RenderSystem::HandleEvents(const frame_tp& timepoint) {
-    auto now = frame_tp(TrillekGame::GetOS().GetTime());
+void RenderSystem::HandleEvents(frame_tp timepoint) {
+    auto now = TrillekGame::GetOS().GetTime().count();
     static frame_tp last_tp = now;
     auto delta = now - last_tp;
-    if(delta > std::chrono::nanoseconds(66666666ll)) {
+    if(delta > 66666666ll) {
         if(!this->frame_drop) {
-            LOGMSGC(INFO) << "Time lag " << (delta.count() - 16666666) * 1.0E-9 << " > 50 milliseconds";
+            LOGMSGC(INFO) << "Time lag " << (delta - 16666666) * 1.0E-9 << " > 50 milliseconds";
             this->frame_drop_count = 0;
         }
         this->frame_drop = true;
@@ -984,21 +997,20 @@ void RenderSystem::HandleEvents(const frame_tp& timepoint) {
     last_tp = now;
     for (auto ren : this->renderables) {
         if (ren.second->GetAnimation()) {
-            ren.second->GetAnimation()->UpdateAnimation(delta.count() * 1E-9);
+            ren.second->GetAnimation()->UpdateAnimation(delta * 1E-9);
         }
     }
-    updated_transforms = TransformMap::GetAsyncUpdatedTransforms().GetFuture(timepoint);
-    if(updated_transforms.valid()) {
-        UpdateModelMatrices();
-    }
-    else {
-        LOGMSGC(INFO) << "HandleEvents() missed the publication of updated transforms";
-    }
+    UpdateModelMatrices(timepoint);
 };
 
 void RenderSystem::Terminate() {
     TrillekGame::GetOS().DetachContext();
 }
+#else
+bool RenderSystem::Parse(rapidjson::Value& node) {
+    return true;
+}
+#endif // defined(_CLIENT_) || defined(_STANDALONE_)
 
 } // End of graphics
 } // End of trillek

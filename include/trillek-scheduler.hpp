@@ -32,16 +32,18 @@ typedef std::chrono::nanoseconds frame_unit;
 #if defined(_MSC_VER)
 // Visual Studio implements steady_clock as system_clock
 // TODO : wait for the fix from Microsoft
-typedef time_point<system_clock, frame_unit> frame_tp;
+typedef time_point<system_clock, frame_unit> scheduler_tp;
+typedef int64_t frame_tp;
 typedef time_point<system_clock, frame_unit> glfw_tp;
 #else
-typedef time_point<steady_clock, frame_unit> frame_tp;
+typedef time_point<steady_clock, frame_unit> scheduler_tp;
+typedef int64_t frame_tp;
 typedef time_point<steady_clock, frame_unit> glfw_tp;
 #endif
 
 class TaskRequestBase {
 public:
-    TaskRequestBase(frame_tp&& timestamp) :
+    TaskRequestBase(scheduler_tp&& timestamp) :
         timestamp(std::move(timestamp))
         {};
 
@@ -63,12 +65,12 @@ public:
         timestamp = Now() + delay;
     }
 
-    frame_tp Timepoint() const {
+    scheduler_tp Timepoint() const {
         return timestamp;
     }
 
 protected:
-    frame_tp timestamp;
+    scheduler_tp timestamp;
 };
 
 template<class T>
@@ -218,7 +220,7 @@ private:
      * \param system SystemBase* system to attach
      *
      */
-    void DayWork(const frame_tp& now, SystemBase* system);
+    void DayWork(const scheduler_tp& now, SystemBase* system);
 
     std::priority_queue<std::shared_ptr<TaskRequestBase>> taskqueue;
     std::condition_variable countercheck;

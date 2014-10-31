@@ -8,19 +8,30 @@
 
 #include "systems/system-base.hpp"
 #include "trillek-game.hpp"
+#include "os.hpp"
+#include "logging.hpp"
 
 namespace trillek {
 std::function<void(std::shared_ptr<TaskRequest<chain_t>>&&,frame_unit&&)> TaskRequest<chain_t>::queue_task;
 
-glfw_tp TaskRequestBase::Now() const {
-    return glfw_tp(TrillekGame::GetOS().GetTime());
+scheduler_tp TaskRequestBase::Now() const {
+#if defined(_MSC_VER)
+    return scheduler_tp(TrillekGame::GetOS().GetTime());
+#else
+//    return scheduler_tp(TrillekGame::GetOS().GetTime());
+    return scheduler_tp{std::chrono::steady_clock::now()};
+#endif
 }
 
 
 void TrillekScheduler::Initialize(unsigned int nr_thread, std::queue<SystemBase*>& systems) {
     std::list<std::thread> thread_list;
     // initialize
-    frame_tp now = frame_tp(TrillekGame::GetOS().GetTime());
+#if defined(_MSC_VER)
+    scheduler_tp now = scheduler_tp(TrillekGame::GetOS().GetTime());
+#else
+    scheduler_tp now{std::chrono::steady_clock::now()};
+#endif
     TaskRequest<chain_t>::Initialize([&](std::shared_ptr<TaskRequest<chain_t>>&& c, frame_unit&& delay)
                                     {
                                         c->Reschedule(std::move(delay));
@@ -42,10 +53,10 @@ void TrillekScheduler::Initialize(unsigned int nr_thread, std::queue<SystemBase*
     }
 }
 
-void TrillekScheduler::DayWork(const frame_tp& now, SystemBase* system) {
-    frame_tp next_frame_tp = now + one_frame;
+void TrillekScheduler::DayWork(const scheduler_tp& now, SystemBase* system) {
+    scheduler_tp next_frame_tp = now + one_frame;
 
-    std::function<void(const frame_tp&)> handleEvents_functor;
+    std::function<void(frame_tp)> handleEvents_functor;
     std::function<void(void)> runBatch_functor;
     std::function<void(void)> terminate_functor;
     if (system) {
@@ -54,7 +65,7 @@ void TrillekScheduler::DayWork(const frame_tp& now, SystemBase* system) {
         terminate_functor = std::bind(&SystemBase::Terminate, std::ref(*system));
         system->ThreadInit();
     } else {
-        handleEvents_functor = [](const frame_tp& timepoint) {};
+        handleEvents_functor = [](frame_tp timepoint) {};
         runBatch_functor = [] () {};
         terminate_functor = [] () {};
     }
@@ -68,11 +79,17 @@ void TrillekScheduler::DayWork(const frame_tp& now, SystemBase* system) {
             std::unique_lock<std::mutex> locker(m_timer);
             // lock the queue while checking it
             m_queue.lock();
+#if defined(_MSC_VER)
             while (taskqueue.empty()
                    || ! taskqueue.top()->IsNow()
-                   || frame_tp(TrillekGame::GetOS().GetTime()) >= next_frame_tp) {
+                   || scheduler_tp(TrillekGame::GetOS().GetTime()) >= next_frame_tp) {
+#else
+            while (taskqueue.empty()
+                   || ! taskqueue.top()->IsNow()
+                   || std::chrono::steady_clock::now() >= next_frame_tp) {
+#endif
                 const auto max_timepoint = taskqueue.empty() ? next_frame_tp :
-                                                            std::min(next_frame_tp, taskqueue.top()->Timepoint());
+                                                            (std::min)(next_frame_tp, taskqueue.top()->Timepoint());
                 // unlock the queue when checking is done
                 m_queue.unlock();
                 // threads wait here (blocking point)
@@ -81,6 +98,7 @@ void TrillekScheduler::DayWork(const frame_tp& now, SystemBase* system) {
                     // release the lock of the blocking point
                     m_timer.unlock();
                     if (TrillekGame::GetTerminateFlag()) {
+                        LOGMSGC(INFO) << "Scheduler: Terminate signal detected for this thread...";
                         // unblock all other threads waiting above
                         queuecheck.notify_all();
                         // save the state of the system
@@ -89,9 +107,13 @@ void TrillekScheduler::DayWork(const frame_tp& now, SystemBase* system) {
                         m_timer.lock();
                         return;
                     }
-                    if (frame_tp(TrillekGame::GetOS().GetTime()) >= next_frame_tp) {
+#if defined(_MSC_VER)
+                    if (scheduler_tp(TrillekGame::GetOS().GetTime()) >= next_frame_tp) {
+#else
+                    if (std::chrono::steady_clock::now() >= next_frame_tp) {
+#endif
                         // a new frame has begun : let's run the system
-                        handleEvents_functor(next_frame_tp);
+                        handleEvents_functor(next_frame_tp.time_since_epoch().count());
                         runBatch_functor();
                         next_frame_tp += one_frame;
                     }

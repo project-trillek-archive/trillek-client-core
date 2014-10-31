@@ -6,6 +6,7 @@
 #include <istream>
 #include <ostream>
 #include <stdint.h>
+#include <memory>
 
 namespace trillek {
 namespace util {
@@ -281,6 +282,63 @@ InputStream& operator>>(InputStream & f, FourCC & o);
 
 std::istream& operator>>(std::istream & f, FourCC & o);
 std::ostream& operator<<(std::ostream & f, FourCC & o);
+
+template<class T>
+inline int PopCount(T);
+
+template<>
+inline int PopCount<uint64_t>(uint64_t value) {
+    #if defined(__GNUG__)
+        return __builtin_popcountll(value);
+    #elif defined(_MSC_VER)
+        return __popcnt(value);
+    #endif
+}
+
+template<>
+inline int PopCount<uint32_t>(uint32_t value) {
+    #if defined(__GNUG__)
+        return __builtin_popcountl(value);
+    #elif defined(_MSC_VER)
+        return __popcnt(value);
+    #endif
+}
+
+template<class T>
+inline uint32_t Ctz(T);
+
+template<>
+inline uint32_t Ctz<uint32_t>(uint32_t value) {
+#if defined(__GNUG__)
+        return static_cast<uint32_t>(__builtin_ctzl(value));
+#elif defined(_MSC_VER)
+        unsigned long ret;
+        _BitScanForward(&ret, value);
+        return ret;
+#endif
+}
+
+#if defined(__GNUG__)
+template<>
+inline uint32_t Ctz<uint64_t>(uint64_t value) {
+        return static_cast<uint32_t>(__builtin_ctzll(value));
+}
+#endif
+
+template<class T>
+inline unsigned int Log2Bin();
+
+template<>
+inline unsigned int Log2Bin<uint32_t>() { return 5; };
+
+template<>
+inline unsigned int Log2Bin<uint64_t>() { return 6; };
+
+template<class T>
+struct is_shared_ptr : std::false_type {};
+
+template<class T>
+struct is_shared_ptr<std::shared_ptr<T>> : std::true_type {};
 
 } // util
 } // trillek

@@ -1,11 +1,16 @@
-#include "systems/physics.hpp"
+#include "trillek-game.hpp"
+#include "components/shared-component.hpp"
+#include "components/system-component.hpp"
+#include "components/system-component-value.hpp"
 #include "physics/collidable.hpp"
 #include "systems/transform-system.hpp"
 #include <bullet/BulletCollision/Gimpact/btGImpactShape.h>
 #include <bullet/BulletCollision/Gimpact/btGImpactCollisionAlgorithm.h>
+#include "logging.hpp"
 
-namespace trillek {
-namespace physics {
+namespace trillek { namespace physics {
+
+using namespace component;
 
 PhysicsSystem::PhysicsSystem() { }
 PhysicsSystem::~PhysicsSystem() { }
@@ -23,34 +28,13 @@ void PhysicsSystem::Start() {
     btGImpactCollisionAlgorithm::registerAlgorithm(dispatcher);
 }
 
-void PhysicsSystem::AddComponent(const unsigned int entity_id, std::shared_ptr<ComponentBase> component) {
-    std::shared_ptr<Collidable> shape = std::dynamic_pointer_cast<Collidable>(component);
-    if (!shape) {
-        return;
-    }
-
-    if (this->dynamicsWorld) {
-        this->dynamicsWorld->addRigidBody(shape->GetRigidBody());
-        this->bodies[entity_id] = shape;
-    }
-}
-
-void PhysicsSystem::HandleEvents(const frame_tp& timepoint) {
-    // Updated the motions state of all bodies in case it was changed outside physics (e.g scripting).
-    for (auto& shape : this->bodies) {
-        shape.second->UpdateMotionState();
-    }
-
-    // Remove access to old updated transforms
-    TransformMap::GetAsyncUpdatedTransforms().Unpublish(timepoint);
-    // Remove access to forces
-    this->async_forces.Unpublish(timepoint);
-    // Remove access to torques
-    this->async_torques.Unpublish(timepoint);
+void PhysicsSystem::HandleEvents(frame_tp timepoint) {
     // publish the forces of the current frame immediately without making a copy of the list
-    this->async_forces.Publish(std::make_shared<const std::map<id_t, btVector3>>(this->forces.Poll()));
-    // publish the torques of the current frame
-    this->async_torques.Publish(std::make_shared<const std::map<id_t, btVector3>>(this->torques.Poll()));
+    for (auto& v : this->velocities.Poll()) {
+        Update<Component::Velocity>(std::move(v.first), std::move(v.second));
+    }
+    // commit velocity updates
+    Commit<Component::Velocity>(timepoint);
 
     static frame_tp last_tp;
     this->delta = timepoint - last_tp;
@@ -59,26 +43,73 @@ void PhysicsSystem::HandleEvents(const frame_tp& timepoint) {
     // Set the rigid bodies linear velocity. Must be done each frame otherwise,
     // other forces will stop the linear velocity.
     // We use the published list
-    for (auto& force : *this->async_forces.GetFuture(timepoint).get()) {
-        auto body = this->bodies[force.first]->GetRigidBody();
-        body->setLinearVelocity(force.second + body->getGravity());
-    }
-    // Set the rigid bodies angular velocity. Must be done each frame otherwise,
-    // other forces will stop the angular velocity.
-    for (auto& torque : *this->async_torques.GetFuture(timepoint).get()) {
-        auto body = this->bodies[torque.first]->GetRigidBody();
-        body->setAngularVelocity(torque.second);
-    }
-    if (this->dynamicsWorld) {
-        this->dynamicsWorld->stepSimulation(this->delta.count() * 1.0E-9, 10);
-    }
+
+    // First moving entities that have no combined velocity
+    OnTrue(GetLastPositiveBitMap<Component::Velocity>()
+                                        & ~Bitmap<Component::ReferenceFrame>(),
+        [](id_t entity_id) {
+            // first inject velocity of entities that have no reference frame
+            auto& body = *Get<Component::Collidable>(entity_id).GetRigidBody();
+            const auto& v = Get<Component::Velocity>(entity_id);
+
+            body.setLinearVelocity(v.GetLinear() + body.getGravity());
+            body.setAngularVelocity(v.GetAngular());
+        }
+    );
+    // Second moving entities with a combined velocity
+    OnTrue(GetLastPositiveBitMap<Component::Velocity>()
+                                        & Bitmap<Component::ReferenceFrame>(),
+        [](id_t entity_id) {
+            // combine velocity
+            auto reference_id = Get<Component::ReferenceFrame>(entity_id);
+            const auto& v = Get<Component::Velocity>(entity_id);
+            const auto& ref_v = Get<Component::Velocity>(reference_id);
+            auto& body = *Get<Component::Collidable>(reference_id).GetRigidBody();
+            auto& transform = body.getCenterOfMassTransform();
+            auto combined_l = transform * v.GetLinear();
+            combined_l += ref_v.GetLinear();
+            body.setLinearVelocity(combined_l + body.getGravity());
+            auto combined_a = transform * v.GetAngular();
+            combined_a += ref_v.GetAngular();
+            body.setAngularVelocity(combined_a);
+        }
+    );
+
+    // Third, entities with reference frame that have moved
+    OnTrue(GetLastPositiveBitMap<Component::Velocity>()
+                                        & Bitmap<Component::IsReferenceFrame>(),
+        [&](id_t entity_id) {
+            // todo
+        }
+    );
+
+
+    dynamicsWorld->stepSimulation(delta * 1.0E-9, 10);
     // Set out transform updates.
-    for (auto& shape : this->bodies) {
-        shape.second->UpdateTransform();
+    auto& bodymap = TrillekGame::GetSystemComponent().Map<Component::Collidable>();
+    for (auto& shape : bodymap) {
+        btTransform transform;
+        shape.second->Get<Collidable>().GetRigidBody()->getMotionState()->getWorldTransform(transform);
+
+        auto pos = transform.getOrigin();
+        auto rot = transform.getRotation();
+        Transform_type entity_transform(Get<Component::Transform>(shape.first));
+        entity_transform.SetTranslation(glm::vec3(pos.x(), pos.y(), pos.z()));
+        entity_transform.SetOrientation(glm::quat(rot.w(), rot.x(), rot.y(), rot.z()));
+        Update<Component::Transform>(shape.first, std::move(entity_transform));
     }
     // Publish the new updated transforms map
-    auto ntm = std::make_shared<std::map<id_t,const Transform*>>(TransformMap::GetUpdatedTransforms().Poll());
-    TransformMap::GetAsyncUpdatedTransforms().Publish(std::move(ntm));
+    Commit<Component::Transform>(timepoint);
+}
+
+void PhysicsSystem::AddDynamicComponent(const unsigned int entity_id, std::shared_ptr<Container> component) {
+    if (component->Is<Collidable>()) {
+        AddBodyToWorld(component->Get<Collidable>().GetRigidBody());
+    }
+}
+
+void PhysicsSystem::AddBodyToWorld(btRigidBody* body) {
+    this->dynamicsWorld->addRigidBody(body);
 }
 
 void PhysicsSystem::Terminate() {
@@ -99,30 +130,19 @@ void PhysicsSystem::Terminate() {
     }
 }
 
-void PhysicsSystem::SetForce(unsigned int entity_id, const Force f) const {
-    this->forces.Insert(entity_id, btVector3(f.x, f.y, f.z));
+void PhysicsSystem::SetGravity(const unsigned int entity_id, btVector3 f) {
+    auto& system = TrillekGame::GetSystemComponent();
+    if (system.Has<Component::Collidable>(entity_id)) {
+        system.Get<Component::Collidable>(entity_id).GetRigidBody()
+                                                        ->setGravity(f);
+    }
 }
 
-void PhysicsSystem::RemoveForce(const unsigned int entity_id) const {
-    this->forces.Erase(entity_id);
-}
-
-void PhysicsSystem::SetTorque(unsigned int entity_id, const Torque t) const {
-    this->torques.Insert(entity_id, btVector3(t.x, t.y, t.z));
-}
-
-void PhysicsSystem::RemoveTorque(const unsigned int entity_id) const {
-    this->torques.Erase(entity_id);
-}
-
-void PhysicsSystem::SetGravity(const unsigned int entity_id, const Force* f) {
-    if (this->bodies.find(entity_id) != this->bodies.end()) {
-        if (f != nullptr) {
-            this->bodies.at(entity_id)->GetRigidBody()->setGravity(btVector3(f->x, f->y, f->z));
-        }
-        else {
-            this->bodies.at(entity_id)->GetRigidBody()->setGravity(this->dynamicsWorld->getGravity());
-        }
+void PhysicsSystem::SetNormalGravity(const unsigned int entity_id) {
+    auto& system = TrillekGame::GetSystemComponent();
+    if (system.Has<Component::Collidable>(entity_id)) {
+        system.Get<Component::Collidable>(entity_id).GetRigidBody()
+                        ->setGravity(this->dynamicsWorld->getGravity());
     }
 }
 

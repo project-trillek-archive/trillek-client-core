@@ -3,6 +3,7 @@
 #include "systems/resource-system.hpp"
 #include "rapidjson/prettywriter.h"
 #include "rapidjson/filestream.h"
+#include "logging.hpp"
 
 #include <mutex>
 #include <iostream>
@@ -28,8 +29,7 @@ bool JSONPasrser::Parse(const std::string& fname) {
     auto file = resource::ResourceMap::Create<resource::TextFile>(fname, props);
 
     if (!file) {
-        // TODO: Use logger
-        std::cerr << "Error parsing: " << fname << std::endl;
+        LOGMSG(ERROR) << "Error parsing: " << fname;
         return false;
     }
 
@@ -48,6 +48,7 @@ bool JSONPasrser::Parse(const std::string& fname) {
 
     doc->document.Parse<0>(doc->file->GetText().c_str());
     if (doc->document.HasParseError()) {
+        LOGMSG(ERROR) << "JSON error at offset " << doc->document.GetErrorOffset() << ": " << doc->document.GetParseError();
         return false;
     }
 
@@ -130,9 +131,13 @@ void JSONPasrser::Serialize(const std::string& out_directory, const std::string&
     }
 }
 
-std::map<std::string, std::shared_ptr<Parser>> JSONPasrser::parsers;
+std::map<std::string, Parser*> JSONPasrser::parsers;
 
 void JSONPasrser::RegisterParser(std::shared_ptr<Parser> parser) {
+    parsers[parser->GetNodeTypeName()] = parser.get();
+}
+
+void JSONPasrser::RegisterParser(Parser* parser) {
     parsers[parser->GetNodeTypeName()] = parser;
 }
 

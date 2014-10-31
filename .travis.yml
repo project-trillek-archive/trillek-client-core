@@ -13,8 +13,10 @@ before_install:
     - sudo dpkg -i playdeb_0.3-1~getdeb1_all.deb
     # No ppa for GLFW3 at this time. Compiling by hand!
     - sudo apt-get -qq install xorg-dev libglu1-mesa-dev
-    - git clone https://github.com/glfw/glfw.git
+    - git clone --depth=50 https://github.com/glfw/glfw.git
     - cd glfw
+    # GLFW requests cmake-2.8.9 but travis runs 2.8.7, we use the last commit using 2.8.7
+    - git checkout 96d230becb0c612b3f3631cb6cf83ebe0a393b71
     - CMAKE_CXX_FLAGS=-fPIC CMAKE_C_FLAGS=-fPIC cmake -DCMAKE_INSTALL_PREFIX=/usr -DBUILD_SHARED_LIBS:bool=true .
     - sudo make install
     - cd ..
@@ -25,14 +27,24 @@ before_install:
     - wget https://bitbucket.org/alexames/luawrapper/downloads/luawrapper.zip
     - unzip luawrapper.zip -d /tmp
     - sudo cp -r /tmp/luawrapper /usr
+    # Download GLM 9.5 from github
+    - wget https://github.com/g-truc/glm/archive/0.9.5.3.zip 
+    - unzip 0.9.5.3.zip -d /tmp
+    - sudo cp -r /tmp/glm-0.9.5.3/glm /usr/include
 install:
     # Install libstdv++ 4.8 and clang
     - sudo apt-get -qq install libstdc++-4.8-dev clang-3.3
     # Setup clang and gcc
     - if [ "$CXX" = "g++" ]; then sudo apt-get install -qq g++-4.8; fi
     - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
-    # GLEW, GLM
-    - sudo apt-get -q -y install libglew-dev libglm-dev
+    # GLEW
+    - sudo apt-get -q -y install libglew-dev
+    # Raknet
+    - git submodule update --init --depth=1 raknet
+    - cd raknet
+    - sudo cmake CMakeLists.txt
+    - sudo make
+    - cd ..
     # OpenAL, Vorbis and OGG
     - sudo apt-get -q -y install libogg-dev libvorbis-dev libopenal-dev libalure-dev
     # Bullet

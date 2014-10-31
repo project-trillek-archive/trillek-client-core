@@ -57,7 +57,7 @@ protected:
 namespace reflection {
 
     template <> inline const char* GetTypeName<resource::Mesh>() { return "Mesh"; }
-    template <> inline const unsigned int GetTypeID<resource::Mesh>() { return 1001; }
+    template <> inline unsigned int GetTypeID<resource::Mesh>() { return 1001; }
 
 } // End of reflection
 } // End of trillek

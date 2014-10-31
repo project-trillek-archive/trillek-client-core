@@ -72,7 +72,7 @@ public:
 
 class System : public util::Parser, public SystemBase {
 private:
-    System() : Parser("sounds") { }
+    System() : Parser("sounds"), last_transform_frame(-1) { }
     System(const System& right) : Parser("sounds")  {
         instance = right.instance;
     }
@@ -86,23 +86,12 @@ private:
     static std::once_flag only_one;
     static std::shared_ptr<System> instance;
 public:
-    static std::shared_ptr<System> GetInstance() {
-        std::call_once(System::only_one,
-        [ ]() {
-            System::instance.reset(new System());
-
-            if(alureInitDevice(NULL, NULL) == false) {
-                std::cout << "Failed to open OpenAL device: " << alureGetErrorString() << std::endl;
-            }
-        });
-
-        return System::instance;
-    }
+    static std::shared_ptr<System> GetInstance();
 
     ~System();
 
     // inherited from system-base
-    virtual void HandleEvents(const frame_tp& timepoint);
+    virtual void HandleEvents(frame_tp timepoint);
     virtual void RunBatch() const;
     virtual void Terminate();
 
@@ -145,6 +134,8 @@ private:
         bool loop, spatial;
         double volume;
     };
+
+    frame_tp last_transform_frame;
 
     std::unordered_map<std::string, std::shared_ptr<sound_info>> sounds;
 }; // end of class System

@@ -1,9 +1,13 @@
+#if defined(_CLIENT_) || defined(_STANDALONE_)
+
 #include "systems/lua-system.hpp"
 
 #include <luawrapper/luawrapper.hpp>
 #include <luawrapper/luawrapperutil.hpp>
 
 #include "trillek-game.hpp"
+
+#include "os.hpp"
 
 namespace trillek {
 namespace script {
@@ -53,3 +57,4 @@ int luaopen_OSSys(lua_State* L) {
 
 } // End of script
 } // End of trillek
+#endif

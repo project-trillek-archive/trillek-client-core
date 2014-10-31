@@ -8,7 +8,7 @@
 
 #include "systems/resource-system.hpp"
 
-namespace trillek { 
+namespace trillek {
 namespace resource {
 
 class Mesh;
@@ -140,7 +140,7 @@ private:
 namespace reflection {
 
 template <> inline const char* GetTypeName<resource::MD5Anim>() { return "MD5Anim"; }
-template <> inline const unsigned int GetTypeID<resource::MD5Anim>() { return 1003; }
+template <> inline unsigned int GetTypeID<resource::MD5Anim>() { return 1003; }
 
 } // End of reflection
 } // End of trillek

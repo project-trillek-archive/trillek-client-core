@@ -8,6 +8,22 @@ SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/modules")
 # Put the executable in the bin folder
 SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 
+# Install the libraries using bin folder as root
+SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/lib")
+
+# Set the directory of Find<Library>.cmake modules
+SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/modules")
+
+# Set the directory for the header files
+SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} ${CMAKE_SOURCE_DIR}/include)
+
+# set options early
+SET(TCC_BUILD_TESTS CACHE BOOL "Parse the tests directory")
+SET(TRILLEK_BUILD_CLIENT CACHE BOOL "Build the client")
+SET(TRILLEK_BUILD_SERVER CACHE BOOL "Build the server")
+SET(TRILLEK_BUILD_STANDALONE ON CACHE BOOL "Build the standalone binary")
+SET(TCC_TEST_NETWORK_DISABLE OFF CACHE BOOL "Disable the network unit test")
+
 # find all source files in the src directory
 FILE(GLOB_RECURSE TCC_SRC "src/*.cpp")
 
@@ -20,30 +36,31 @@ FILE(GLOB_RECURSE TCC_INCLUDES "include/*.h" "include/*.hpp")
 #Check if we can build with the current chaintool
 INCLUDE(SetCompilerFlags)
 
-SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} ${CMAKE_SOURCE_DIR}/include/)
 INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/include/")
 
 # If we are on windows add in the local search directories as well.
 IF (WIN32 AND NOT MINGW) # Windows
-  SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} ${CMAKE_SOURCE_DIR}/lib/include/)
-  INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/lib/include/")
-  IF (CMAKE_CL_64)
+    SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} ${CMAKE_SOURCE_DIR}/lib/include/)
+    INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/lib/include/")
+    IF (CMAKE_CL_64)
     LINK_DIRECTORIES("${CMAKE_SOURCE_DIR}/lib/x64/debug" "${CMAKE_SOURCE_DIR}/lib/x64/release")
     SET(CMAKE_LIBRARY_PATH ${CMAKE_SOURCE_DIR}/lib/x64/debug ${CMAKE_SOURCE_DIR}/lib/x64/release)
-  ELSE (CMAKE_CL_64)
+    ELSE (CMAKE_CL_64)
     LINK_DIRECTORIES("${CMAKE_SOURCE_DIR}/lib/x86/debug" "${CMAKE_SOURCE_DIR}/lib/x86/release")
     SET(CMAKE_LIBRARY_PATH ${CMAKE_SOURCE_DIR}/lib/x86/debug ${CMAKE_SOURCE_DIR}/lib/x86/release)
-  ENDIF (CMAKE_CL_64)
+    ENDIF (CMAKE_CL_64)
 ENDIF (WIN32 AND NOT MINGW)
 
 FIND_PACKAGE(GLM REQUIRED)
-# Force using radians as degrees are depcrecated
-# Bullet is builet using doubles
+# Force using radians as degrees is deprecated
+# Bullet is built using doubles
 ADD_DEFINITIONS(-DGLM_FORCE_RADIANS -DBT_USE_DOUBLE_PRECISION)
 
 FIND_PACKAGE(OpenGL REQUIRED)
 FIND_PACKAGE(GLFW3 REQUIRED)
 FIND_PACKAGE(RapidJSON REQUIRED)
+FIND_PACKAGE(RakNet REQUIRED)
+#INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}")
 FIND_PACKAGE(Bullet REQUIRED)
 FIND_PACKAGE(ALURE REQUIRED)
 FIND_PACKAGE(OpenAL REQUIRED)
@@ -56,115 +73,146 @@ SET(X11_LIBRARIES "")
 SET(OSX_LIBRARIES "")
 
 IF (NOT APPLE) # X11 and GLEW are not needed on OSX.
-	FIND_PACKAGE(X11)
-	SET(USE_STATIC_GLEW CACHE BOOL "Build against GLEW static (default no)")
-	FIND_PACKAGE(GLEW REQUIRED) # We find GLEW here as OSX doesn't need it.
+    FIND_PACKAGE(X11)
+    SET(USE_STATIC_GLEW CACHE BOOL "Build against GLEW static (default no)")
+    FIND_PACKAGE(GLEW REQUIRED) # We find GLEW here as OSX doesn't need it.
 ENDIF (NOT APPLE)
 
 IF (APPLE) # Mac OSX
-	SET(GLEW_LIBRARY "") # Set a dummy value for GLEW.
+    SET(GLEW_LIBRARY "") # Set a dummy value for GLEW.
 
-	SET(CMAKE_XCODE_ATTRIBUTE_SUPPORTED_PLATFORMS macosx)
+    SET(CMAKE_XCODE_ATTRIBUTE_SUPPORTED_PLATFORMS macosx)
 
-	# Need the 10.7 SDK or later.
-	EXECUTE_PROCESS(COMMAND xcodebuild -sdk macosx -version SDKVersion OUTPUT_VARIABLE OSX_SDK_VERSION)
-	IF (NOT (OSX_SDK_VERSION VERSION_GREATER 10.7 OR OSX_SDK_VERSION VERSION_EQUAL 10.7))
-		MESSAGE(FATAL_ERROR "The installed version of Xcode does not support the 10.7 SDK or later.  Please upgrade Xcode and try again.")
-	ENDIF (NOT (OSX_SDK_VERSION VERSION_GREATER 10.7 OR OSX_SDK_VERSION VERSION_EQUAL 10.7))
+    # Need the 10.7 SDK or later.
+    EXECUTE_PROCESS(COMMAND xcodebuild -sdk macosx -version SDKVersion OUTPUT_VARIABLE OSX_SDK_VERSION)
+    IF (NOT (OSX_SDK_VERSION VERSION_GREATER 10.7 OR OSX_SDK_VERSION VERSION_EQUAL 10.7))
+        MESSAGE(FATAL_ERROR "The installed version of Xcode does not support the 10.7 SDK or later.  Please upgrade Xcode and try again.")
+    ENDIF (NOT (OSX_SDK_VERSION VERSION_GREATER 10.7 OR OSX_SDK_VERSION VERSION_EQUAL 10.7))
 
-	# Configure the project to use the correct SDK.
-	IF (XCODE_VERSION)
-		SET(CMAKE_OSX_SYSROOT macosx)
-	ELSE (XCODE_VERSION)
-		# Non-Xcode generators need the full path.
-		EXECUTE_PROCESS(COMMAND xcodebuild -sdk macosx -version Path | head -n 1 OUTPUT_VARIABLE CMAKE_OSX_SYSROOT)
-		STRING(REGEX REPLACE "(\r?\n)+$" "" CMAKE_OSX_SYSROOT "${CMAKE_OSX_SYSROOT}")
-	ENDIF (XCODE_VERSION)
+    # Configure the project to use the correct SDK.
+    IF (XCODE_VERSION)
+        SET(CMAKE_OSX_SYSROOT macosx)
+    ELSE (XCODE_VERSION)
+        # Non-Xcode generators need the full path.
+        EXECUTE_PROCESS(COMMAND xcodebuild -sdk macosx -version Path | head -n 1 OUTPUT_VARIABLE CMAKE_OSX_SYSROOT)
+        STRING(REGEX REPLACE "(\r?\n)+$" "" CMAKE_OSX_SYSROOT "${CMAKE_OSX_SYSROOT}")
+    ENDIF (XCODE_VERSION)
 
-	# Can deploy back to 10.7, the first OS X to support the GL Core.
-	SET(CMAKE_OSX_DEPLOYMENT_TARGET 10.7)
+    # Can deploy back to 10.7, the first OS X to support the GL Core.
+    SET(CMAKE_OSX_DEPLOYMENT_TARGET 10.7)
 
-	# Need Core Foundation and libobjc.
-	SET(OSX_LIBRARIES "-framework CoreFoundation /usr/lib/libobjc.dylib")
+    # Need Core Foundation and libobjc.
+    SET(OSX_LIBRARIES "-framework CoreFoundation /usr/lib/libobjc.dylib")
 ENDIF (APPLE)
-
-SET(TCC_BUILD_TESTS CACHE BOOL "Parse the tests directory")
-SET(TRILLEK_BUILD_CLIENT CACHE BOOL "Build the client")
-SET(TRILLEK_BUILD_SERVER CACHE BOOL "Build the server")
-SET(TRILLEK_BUILD_STANDALONE ON CACHE BOOL "Build the standalone binary")
 
 IF (TCC_BUILD_TESTS)
     # Try to get GTest using a Env. variable, if not, with find_package
     IF (DEFINED ENV{GTEST_ROOT})
-      MESSAGE ("... using gtest found in $ENV{GTEST_ROOT}")
-      # Example :
-      # GTEST_ROOT=path/gtest-1.6.0 ;
-      # export GTEST_ROOT
-      ADD_SUBDIRECTORY ($ENV{GTEST_ROOT} ${CMAKE_CURRENT_BINARY_DIR}/gtest)
-      INCLUDE_DIRECTORIES ($ENV{GTEST_ROOT}/include $ENV{GTEST_ROOT})
-      SET (GTEST_LIBRARIES gtest)
-
+        MESSAGE ("... using gtest found in $ENV{GTEST_ROOT}")
+        # Example :
+        # GTEST_ROOT=path/gtest-1.6.0 ;
+        # export GTEST_ROOT
+        ADD_SUBDIRECTORY ($ENV{GTEST_ROOT} ${CMAKE_CURRENT_BINARY_DIR}/gtest)
+        INCLUDE_DIRECTORIES ($ENV{GTEST_ROOT}/include $ENV{GTEST_ROOT})
+        SET (GTEST_LIBRARIES gtest)
     ELSE (DEFINED ENV{GTEST_ROOT})
-      FIND_PACKAGE(GTEST REQUIRED)
-
+        FIND_PACKAGE(GTEST REQUIRED)
     ENDIF (DEFINED ENV{GTEST_ROOT})
 
-    file(GLOB_RECURSE TCCTests_SRC "tests/src/*.cpp")
-    file(GLOB_RECURSE TCCTests_INCLUDE "tests/tests/*.h" "tests/tests/*.hpp")
+    FILE(GLOB_RECURSE TCCTests_SRC "tests/src/*.cpp")
+    FILE(GLOB_RECURSE TCCTests_INCLUDE "tests/tests/*.h" "tests/tests/*.hpp")
     SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} ${CMAKE_SOURCE_DIR}/tests/)
     INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/tests/")
 ENDIF (TCC_BUILD_TESTS)
 
+LINK_DIRECTORIES(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+
 # define all required external libraries
-set(TCC_ALL_LIBS
-	${OPENGL_LIBRARIES}
-	${GLFW3_LIBRARIES}
-	${X11_LIBRARIES}
-	${OSX_LIBRARIES}
-	${GLEW_LIBRARIES}
-	${BULLET_LINEARMATH_LIBRARIES}
-	${BULLET_COLLISION_LIBRARIES}
-	${BULLET_DYNAMICS_LIBRARIES}
-	${ALURE_LIBRARIES}
-	${OPENAL_LIBRARIES}
-	${LUA_LIBRARIES}
-  )
+SET(Backend_LIBS
+    ${RAKNET_LIBRARIES}
+    ${BULLET_DYNAMICS_LIBRARIES}
+    ${BULLET_COLLISION_LIBRARIES}
+    ${BULLET_LINEARMATH_LIBRARIES}
+    ${LUA_LIBRARIES}
+    )
+
+SET(Graphics_LIBS
+    ${GLEW_LIBRARIES}
+    ${OPENGL_LIBRARIES}
+    ${GLFW3_LIBRARIES}
+    )
+
+SET(Frontend_LIBS
+    ${X11_LIBRARIES}
+    ${OSX_LIBRARIES}
+    ${Graphics_LIBS}
+    ${ALURE_LIBRARIES}
+    ${OPENAL_LIBRARIES}
+    )
+
+ADD_SUBDIRECTORY (${CMAKE_SOURCE_DIR}/trillek-vcomputer-module)
+#Dirty addition of vcomputer
+#TODO: make a cmake module
+IF (MSVC) # Visual C++
+    SET(Backend_LIBS
+        ${Backend_LIBS}
+        VCOMPUTER.lib
+        )
+ELSE (MSVC)
+    SET(Backend_LIBS
+        ${Backend_LIBS}
+	VCOMPUTER
+        )
+ENDIF (MSVC) # Visual C++
+
+INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/trillek-vcomputer-module/include")
+INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/trillek-vcomputer-module/src")
+
+SET(Trillek_Server_LIBS ${Backend_LIBS})
+SET(Trillek_Client_LIBS ${Backend_LIBS} ${Frontend_LIBS})
+SET(Trillek_Standalone_LIBS ${Trillek_Client_LIBS})
+
+# Visio C++ needs GLFW for the clock
+IF (MSVC) # Visual C++
+    SET(Trillek_Server_LIBS ${Trillek_Server_LIBS} ${Graphics_LIBS})
+ENDIF (MSVC)
 
 FOREACH(MAIN_CPP ${TCC_MAIN_CPP})
-    GET_FILENAME_COMPONENT(TEST_NAME ${MAIN_CPP} NAME_WE)
-    if(TEST_NAME STREQUAL "Client_main" AND TRILLEK_BUILD_CLIENT)
-        SET(TEST_NAME "Trillek_Client")
-        SET(BUILDTARGET "CLIENT")
-    endif(TEST_NAME STREQUAL "Client_main" AND TRILLEK_BUILD_CLIENT)
+    GET_FILENAME_COMPONENT(T_NAME ${MAIN_CPP} NAME_WE)
+    IF(T_NAME STREQUAL "client-main" AND TRILLEK_BUILD_CLIENT)
+        SET(T_NAME "Trillek_Client")
+        SET(BUILDTARGET "_CLIENT_")
+    ENDIF(T_NAME STREQUAL "client-main" AND TRILLEK_BUILD_CLIENT)
 
-    if(TEST_NAME STREQUAL "Server_main" AND TRILLEK_BUILD_SERVER)
-        SET(TEST_NAME "Trillek_Server")
-        SET(BUILDTARGET "SERVER")
-    endif(TEST_NAME STREQUAL "Server_main" AND TRILLEK_BUILD_SERVER)
+    IF(T_NAME STREQUAL "server-main" AND TRILLEK_BUILD_SERVER)
+        SET(T_NAME "Trillek_Server")
+        SET(BUILDTARGET "_SERVER_")
+    ENDIF(T_NAME STREQUAL "server-main" AND TRILLEK_BUILD_SERVER)
 
-    if(TEST_NAME STREQUAL "Standalone_main" AND TRILLEK_BUILD_STANDALONE)
-        SET(TEST_NAME "Trillek_Standalone")
-        SET(BUILDTARGET "STANDALONE")
-    endif(TEST_NAME STREQUAL "Standalone_main" AND TRILLEK_BUILD_STANDALONE)
+    IF(T_NAME STREQUAL "standalone-main" AND TRILLEK_BUILD_STANDALONE)
+        SET(T_NAME "Trillek_Standalone")
+        SET(BUILDTARGET "_STANDALONE_")
+    ENDIF(T_NAME STREQUAL "standalone-main" AND TRILLEK_BUILD_STANDALONE)
 
     IF(BUILDTARGET)
-        MESSAGE(STATUS "Processing: ${TEST_NAME}")
+        MESSAGE(STATUS "Processing: ${T_NAME}")
 
         # if just building an exe use all the source and libraries
-        ADD_EXECUTABLE(${TEST_NAME}
-          ${MAIN_CPP}
-          ${TCC_SRC}
-          ${TCC_INCLUDES}
-          )
+        ADD_EXECUTABLE(${T_NAME}
+            ${MAIN_CPP}
+            ${TCC_SRC}
+            ${TCC_INCLUDES}
+            )
 
         # Set a preprocessor variable
-        set_property(
-            TARGET ${TEST_NAME}
-            PROPERTY COMPILE_DEFINITIONS ${BUILDTARGET}
-        )
+        SET_PROPERTY(TARGET ${T_NAME} PROPERTY COMPILE_DEFINITIONS ${BUILDTARGET} APPEND)
+        # this other form is only supported in new versions of cmake
+        #target_compile_definitions(${T_NAME} PRIVATE ${BUILDTARGET})
+
+	ADD_DEPENDENCIES(${T_NAME} VCOMPUTER)
 
         # Link the executable to all required libraries
-        TARGET_LINK_LIBRARIES(${TEST_NAME} ${TCC_ALL_LIBS})
+        TARGET_LINK_LIBRARIES(${T_NAME} ${${T_NAME}_LIBS})
     ENDIF(BUILDTARGET)
 
     UNSET(BUILDTARGET)
@@ -172,6 +220,17 @@ ENDFOREACH(MAIN_CPP)
 
 if(TCC_BUILD_TESTS)
     MESSAGE(STATUS "Processing: TCCTests")
-    ADD_EXECUTABLE(TCCTests main/Tests_main.cpp ${TCCTests_SRC} ${TCC_SRC} ${TCCTests_INCLUDE})
-    TARGET_LINK_LIBRARIES(TCCTests ${GTEST_LIBRARIES} ${TCC_ALL_LIBS})
+    ADD_EXECUTABLE(TCCTests main/tests-main.cpp ${TCCTests_SRC} ${TCC_SRC} ${TCCTests_INCLUDE})
+    # Set a preprocessor variable
+    SET_PROPERTY(TARGET TCCTests PROPERTY COMPILE_DEFINITIONS _STANDALONE_ APPEND)
+    #target_compile_definitions(TCCTests PRIVATE _STANDALONE_)
+    ADD_DEPENDENCIES(TCCTests VCOMPUTER)
+    IF(TCC_TEST_NETWORK_DISABLE)
+        SET_PROPERTY(TARGET TCCTests PROPERTY COMPILE_DEFINITIONS NO_NETWORK APPEND)
+        #target_compile_definitions(TCCTests PRIVATE NO_NETWORK)
+    ELSE(TCC_TEST_NETWORK_DISABLE)
+        SET_PROPERTY(TARGET TCCTests PROPERTY COMPILE_DEFINITIONS _CLIENT_ _SERVER_ APPEND)
+    ENDIF(TCC_TEST_NETWORK_DISABLE)
+
+    TARGET_LINK_LIBRARIES(TCCTests ${GTEST_LIBRARIES} ${Trillek_Standalone_LIBS})
 endif(TCC_BUILD_TESTS)
