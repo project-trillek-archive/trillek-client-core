@@ -72,12 +72,6 @@ public:
      */
     static component::System& GetSystemComponent() { return *system_component.get(); };
 
-    /** \brief Return the Lua system instance
-    *
-    * \return script::LuaSystem
-    */
-    static script::LuaSystem& GetLuaSystem() { return lua_sys; };
-
     /** \brief Get the storage of system components stored by values
      *
      * \return component::SystemValue& the storage
@@ -100,6 +94,12 @@ public:
     static void NotifyCloseWindow() { close_window = true; };
 
 #if defined(_CLIENT_) || defined(_STANDALONE_)
+    /** \brief Return the Lua system instance
+    *
+    * \return script::LuaSystem
+    */
+    static script::LuaSystem& GetLuaSystem() { return lua_sys; };
+
     /** \brief Return the sound system instance
      *
      * \return sound::System&

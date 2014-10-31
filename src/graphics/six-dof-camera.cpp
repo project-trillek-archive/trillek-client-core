@@ -81,11 +81,11 @@ void SixDOFCamera::Notify(const KeyboardEvent* key_event) {
         case GLFW_KEY_GRAVE_ACCENT:
             if (gravity_disabled) {
                 gravity_disabled = false;
-                TrillekGame::GetPhysicsSystem().SetGravity(this->entity_id, nullptr);
+                TrillekGame::GetPhysicsSystem().SetNormalGravity(this->entity_id);
             }
             else {
                 gravity_disabled = true;
-                TrillekGame::GetPhysicsSystem().SetGravity(this->entity_id, &zero_gravity);
+                TrillekGame::GetPhysicsSystem().SetGravity(this->entity_id, zero_gravity);
             }
         break;
         default:

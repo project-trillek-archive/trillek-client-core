@@ -130,17 +130,19 @@ void PhysicsSystem::Terminate() {
     }
 }
 
-void PhysicsSystem::SetGravity(const unsigned int entity_id, const btVector3* f) {
+void PhysicsSystem::SetGravity(const unsigned int entity_id, btVector3 f) {
     auto& system = TrillekGame::GetSystemComponent();
     if (system.Has<Component::Collidable>(entity_id)) {
-        if (f != nullptr) {
-            system.Get<Component::Collidable>(entity_id).GetRigidBody()
-                                                            ->setGravity(*f);
-        }
-        else {
-            system.Get<Component::Collidable>(entity_id).GetRigidBody()
-                            ->setGravity(this->dynamicsWorld->getGravity());
-        }
+        system.Get<Component::Collidable>(entity_id).GetRigidBody()
+                                                        ->setGravity(f);
+    }
+}
+
+void PhysicsSystem::SetNormalGravity(const unsigned int entity_id) {
+    auto& system = TrillekGame::GetSystemComponent();
+    if (system.Has<Component::Collidable>(entity_id)) {
+        system.Get<Component::Collidable>(entity_id).GetRigidBody()
+                        ->setGravity(this->dynamicsWorld->getGravity());
     }
 }
 

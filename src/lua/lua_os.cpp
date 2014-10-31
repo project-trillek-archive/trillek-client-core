@@ -1,3 +1,5 @@
+#if defined(_CLIENT_) || defined(_STANDALONE_)
+
 #include "systems/lua-system.hpp"
 
 #include <luawrapper/luawrapper.hpp>
@@ -55,3 +57,4 @@ int luaopen_OSSys(lua_State* L) {
 
 } // End of script
 } // End of trillek
+#endif

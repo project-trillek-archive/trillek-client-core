@@ -1,3 +1,5 @@
+#if defined(_CLIENT_) || defined(_STANDALONE_)
+
 #include "systems/lua-system.hpp"
 #include <iostream>
 
@@ -19,3 +21,4 @@ void LuaSystem::RegisterTypes() {
 
 } // End of script
 } // End of trillek
+#endif

@@ -31,11 +31,11 @@ int SetGravity(lua_State* L) {
     auto physSys = luaW_check<physics::PhysicsSystem>(L, 1);
     int entity_id = luaL_checkint(L, 2);
     if (lua_type(L, 3) == LUA_TNIL) {
-        physSys->SetGravity(entity_id, nullptr);
+        physSys->SetNormalGravity(entity_id);
     }
     else {
         physics::VelocityStruct f = luaU_check<physics::VelocityStruct>(L, 3);
-        physSys->SetGravity(entity_id, &f.GetLinear());
+        physSys->SetGravity(entity_id, f.GetLinear());
     }
 
     return 0;
