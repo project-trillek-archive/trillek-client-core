@@ -9,7 +9,7 @@
 #include "trillek.hpp"
 #include "async-data.hpp"
 #include "trillek-scheduler.hpp"
-#include "atomic-map.hpp"
+#include "order-queue.hpp"
 #include "systems/system-base.hpp"
 
 namespace trillek { namespace physics {
@@ -30,8 +30,6 @@ struct VelocityStruct {
     btVector3 GetAngular() const {
         return btVector3(angular.x, angular.y, angular.z);
     }
-    //btVector3 linear;
-    //btVector3 angular;
 };
 
 struct VelocityMaxStruct {
@@ -77,7 +75,7 @@ public:
      * \param const unsigned int entity_id The entity ID the compoennt belongs to.
      * \param std::shared_ptr<T> component The component to add.
      */
-    void AddDynamicComponent(const unsigned int entity_id, std::shared_ptr<Container> shape);
+    void AddDynamicComponent(const unsigned int entity_id, std::shared_ptr<component::Container> shape) override;
 
     void AddBodyToWorld(btRigidBody* body);
 
@@ -99,8 +97,8 @@ public:
     void Terminate() override;
 
     template<class T>
-    void SetVelocity(id_t entity_id, T&& v) const {
-        this->velocities.Insert(entity_id, std::forward<T>(v));
+    void AddOrder(id_t entity_id, T&& v) const {
+        this->orders.AddOrder(entity_id, std::forward<T>(v));
     }
 
     /** \brief Set a rigid body's gravity.
@@ -124,7 +122,7 @@ private:
     btSequentialImpulseConstraintSolver* solver;
     btDiscreteDynamicsWorld* dynamicsWorld;
 
-    AtomicMap<id_t, std::shared_ptr<Container>> velocities;
+    OrderQueue orders;
 
     btCollisionShape* groundShape;
     btDefaultMotionState* groundMotionState;

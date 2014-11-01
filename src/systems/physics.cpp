@@ -7,6 +7,7 @@
 #include <bullet/BulletCollision/Gimpact/btGImpactShape.h>
 #include <bullet/BulletCollision/Gimpact/btGImpactCollisionAlgorithm.h>
 #include "logging.hpp"
+#include "order.hpp"
 
 namespace trillek { namespace physics {
 
@@ -29,9 +30,10 @@ void PhysicsSystem::Start() {
 }
 
 void PhysicsSystem::HandleEvents(frame_tp timepoint) {
-    // publish the forces of the current frame immediately without making a copy of the list
-    for (auto& v : this->velocities.Poll()) {
-        Update<Component::Velocity>(std::move(v.first), std::move(v.second));
+    // Execute the orders
+    auto iterator_pair = this->orders.GetAndTagOrdersFrom(timepoint);
+    for (auto& v = iterator_pair.first; v != iterator_pair.second; ++v) {
+        order::Execute(std::move(v->second.first), std::move(v->second.second));
     }
     // commit velocity updates
     Commit<Component::Velocity>(timepoint);
@@ -109,7 +111,7 @@ void PhysicsSystem::HandleEvents(frame_tp timepoint) {
     auto& bodymap = TrillekGame::GetSystemComponent().Map<Component::Collidable>();
     for (auto& shape : bodymap) {
         btTransform transform;
-        shape.second->Get<Collidable>().GetRigidBody()->getMotionState()->getWorldTransform(transform);
+        Get<Component::Collidable>(shape.second)->GetRigidBody()->getMotionState()->getWorldTransform(transform);
 
         auto pos = transform.getOrigin();
         auto rot = transform.getRotation();
@@ -123,8 +125,8 @@ void PhysicsSystem::HandleEvents(frame_tp timepoint) {
 }
 
 void PhysicsSystem::AddDynamicComponent(const unsigned int entity_id, std::shared_ptr<Container> component) {
-    if (component->Is<Collidable>()) {
-        AddBodyToWorld(component->Get<Collidable>().GetRigidBody());
+    if (component->Is<Component::Collidable>()) {
+        AddBodyToWorld(component::Get<Component::Collidable>(component)->GetRigidBody());
     }
 }
 

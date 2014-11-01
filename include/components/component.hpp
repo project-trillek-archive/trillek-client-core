@@ -25,7 +25,6 @@
 namespace trillek {
 
 class Property;
-class Container;
 class Transform;
 
 namespace physics {
@@ -51,6 +50,7 @@ public:
 
 namespace component {
 
+class Container;
 class System;
 class Shared;
 class SystemValue;
@@ -76,9 +76,12 @@ struct ContainerRef {
 template<Component C> struct type_trait;
 template<Component C> struct container_type_trait;
 
+template<Component C, class T=typename type_trait<C>::value_type>
+std::shared_ptr<Container> Create(const typename type_trait<C>::value_type& comp);
+
 template<Component C>
 std::shared_ptr<Container> Initialize(const std::vector<Property> &properties) {
-    return std::allocate_shared<Container>(TrillekAllocator<Container>(), typename type_trait<C>::value_type());
+    return component::Create<C>(typename type_trait<C>::value_type());
 };
 
 template<Component C>

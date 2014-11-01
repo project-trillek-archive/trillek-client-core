@@ -21,8 +21,8 @@ int SetVelocity(lua_State* L) {
     auto physSys = luaW_check<physics::PhysicsSystem>(L, 1);
     int entity_id = luaL_checkint(L, 2);
     physics::VelocityStruct f = luaU_check<physics::VelocityStruct>(L, 3);
-    auto v_ptr = std::allocate_shared<Container>(TrillekAllocator<Container>(), component::Velocity_type(f));
-    physSys->SetVelocity(entity_id, std::move(v_ptr));
+    auto v_ptr = component::Create<component::Component::Velocity>(component::Velocity_type(f));
+    physSys->AddOrder(entity_id, std::move(v_ptr));
 
     return 0;
 }

@@ -3,7 +3,7 @@
 
 #include "systems/rewindable-map.hpp"
 #include "component.hpp"
-#include "container.hpp"
+#include "component-container.hpp"
 
 namespace trillek { namespace component {
 
@@ -32,7 +32,7 @@ public:
 
     template<Component type>
     const typename type_trait<type>::value_type& Get(id_t entity_id) {
-        return Map<type>().Map().at(entity_id)->Get<typename type_trait<type>::value_type>();
+        return *component::Get<type>(Map<type>().Map().at(entity_id));
     }
 
     template<Component type>
@@ -43,7 +43,7 @@ public:
     template<Component type>
     std::shared_ptr<const typename type_trait<type>::value_type> GetSharedPtr(id_t entity_id) {
         const auto& ptr = std::const_pointer_cast<Container>(Map<type>().Map().at(entity_id));
-        return Container::GetSharedPtr<const typename type_trait<type>::value_type>(ptr);
+        return component::Get<type,const typename type_trait<type>::value_type>(ptr);
     }
 
     template<Component type>
@@ -53,7 +53,7 @@ public:
 
     template<Component type, class V>
     void Insert(id_t entity_id, V&& value, typename std::enable_if<!util::is_shared_ptr<typename std::decay<V>::type>::value>::type* = 0) {
-        Map<type>().Insert(entity_id, std::allocate_shared<const Container>(TrillekAllocator<Container>(), std::forward<V>(value)));
+        Map<type>().Insert(entity_id, component::CreateConst<type>(std::forward<V>(value)));
     }
 
 
@@ -64,7 +64,7 @@ public:
 
     template<Component type, class V>
     void Update(id_t entity_id, V&& value, typename std::enable_if<!util::is_shared_ptr<typename std::decay<V>::type>::value>::type* = 0) {
-        Map<type>().Update(entity_id, std::allocate_shared<const Container>(TrillekAllocator<Container>(), std::forward<V>(value)));
+        Map<type>().Update(entity_id, component::CreateConst<type>(std::forward<V>(value)));
     }
 
     template<Component type, class V>

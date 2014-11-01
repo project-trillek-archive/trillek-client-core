@@ -10,7 +10,7 @@ namespace trillek {
 using namespace component;
 
 template<Component type>
-static std::shared_ptr<Container> CreateComponent(id_t entity_id,
+static std::shared_ptr<component::Container> CreateComponent(id_t entity_id,
                                 const std::vector<Property> &properties) {
     auto type_id = static_cast<uint32_t>(type);
     auto sharedcomp = component::Initialize<type>(properties);

@@ -122,7 +122,6 @@ public:
             if (comp && (inst->systems.count(type_id))) {
                 (ComponentAdder<DYNAMIC,C,SystemBase>(inst->systems.at(type_id)))
                                                                     (entity_id, comp);
-                inst->components.at(type_id)[entity_id] = std::move(comp);
                 return true;
             }
             return false;
@@ -167,12 +166,12 @@ public:
     template<class T>
     std::shared_ptr<T> Get(id_t entity_id) {
         unsigned int type_id = reflection::GetTypeID<T>();
-        if (! instance->components[type_id].count(entity_id)) {
+        if (! instance->graphic_components[type_id].count(entity_id)) {
             LOGMSGC(ERROR) << "Component type #" << type_id <<
                                     " not found for entity id #" << entity_id;
             return nullptr;
         }
-        return std::static_pointer_cast<T>(instance->components[type_id].at(entity_id));
+        return std::static_pointer_cast<T>(instance->graphic_components[type_id].at(entity_id));
     }
 
     /**
@@ -204,6 +203,8 @@ public:
      * \brief Creates a component with the given name and initializes it. This
      * is used at compile time when type information is known.
      *
+     * Only used by the graphics system.
+     *
      * \param[in] const std::string & name The name of the component to create.
      * \param[in] const std::vector<Property> & properties The creation
      * properties for the component.
@@ -211,19 +212,19 @@ public:
      * already exists, otherwise the created component.
      */
     template<class T>
-    std::shared_ptr<Container> Create(const unsigned int entity_id, const std::vector<Property> &properties) {
+    std::shared_ptr<graphics::Container> Create(const unsigned int entity_id, const std::vector<Property> &properties) {
         unsigned int type_id = reflection::GetTypeID<T>();
-        if (instance->components[type_id].find(entity_id) == instance->components[type_id].end()) {
-            auto sharedcomp = std::make_shared<Container>(T());
+        if (instance->graphic_components[type_id].find(entity_id) == instance->graphic_components[type_id].end()) {
+            auto sharedcomp = std::make_shared<graphics::Container>(T());
             sharedcomp->Get<T>().component_type_id = type_id;
             if (!sharedcomp->Get<T>().Initialize(properties)) {
-                instance->components[type_id].erase(entity_id);
+                instance->graphic_components[type_id].erase(entity_id);
                 return nullptr;
             }
-            instance->components[type_id][entity_id] = sharedcomp;
+            instance->graphic_components[type_id][entity_id] = sharedcomp;
             return std::move(sharedcomp);
         }
-        return instance->components[type_id][entity_id];
+        return instance->graphic_components[type_id][entity_id];
     }
 
     /**
@@ -235,7 +236,7 @@ public:
      */
     template<class T,class U = std::shared_ptr<const T>>
     void Add(id_t entity_id, U&& r) {
-        instance->components.at(reflection::GetTypeID<T>())[entity_id] = std::forward<U>(r);
+        instance->graphic_components.at(reflection::GetTypeID<T>())[entity_id] = std::forward<U>(r);
     }
 
     /**
@@ -255,7 +256,7 @@ public:
     // Inherited from Parse
     virtual bool Parse(rapidjson::Value& node);
 private:
-    std::map<unsigned int, std::map<id_t, std::shared_ptr<Container>>> components; // Mapping of component TypeID to loaded components
+    std::map<unsigned int, std::map<id_t, std::shared_ptr<graphics::Container>>> graphic_components; // Mapping of component TypeID to loaded components for graphic
     std::map<unsigned int, SystemBase*> systems; // Mapping of component TypeID to system to add it to
     std::map<std::string, unsigned int> component_type_id; // Stores a mapping of TypeName to TypeID
     std::map<unsigned int, std::function<bool(const unsigned int, const std::vector<Property> &properties)>> factories; // Mapping of type ID to factory function.

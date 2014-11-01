@@ -15,7 +15,7 @@ bool TransformMap::Serialize(rapidjson::Document& document) {
     rapidjson::Value transform_node(rapidjson::kObjectType);
 
     for (auto& entity_transform_wrapped : TrillekGame::GetSharedComponent().Map<Component::Transform>().Map()) {
-        auto& entity_transform = entity_transform_wrapped.second->Get<Transform_type>();
+        auto& entity_transform = *Get<Component::Transform>(entity_transform_wrapped.second);
         rapidjson::Value transform_object(rapidjson::kObjectType);
 
         rapidjson::Value translation_element(rapidjson::kObjectType);

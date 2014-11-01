@@ -707,7 +707,7 @@ inline void RenderSystem::UpdateModelMatrices(const frame_tp& timepoint) {
     for (const auto& transform_el : transform_map_pos) {
         // for each modified transform in the frame
         const auto id = transform_el.first;
-        const auto& transform = transform_el.second->Get<Transform>();
+        const auto& transform = *component::Get<Component::Transform>(transform_el.second);
         glm::mat4 model_matrix = glm::translate(transform.GetTranslation()) *
             glm::mat4_cast(transform.GetOrientation()) *
             glm::scale(transform.GetScale());

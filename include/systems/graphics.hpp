@@ -24,7 +24,7 @@
 #include <map>
 #include "systems/dispatcher.hpp"
 #include "os.hpp"
-#include "container.hpp"
+#include "graphics/graphics-container.hpp"
 
 namespace trillek {
 

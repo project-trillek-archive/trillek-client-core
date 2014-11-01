@@ -3,7 +3,7 @@
 
 #include <map>
 #include "component.hpp"
-#include "container.hpp"
+#include "component-container.hpp"
 #include "bitmap.hpp"
 
 namespace trillek { namespace component {
@@ -31,13 +31,13 @@ public:
 
     template<Component type>
     typename type_trait<type>::value_type& Get(id_t entity_id) {
-        return Map<type>().at(entity_id)->Get<typename type_trait<type>::value_type>();
+        return *component::Get<type>(Map<type>().at(entity_id));
     }
 
     template<Component type>
     std::shared_ptr<typename type_trait<type>::value_type> GetSharedPtr(id_t entity_id) {
         const auto& ptr = Map<type>().at(entity_id);
-        return Container::GetSharedPtr<typename type_trait<type>::value_type>(ptr);
+        return component::Get<typename type_trait<type>::value_type>(ptr);
     }
 
     template<Component C>
@@ -47,7 +47,7 @@ public:
 
     template<Component type, class V>
     void Insert(id_t entity_id, V&& value) {
-        Map<type>().insert(std::make_pair(std::move(entity_id), std::allocate_shared<Container>(TrillekAllocator<Container>(), std::forward<V>(value))));
+        Map<type>().insert(std::make_pair(std::move(entity_id), component::Create<type>(std::forward<V>(value))));
         LOGMSG(DEBUG) << "system inserting component " << reflection::GetTypeName<std::integral_constant<Component,type>>() << " for entity #" << entity_id;
         Bitmap<type>()[entity_id] = true;
     }

@@ -5,9 +5,9 @@
 
 namespace trillek {
 
-class Container;
-
 namespace component {
+
+class Container;
 
 extern template std::shared_ptr<Container> Initialize<Component::VelocityMax>(const std::vector<Property> &properties);
 extern template std::shared_ptr<Container> Initialize<Component::Collidable>(const std::vector<Property> &properties);

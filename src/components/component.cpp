@@ -1,6 +1,6 @@
 #include "components/component.hpp"
 #include "property.hpp"
-#include "container.hpp"
+#include "components/component-container.hpp"
 #include "physics/collidable.hpp"
 #include "trillek-game.hpp"
 #include "components/system-component-value.hpp"
@@ -58,7 +58,7 @@ std::shared_ptr<Container> Initialize<Component::VelocityMax>(const std::vector<
             return nullptr;
         }
     }
-    return std::allocate_shared<Container>(TrillekAllocator<Container>(), VelocityMax_type(std::move(lmax), std::move(amax)));
+    return component::Create<Component::VelocityMax>(VelocityMax_type(std::move(lmax), std::move(amax)));
 }
 
 template<>
@@ -95,8 +95,8 @@ id_t Initialize<Component::ReferenceFrame>(bool& result, const std::vector<Prope
 
 template<>
 std::shared_ptr<Container> Initialize<Component::Collidable>(const std::vector<Property> &properties) {
-    auto ret = std::allocate_shared<Container>(TrillekAllocator<Container>(), physics::Collidable());
-    if (ret->Get<physics::Collidable>().Initialize(properties)) {
+    auto ret = component::Create<Component::Collidable>(physics::Collidable());
+    if (component::Get<Component::Collidable>(ret)->Initialize(properties)) {
         return std::move(ret);
     }
     return nullptr;

@@ -6,7 +6,13 @@
 
 namespace trillek {
 
-class Container;
+namespace component {
+    class Container;
+}
+
+namespace graphics {
+    class Container;
+}
 
 class SystemBase {
 
@@ -60,7 +66,18 @@ public:
      * \param std::shared_ptr<ComponentBase> component The component to add.
      */
     virtual void AddDynamicComponent(const unsigned int entity_id,
-                                    std::shared_ptr<Container> component) {};
+                                    std::shared_ptr<component::Container> component) {};
+
+    /**
+     * \brief Adds a component to the system (graphic version).
+     *
+     * The component is not stored in the system but in the ComponentFactory
+     *
+     * \param const unsigned int entityID The entity ID the compoennt belongs to.
+     * \param std::shared_ptr<ComponentBase> component The component to add.
+     */
+    virtual void AddDynamicComponent(const unsigned int entity_id,
+                                    std::shared_ptr<graphics::Container> component) {};
 };
 
 } // namespace trillek

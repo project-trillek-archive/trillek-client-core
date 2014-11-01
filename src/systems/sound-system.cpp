@@ -123,7 +123,7 @@ void System::HandleEvents(frame_tp timepoint) {
         auto& transformmap = itmap->second;
         if (transformmap.count(TrillekGame::GetGraphicSystem().GetActiveCameraID())) {
             // the camera is moving
-            auto& data = transformmap.at(TrillekGame::GetGraphicSystem().GetActiveCameraID())->Get<Transform>();
+            auto& data = *component::Get<component::Component::Transform>(transformmap.at(TrillekGame::GetGraphicSystem().GetActiveCameraID()));
             const glm::vec3& position = data.GetTranslation();
             alListener3f(AL_POSITION, position.x, position.y, position.z);
             const glm::vec3& up = data.GetOrientation() * UP_VECTOR;
