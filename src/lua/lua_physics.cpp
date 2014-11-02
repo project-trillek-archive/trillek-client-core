@@ -23,8 +23,8 @@ int SetVelocity(lua_State* L) {
     physics::VelocityStruct f = luaU_check<physics::VelocityStruct>(L, 3);
     auto camera_orientation = glm::toMat4(component::Get<component::Component::Transform>(entity_id).GetOrientation());
     physics::VelocityStruct g(camera_orientation * f.linear, camera_orientation * f.angular);
-    auto v_ptr = component::Create<component::Component::Velocity>(g);
-    physSys->AddOrder(entity_id, std::move(v_ptr));
+    auto v_ptr = component::Create<component::Component::Velocity>(std::move(g));
+    physSys->AddCommand(entity_id, std::move(v_ptr));
 
     return 0;
 }

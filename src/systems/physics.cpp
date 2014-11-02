@@ -7,7 +7,7 @@
 #include <bullet/BulletCollision/Gimpact/btGImpactShape.h>
 #include <bullet/BulletCollision/Gimpact/btGImpactCollisionAlgorithm.h>
 #include "logging.hpp"
-#include "order.hpp"
+#include "user-command.hpp"
 
 namespace trillek { namespace physics {
 
@@ -30,10 +30,10 @@ void PhysicsSystem::Start() {
 }
 
 void PhysicsSystem::HandleEvents(frame_tp timepoint) {
-    // Execute the orders
-    auto iterator_pair = this->orders.GetAndTagOrdersFrom(timepoint);
+    // Execute the commands
+    auto iterator_pair = this->usercommands.GetAndTagCommandsFrom(timepoint);
     for (auto& v = iterator_pair.first; v != iterator_pair.second; ++v) {
-        order::Execute(std::move(v->second.first), std::move(v->second.second));
+        usercommand::Execute(std::move(v->second.first), std::move(v->second.second));
     }
     // commit velocity updates
     Commit<Component::Velocity>(timepoint);

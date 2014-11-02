@@ -7,12 +7,22 @@
 namespace trillek {
 namespace component {
 
+/**
+ * \brief A class to contain a component.
+ *
+ * 'type' contain the integer given to the component
+ * in the Component enum.
+ *
+ * Is() tests the component enumerator
+ */
 class Container {
 public:
     typedef std::underlying_type<Component>::type component_type;
 
     template<Component C>
-    bool Is() { return static_cast<component_type>(C) == type; };
+    bool Is() const { return static_cast<component_type>(C) == type; };
+
+    component_type GetTypeId() const { return type; };
 
 protected:
     Container(component_type n) : type(n) {};
@@ -22,10 +32,8 @@ private:
 };
 
 /**
- * \brief A class to contain an arbitrary value.
+ * \brief A class to contain the value.of the component
  *
- * This class is used to carry dynamic typed values.
- * The type contained can be determined with GetType() or Is<T>()
  */
 template<Component C, class T=typename type_trait<C>::value_type>
 class ContainerObject : public Container {
@@ -56,7 +64,7 @@ private:
     content_type content;
 };
 
-/** \brief Create an alias to a shared pointer
+/** \brief Alias a shared_ptr<Container> to get a shared_ptr<T>
  *
  * \param ct const std::shared_ptr<Container>& the original pointer
  * \return std::shared_ptr<T> the alias
@@ -67,10 +75,10 @@ std::shared_ptr<T> Get(const std::shared_ptr<Container>& ct) {
     return std::shared_ptr<T>(ct,&std::static_pointer_cast<ContainerObject<C>>(ct)->Get());
 }
 
-/** \brief Create an alias to a shared pointer
+/** \brief Alias a shared_ptr<const Container> to get a shared_ptr<const T>
  *
  * \param ct const std::shared_ptr<Container>& the original pointer
- * \return std::shared_ptr<T> the alias
+ * \return std::shared_ptr<const T> the alias
  *
  */
 template<Component C, class T=typename type_trait<C>::value_type>
@@ -78,26 +86,32 @@ std::shared_ptr<const T> Get(const std::shared_ptr<const Container>& ct) {
     return std::shared_ptr<const T>(ct,&std::static_pointer_cast<const ContainerObject<C>>(ct)->Get());
 }
 
-/** \brief Create an alias to a shared pointer
+/** \brief Put a component data in a component container
  *
- * \param ct const std::shared_ptr<Container>& the original pointer
- * \return std::shared_ptr<T> the alias
+ * T must match the component data type or can be implicitly cast to it.
+ *
+ * \param comp the data
+ * \return std::shared_ptr<Container> the container
  *
  */
 template<Component C, class T=typename type_trait<C>::value_type>
-std::shared_ptr<Container> Create(const typename type_trait<C>::value_type& comp) {
-    return std::static_pointer_cast<Container>(std::allocate_shared<ContainerObject<C,T>>(TrillekAllocator<ContainerObject<C,T>>(), comp));
+std::shared_ptr<Container> Create(T&& comp) {
+    return std::static_pointer_cast<Container>(std::allocate_shared<ContainerObject<C,T>>(TrillekAllocator<ContainerObject<C,T>>(), std::forward<T>(comp)));
 }
 
-/** \brief Create an alias to a shared pointer
+/** \brief Put a component data in a component container
  *
- * \param ct const std::shared_ptr<Container>& the original pointer
- * \return std::shared_ptr<T> the alias
+ * This version returns a const Container.
+ *
+ * T must match the component data type or can be implicitly cast to it.
+ *
+ * \param comp the data
+ * \return std::shared_ptr<const Container> the container
  *
  */
 template<Component C, class T=typename type_trait<C>::value_type>
-std::shared_ptr<const Container> CreateConst(const typename type_trait<C>::value_type& comp) {
-    return std::static_pointer_cast<const Container>(std::allocate_shared<ContainerObject<C,T>>(TrillekAllocator<ContainerObject<C,T>>(), comp));
+std::shared_ptr<const Container> CreateConst(T&& comp) {
+    return std::static_pointer_cast<const Container>(std::allocate_shared<ContainerObject<C,T>>(TrillekAllocator<ContainerObject<C,T>>(), std::forward<T>(comp)));
 }
 
 } // namespace component

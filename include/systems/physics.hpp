@@ -9,7 +9,7 @@
 #include "trillek.hpp"
 #include "async-data.hpp"
 #include "trillek-scheduler.hpp"
-#include "order-queue.hpp"
+#include "user-command-queue.hpp"
 #include "systems/system-base.hpp"
 
 namespace trillek { namespace physics {
@@ -97,8 +97,8 @@ public:
     void Terminate() override;
 
     template<class T>
-    void AddOrder(id_t entity_id, T&& v) const {
-        this->orders.AddOrder(entity_id, std::forward<T>(v));
+    void AddCommand(id_t entity_id, T&& v) const {
+        this->usercommands.AddCommand(entity_id, std::forward<T>(v));
     }
 
     /** \brief Set a rigid body's gravity.
@@ -122,7 +122,7 @@ private:
     btSequentialImpulseConstraintSolver* solver;
     btDiscreteDynamicsWorld* dynamicsWorld;
 
-    OrderQueue orders;
+    UserCommandQueue usercommands;
 
     btCollisionShape* groundShape;
     btDefaultMotionState* groundMotionState;
