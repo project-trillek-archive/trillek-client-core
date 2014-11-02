@@ -15,15 +15,15 @@
 namespace trillek { namespace physics {
 
 struct VelocityStruct {
-    VelocityStruct() : linear(0,0,0), angular(0,0,0) {};
+    VelocityStruct() : linear(0,0,0,0), angular(0,0,0,0) {};
 
     template<class T>
     VelocityStruct(T&& linear, T&& angular)
         :   linear(std::forward<T>(linear)),
             angular(std::forward<T>(angular)) {};
 
-    glm::vec3 linear;
-    glm::vec3 angular;
+    glm::vec4 linear;
+    glm::vec4 angular;
     btVector3 GetLinear() const {
         return btVector3(linear.x, linear.y, linear.z);
     }
