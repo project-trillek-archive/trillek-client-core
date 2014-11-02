@@ -3,7 +3,7 @@
 
 #include "property.hpp"
 #include "type-id.hpp"
-#include "container.hpp"
+#include "graphics/graphics-container.hpp"
 
 namespace trillek {
 namespace reflection {
@@ -57,7 +57,7 @@ TEST(RTTITests, TypeIDMatch) {
     TRILLEK_MAKE_IDTYPE_NS(glm, mat3x3, 27)
     TRILLEK_MAKE_IDTYPE_NS(glm, mat4x4, 28)
     TRILLEK_MAKE_IDTYPE_NS(glm, quat, 29)
-    TRILLEK_MAKE_IDTYPE(Container, 30)
+    TRILLEK_MAKE_IDTYPE(graphics::Container, 30)
     TRILLEK_MAKE_IDTYPE(Property, 31)
     TRILLEK_MAKE_IDTYPE_NS(std, string, 32)
     TRILLEK_MAKE_IDTYPE_NS(glm, dvec2, 33)
@@ -70,6 +70,8 @@ TEST(RTTITests, TypeIDMatch) {
 }
 
 TEST(RTTITests, BasicTypes) {
+    using graphics::Container;
+
     const std::string name = "Test";
     std::vector<Container> test_vector;
     int i = 0;
