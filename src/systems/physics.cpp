@@ -83,8 +83,8 @@ void PhysicsSystem::HandleEvents(frame_tp timepoint) {
         }
     );
 
-    // Kill entities with health and whose health is 0
-    OnTrue(Bitmap<Component::Health>(),
+    // Kill entities with health and whose health is 0 and are not immune
+    OnTrue(Bitmap<Component::Health>() & ~Bitmap<Component::Immune>(),
         [&](id_t entity_id) {
             // this function is executed only on entitities that has a health component
             auto health = Get<Component::Health>(entity_id);
@@ -93,6 +93,8 @@ void PhysicsSystem::HandleEvents(frame_tp timepoint) {
                 LOGMSG(INFO) << "Entity #" << entity_id << " should die now";
                 // set helth to 300
                 Update<Component::Health>(entity_id, 300);
+                // set immunity
+                Insert<Component::Immune>(entity_id, true);
             }
             else {
                 // decrement health
