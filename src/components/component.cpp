@@ -102,5 +102,27 @@ std::shared_ptr<Container> Initialize<Component::Collidable>(const std::vector<P
     return nullptr;
 }
 
+template<>
+uint32_t Initialize<Component::Health>(bool& result, const std::vector<Property> &properties) {
+    id_t entity_id;
+    uint32_t health = 100;       // default value;
+    result = false;
+    for (const Property& p : properties) {
+        std::string name = p.GetName();
+        if (name == "health") {
+            health = p.Get<uint32_t>();
+        }
+        else if (name == "entity_id") {
+            entity_id = p.Get<id_t>();
+            // tell to the caller that we must add the component
+            result = true;
+        }
+        else {
+            LOGMSG(ERROR) << "Health: Unknown property: " << name;
+        }
+    }
+    return health;
+}
+
 } // namespace component
 } // namespace trillek

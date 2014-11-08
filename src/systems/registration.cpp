@@ -66,6 +66,8 @@ void ComponentFactory::RegisterTypes() {
     RegisterComponentType(ComponentAdder<SYSTEM,Component::IsReferenceFrame,bool>(system_value));
     RegisterComponentType(ComponentAdder<SYSTEM,Component::CombinedVelocity>(system));
     RegisterComponentType(ComponentAdder<SHARED,Component::Transform, bool>(shared));
+    RegisterComponentType(ComponentAdder<SYSTEM,Component::ReferenceFrame,id_t>(system_value));
+    RegisterComponentType(ComponentAdder<SYSTEM,Component::Health,uint32_t>(system_value));
 #if defined(_CLIENT_) || defined(_STANDALONE_)
     RegisterComponentType<graphics::Renderable>();
     RegisterComponentType<graphics::LightBase>();

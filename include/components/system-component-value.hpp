@@ -44,7 +44,12 @@ public:
     virtual ~SystemValue() {};
 
     template<Component type>
-    typename type_trait<type>::value_type& Get(id_t entity_id) {
+    typename type_trait<type>::value_type& Get(id_t entity_id, typename std::enable_if<!std::is_same<typename type_trait<type>::value_type,bool>::value>::type* = 0) {
+        return Map<type>().at(entity_id);
+    }
+
+    template<Component type>
+    typename type_trait<type>::value_type Get(id_t entity_id, typename std::enable_if<std::is_same<typename type_trait<type>::value_type,bool>::value>::type* = 0) {
         return Map<type>().at(entity_id);
     }
 

@@ -83,6 +83,24 @@ void PhysicsSystem::HandleEvents(frame_tp timepoint) {
         }
     );
 
+    // Kill entities with health and whose health is 0
+    OnTrue(Bitmap<Component::Health>(),
+        [&](id_t entity_id) {
+            // this function is executed only on entitities that has a health component
+            auto health = Get<Component::Health>(entity_id);
+            if (health == 0) {
+                //kill entity
+                LOGMSG(INFO) << "Entity #" << entity_id << " should die now";
+                // set helth to 300
+                Update<Component::Health>(entity_id, 300);
+            }
+            else {
+                // decrement health
+                Update<Component::Health>(entity_id, --health);
+            }
+        }
+    );
+
 
     dynamicsWorld->stepSimulation(delta * 1.0E-9, 10);
     // Set out transform updates.

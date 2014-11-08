@@ -62,7 +62,8 @@ enum class Component : uint32_t {
     IsReferenceFrame,
     CombinedVelocity,
     Collidable,
-    Transform
+    Transform,
+    Health
 };
 
 // A class to hold a container reference
@@ -98,7 +99,12 @@ static typename container_type_trait<C>::container_type GetContainer() {
 };
 
 template<Component C>
-static const typename type_trait<C>::value_type& Get(id_t entity_id) {
+static const typename type_trait<C>::value_type& Get(id_t entity_id, typename std::enable_if<!std::is_same<typename type_trait<C>::value_type,bool>::value>::type* = 0) {
+    return GetContainer<C>().Get<C>(entity_id);
+}
+
+template<Component C>
+static typename type_trait<C>::value_type Get(id_t entity_id, typename std::enable_if<std::is_same<typename type_trait<C>::value_type,bool>::value>::type* = 0) {
     return GetContainer<C>().Get<C>(entity_id);
 }
 
@@ -142,6 +148,7 @@ TRILLEK_MAKE_COMPONENT(ReferenceFrame,"reference-frame",id_t,SystemValue)
 TRILLEK_MAKE_COMPONENT(IsReferenceFrame,"is-reference-frame",bool,SystemValue)
 TRILLEK_MAKE_COMPONENT(CombinedVelocity,"combined-velocity",trillek::physics::VelocityStruct,System)
 TRILLEK_MAKE_COMPONENT(Transform,"transform",trillek::Transform, Shared)
+TRILLEK_MAKE_COMPONENT(Health,"health",uint32_t,SystemValue)
 
 } // namespace trillek
 
