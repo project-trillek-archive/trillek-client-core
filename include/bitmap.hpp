@@ -303,8 +303,14 @@ private:
             result.push_back(operation(last_right.bitarray.at(k), first_right.def_value));
         }
         a.def_value = operation(a.def_value, b.def_value);
-        a.first_block = first_size ? left : last_left.first_block;
-        a.last_block = last_size ? right : first_right.last_block;
+        if(result.size()) {
+            a.first_block = first_size ? left : last_left.first_block;
+            a.last_block = last_size ? right : first_right.last_block;
+        }
+        else {
+            a.first_block = 0;
+            a.last_block = 0;
+        }
         a.bsize = std::max(a.bsize, b.bsize);
         a.bitarray = std::move(result);
     }
