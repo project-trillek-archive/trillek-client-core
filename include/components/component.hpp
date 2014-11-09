@@ -89,7 +89,9 @@ typename type_trait<C>::value_type Initialize(bool& result, const std::vector<Pr
 
 template<class T>
 static void OnTrue(const BitMap<T>& bitmap, const std::function<void(id_t)>& operation) {
-    for (auto i = bitmap.enumerator(); *i < bitmap.size(); ++i) {
+    // TODO replace 10000 by the number of entities in the game.
+    auto end = bitmap.DefaultValue() ? std::max(bitmap.size(), size_t(10000)) : bitmap.size();
+    for (auto i = bitmap.enumerator(10000); *i < end; ++i) {
         operation(*i);
     }
 };
