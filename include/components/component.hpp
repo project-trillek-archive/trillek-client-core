@@ -72,6 +72,16 @@ static typename type_trait<C>::value_type Get(id_t entity_id, typename std::enab
     return GetContainer<C>().Get<C>(entity_id);
 }
 
+template<Component C>
+std::shared_ptr<typename type_trait<C>::value_type> GetSharedPtr(id_t entity_id) {
+    return GetContainer<C>().GetSharedPtr<C>(entity_id);
+}
+
+template<Component C>
+std::shared_ptr<const typename type_trait<C>::value_type> GetConstSharedPtr(id_t entity_id) {
+    return GetContainer<C>().GetSharedPtr<C>(entity_id);
+}
+
 template<Component C, class V>
 static void Insert(id_t entity_id, V&& value) {
     GetContainer<C>().Insert<C>(entity_id, std::forward<V>(value));
@@ -88,7 +98,12 @@ static void Remove(id_t entity_id) {
 }
 
 template<Component C>
-static BitMap<uint32_t>& Bitmap() {
+static bool Has(id_t entity_id) {
+    return GetContainer<C>().Has<C>(entity_id);
+}
+
+template<Component C>
+static const BitMap<uint32_t>& Bitmap() {
     return GetContainer<C>().Bitmap<C>();
 };
 

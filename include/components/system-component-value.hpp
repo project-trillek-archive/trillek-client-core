@@ -62,7 +62,7 @@ public:
     template<Component C, class V>
     void Insert(id_t entity_id, V&& value, typename std::enable_if<!std::is_same<typename type_trait<C>::value_type,bool>::value>::type* = 0) {
         Update<C>(entity_id, std::forward<V>(value));
-        Bitmap<C>()[entity_id] = true;
+        SystemValueContainer<C,typename type_trait<C>::value_type>::bitmap[entity_id] = true;
     }
 
     // bool specialization
@@ -79,7 +79,7 @@ public:
     template<Component type>
     void Remove(id_t entity_id, typename std::enable_if<!std::is_same<typename type_trait<type>::value_type,bool>::value>::type* = 0) {
         Map<type>().erase(entity_id);
-        Bitmap<type>()[entity_id] = false;
+        SystemValueContainer<type,typename type_trait<type>::value_type>::bitmap[entity_id] = false;
     }
 
     // bool specialization
@@ -94,7 +94,7 @@ public:
     }
 
     template<Component C>
-    BitMap<uint32_t>& Bitmap() {
+    const BitMap<uint32_t>& Bitmap() {
         return SystemValueContainer<C,typename type_trait<C>::value_type>::bitmap;
     }
 

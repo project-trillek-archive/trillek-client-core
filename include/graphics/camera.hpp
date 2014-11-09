@@ -3,6 +3,7 @@
 
 #include "trillek-game.hpp"
 #include "components/shared-component.hpp"
+#include "components/system-component.hpp"
 #include "systems/transform-system.hpp"
 #include "type-id.hpp"
 #include "transform.hpp"
@@ -25,22 +26,21 @@ public:
      * \param const unsigned int entity_id The ID of the entity whose transform we need to use.
      */
     void Activate(const unsigned int entity_id) {
-        auto& shared = TrillekGame::GetSharedComponent();
         this->active = true;
         this->entity_id = entity_id;
-        if (! shared.Has<Component::Velocity>(entity_id)) {
+        if (! Has<Component::Velocity>(entity_id)) {
             // Add velocity component if needed
-            shared.Insert<Component::Velocity>(entity_id, Velocity_type());
+            Insert<Component::Velocity>(entity_id, Velocity_type());
             // set null values to prevent move
             this->entity_speed = glm::vec3(0.0f);
             this->entity_rotation_speed = glm::vec3(0.0f);
         }
         else {
-            auto& velocity = shared.Get<Component::VelocityMax>(entity_id);
+            auto& velocity = Get<Component::VelocityMax>(entity_id);
             this->entity_speed = velocity.linear;
             this->entity_rotation_speed = velocity.angular;
         }
-        this->camera_transform = shared.GetSharedPtr<Component::Transform>(entity_id);
+        this->camera_transform = GetConstSharedPtr<Component::GraphicTransform>(entity_id);
     }
 
     /**
@@ -51,7 +51,7 @@ public:
         this->camera_transform = nullptr;
         // if the entity can't move, remove the velocity component
         if (this->entity_speed == glm::vec3(0.0f)) {
-            TrillekGame::GetSharedComponent().Remove<Component::Velocity>(entity_id);
+            Remove<Component::Velocity>(entity_id);
         }
     }
 

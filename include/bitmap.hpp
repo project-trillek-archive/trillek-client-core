@@ -154,7 +154,7 @@ public:
     }
 
     // NOT operation
-    BitMap<T> operator~() {
+    BitMap<T> operator~() const {
         BitMap<T> ret;
         ret.first_block = this->first_block;
         ret.last_block = this->last_block;

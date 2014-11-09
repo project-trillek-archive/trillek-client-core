@@ -115,13 +115,14 @@ void PhysicsSystem::HandleEvents(frame_tp timepoint) {
 
         auto pos = transform.getOrigin();
         auto rot = transform.getRotation();
-        Transform_type entity_transform(Get<Component::Transform>(shape.first));
+        GraphicTransform_type entity_transform(Get<Component::GraphicTransform>(shape.first));
         entity_transform.SetTranslation(glm::vec3(pos.x(), pos.y(), pos.z()));
         entity_transform.SetOrientation(glm::quat(rot.w(), rot.x(), rot.y(), rot.z()));
-        Update<Component::Transform>(shape.first, std::move(entity_transform));
+        Update<Component::GraphicTransform>(shape.first, std::move(entity_transform));
     }
+
     // Publish the new updated transforms map
-    Commit<Component::Transform>(timepoint);
+    Commit<Component::GraphicTransform>(timepoint);
 }
 
 void PhysicsSystem::AddDynamicComponent(const unsigned int entity_id, std::shared_ptr<Container> component) {

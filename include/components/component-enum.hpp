@@ -41,9 +41,10 @@ enum class Component : uint32_t {
     IsReferenceFrame,
     CombinedVelocity,
     Collidable,
-    Transform,
     Health,
-    Immune
+    Immune,
+    GraphicTransform,
+    GameTransform
 };
 
 template<Component C> struct type_trait;
@@ -57,9 +58,10 @@ TRILLEK_MAKE_COMPONENT(VelocityMax,"velocity-max",trillek::physics::VelocityMaxS
 TRILLEK_MAKE_COMPONENT(ReferenceFrame,"reference-frame",id_t,SystemValue)
 TRILLEK_MAKE_COMPONENT(IsReferenceFrame,"is-reference-frame",bool,SystemValue)
 TRILLEK_MAKE_COMPONENT(CombinedVelocity,"combined-velocity",trillek::physics::VelocityStruct,System)
-TRILLEK_MAKE_COMPONENT(Transform,"transform",trillek::Transform, Shared)
 TRILLEK_MAKE_COMPONENT(Health,"health",uint32_t,SystemValue)
 TRILLEK_MAKE_COMPONENT(Immune,"immune",bool,SystemValue)
+TRILLEK_MAKE_COMPONENT(GraphicTransform,"graphic-transform",trillek::Transform, Shared)
+TRILLEK_MAKE_COMPONENT(GameTransform,"game-transform",trillek::Transform, Shared)
 
 } // namespace trillek
 

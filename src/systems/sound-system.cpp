@@ -118,12 +118,12 @@ std::shared_ptr<Sound> System::GetSound(const std::string& id) {
 
 void System::HandleEvents(frame_tp timepoint) {
     auto transform_history = TrillekGame::GetSharedComponent().
-                Map<component::Component::Transform>().Pull(timepoint, last_transform_frame);
+                Map<component::Component::GraphicTransform>().Pull(timepoint, last_transform_frame);
     for(auto itmap = transform_history.second.cbegin(); itmap != transform_history.second.cend(); ++itmap) {
         auto& transformmap = itmap->second;
         if (transformmap.count(TrillekGame::GetGraphicSystem().GetActiveCameraID())) {
             // the camera is moving
-            auto& data = *component::Get<component::Component::Transform>(transformmap.at(TrillekGame::GetGraphicSystem().GetActiveCameraID()));
+            auto& data = *component::Get<component::Component::GraphicTransform>(transformmap.at(TrillekGame::GetGraphicSystem().GetActiveCameraID()));
             const glm::vec3& position = data.GetTranslation();
             alListener3f(AL_POSITION, position.x, position.y, position.z);
             const glm::vec3& up = data.GetOrientation() * UP_VECTOR;
