@@ -73,7 +73,17 @@ static typename type_trait<C>::value_type Get(id_t entity_id, typename std::enab
 }
 
 template<Component C>
-std::shared_ptr<typename type_trait<C>::value_type> GetSharedPtr(id_t entity_id) {
+std::shared_ptr<Container> GetContainer(id_t entity_id) {
+    return GetContainer<C>().GetContainer<C>(entity_id);
+}
+
+template<Component C>
+std::shared_ptr<const Container> GetConstContainer(id_t entity_id) {
+    return GetContainer<C>().GetConstContainer<C>(entity_id);
+}
+
+template<Component C>
+std::shared_ptr<const typename type_trait<C>::value_type> GetSharedPtr(id_t entity_id) {
     return GetContainer<C>().GetSharedPtr<C>(entity_id);
 }
 

@@ -35,6 +35,11 @@ public:
     }
 
     template<Component type>
+    std::shared_ptr<Container> GetContainer(id_t entity_id) {
+        return Map<type>().Map().at(entity_id);
+    }
+
+    template<Component type>
     std::shared_ptr<typename type_trait<type>::value_type> GetSharedPtr(id_t entity_id) {
         const auto& ptr = Map<type>().at(entity_id);
         return component::Get<type>(ptr);
