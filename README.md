@@ -6,7 +6,7 @@ Contributing
 
 The easiest way to contribute is to fork, experiment, and make PRs.
 
-There are 3 domains were contribution is needed:
+There are 3 domains where contribution is needed:
 
 * Game logic
 * Engine
