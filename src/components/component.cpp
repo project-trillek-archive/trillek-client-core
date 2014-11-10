@@ -103,6 +103,28 @@ std::shared_ptr<Container> Initialize<Component::Collidable>(const std::vector<P
 }
 
 template<>
+float_t Initialize<Component::OxygenRate>(bool& result, const std::vector<Property> &properties) {
+    id_t entity_id;
+    auto oxygen_rate = 20.0f;       // default value;
+    result = false;
+    for (const Property& p : properties) {
+        std::string name = p.GetName();
+        if (name == "rate") {
+            oxygen_rate = p.Get<float>();
+        }
+        else if (name == "entity_id") {
+            entity_id = p.Get<id_t>();
+            // tell to the caller that we must add the component
+            result = true;
+        }
+        else {
+            LOGMSG(ERROR) << "OxygenRate: Unknown property: " << name;
+        }
+    }
+    return oxygen_rate;
+}
+
+template<>
 uint32_t Initialize<Component::Health>(bool& result, const std::vector<Property> &properties) {
     id_t entity_id;
     uint32_t health = 100;       // default value;

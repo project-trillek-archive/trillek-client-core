@@ -41,6 +41,7 @@ enum class Component : uint32_t {
     IsReferenceFrame,           // true if this entity has at least a child
     CombinedVelocity,           // ?
     Collidable,                 // wrapper object for body TODO:make a true component
+    OxygenRate,                 // Oxygen rate associated with an entity (room...)
     Health,                     // Health level
     Immune,                     // true = Immune
     GraphicTransform,           // transform used to display the entity
@@ -58,6 +59,7 @@ TRILLEK_MAKE_COMPONENT(VelocityMax,"velocity-max",trillek::physics::VelocityMaxS
 TRILLEK_MAKE_COMPONENT(ReferenceFrame,"reference-frame",id_t,SystemValue)
 TRILLEK_MAKE_COMPONENT(IsReferenceFrame,"is-reference-frame",bool,SystemValue)
 TRILLEK_MAKE_COMPONENT(CombinedVelocity,"combined-velocity",trillek::physics::VelocityStruct,System)
+TRILLEK_MAKE_COMPONENT(OxygenRate,"oxygen-rate",float_t,SystemValue)
 TRILLEK_MAKE_COMPONENT(Health,"health",uint32_t,SystemValue)
 TRILLEK_MAKE_COMPONENT(Immune,"immune",bool,SystemValue)
 TRILLEK_MAKE_COMPONENT(GraphicTransform,"graphic-transform",trillek::Transform, Shared)
