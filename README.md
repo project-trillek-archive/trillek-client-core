@@ -4,7 +4,28 @@ trillek-client
 Contributing
 ===
 
-The easiest way to contribute is to fork and experiment.  Coding standards and practices can be found [here](https://github.com/trillek-team/trillek-client-core/wiki/Coding-Standards).
+The easiest way to contribute is to fork, experiment, and make PRs.
+
+There are 3 domains where contribution is needed:
+
+* Game logic
+* Engine
+* Artistic assets
+
+The game logic is a lot more dev-friendly than the engine itself and needs less experience. 
+We put some efforts to create an abstraction layer for the game logic that allows
+ to create easily some features.
+
+Before starting, you must read these docs:
+
+* [Coding standards and practices](https://github.com/trillek-team/trillek-client-core/wiki/Coding-Standards).
+* [ECS framework](https://github.com/trillek-team/trillek-client-core/wiki/ECS-State-System)
+
+If you don't know where to put your game logic code, use [physics.cpp](https://github.com/trillek-team/trillek-client-core/blob/develop/src/systems/physics.cpp#L31)
+as a sandbox. There are also some sample codes here you should see. We will move them in a right location later.
+
+The dev community is mainly on IRC : #project-trillek on Freenode.
+
 
 Installing
 ===
@@ -23,9 +44,9 @@ Trillek depends on the following libraries:
 
 - [GLFW3](https://github.com/glfw/glfw)
 - [GLM](https://github.com/g-truc/glm)
-- [Bullet Physics](https://github.com/bulletphysics/bullet3) (builet with double precision)
+- [Bullet Physics](https://github.com/bulletphysics/bullet3) (bullet with double precision)
 - [GLEW](https://github.com/nigels-com/glew)
-- [OpenAL](http://kcat.strangesoft.net/openal.html) (with OggVoribis support)
+- [OpenAL](http://kcat.strangesoft.net/openal.html) (with OggVorbis support)
 - [Alure](http://kcat.strangesoft.net/alure.html)
 - [RapidJSON](https://github.com/miloyip/rapidjson)
 - [Lua](http://www.lua.org/download.html)
@@ -50,3 +71,6 @@ Platform specific build instructions are available on the Wiki.
 [Building on Windows](https://github.com/trillek-team/trillek-client-core/wiki/Building-on-Windows)
 
 [Building on OS X](https://github.com/trillek-team/trillek-client-core/wiki/Building-On-OS-X)
+
+On Linux, you can get some inspiration by checking the [travis-ci script](https://github.com/trillek-team/trillek-client-core/blob/develop/.travis.yml)
+that builds the client from scratch.
