@@ -154,7 +154,7 @@ public:
     }
 
     // NOT operation
-    BitMap<T> operator~() {
+    BitMap<T> operator~() const {
         BitMap<T> ret;
         ret.first_block = this->first_block;
         ret.last_block = this->last_block;
@@ -221,8 +221,8 @@ public:
         return bitarray.data();
     }
 
-    BitMapEnumerator<T> enumerator() const {
-        return BitMapEnumerator<T>(*this);
+    BitMapEnumerator<T> enumerator(size_t max_iterations) const {
+        return BitMapEnumerator<T>(*this, max_iterations);
     };
 
     const size_t countTrue() const {
@@ -266,7 +266,7 @@ public:
         return (sizeof(T) << 3);
     }
 
-    bool DefaultValue() {
+    bool DefaultValue() const {
         return def_value;
     }
 
@@ -303,8 +303,14 @@ private:
             result.push_back(operation(last_right.bitarray.at(k), first_right.def_value));
         }
         a.def_value = operation(a.def_value, b.def_value);
-        a.first_block = first_size ? left : last_left.first_block;
-        a.last_block = last_size ? right : first_right.last_block;
+        if(result.size()) {
+            a.first_block = first_size ? left : last_left.first_block;
+            a.last_block = last_size ? right : first_right.last_block;
+        }
+        else {
+            a.first_block = 0;
+            a.last_block = 0;
+        }
         a.bsize = std::max(a.bsize, b.bsize);
         a.bitarray = std::move(result);
     }
@@ -350,16 +356,23 @@ BitMap<T> operator^(const BitMap<T>& lhs, const BitMap<T>& rhs) {
 template<class T>
 class BitMapEnumerator {
 public:
-    BitMapEnumerator(const BitMap<T>& bs) : bitarray(bs),
-        current_long((T*) bs.data()),
+    BitMapEnumerator(const BitMap<T>& bs, size_t max_iterations) : bitarray(bs),
+        current_long((T*) bs.data()), max_iterations(max_iterations),
         last_bit(0), current_value(-1) { ++(*this); };
     virtual ~BitMapEnumerator() {};
 
     size_t operator++() {
-        auto length = bitarray.size() + BlockSize();
+        auto length = std::max(bitarray.size() + BlockSize(),max_iterations);
         const auto last_index = std::min(length, bitarray.LastBlock() * BlockSize());
-        const auto end = start + ((last_index- bitarray.FirstBlock() * BlockSize()) >> util::Log2Bin<T>());
-        for (current_value++; current_long < end ; current_long++) {
+        const auto end = start + ((last_index) >> util::Log2Bin<T>());
+        const auto end_1void = bitarray.FirstBlock() << util::Log2Bin<T>();
+        if(++current_value < end_1void) {
+            if (bitarray.DefaultValue()) {
+                return current_value;
+            }
+            current_value = end_1void;
+        }
+        for (; current_long < end ; current_long++) {
             if (*current_long && last_bit < BlockSize()) {
                 T tmp(*current_long >> last_bit);
                 if (util::PopCount<T>(tmp)) {
@@ -372,7 +385,12 @@ public:
                 last_bit = 0;
             }
         }
-        current_value = length;
+        if(current_value < length) {
+            if (bitarray.DefaultValue()) {
+                return current_value;
+            }
+            current_value = length;
+        }
         return current_value;
     };
 
@@ -390,6 +408,7 @@ private:
     const T* const start = current_long;
     const BitMap<T>& bitarray;
     size_t current_value;
+    size_t max_iterations;
 };
 
 #else // other compilers : not optimized at all
@@ -397,17 +416,24 @@ private:
 template<class T>
 class BitMapEnumerator {
 public:
-    BitMapEnumerator(BitMap<T>& bs) : bitarray(bs), current_value(-1) { ++(*this); };
+    BitMapEnumerator(BitMap<T>& bs, size_t max_iterations)
+     : bitarray(bs), current_value(-1), max_iterations(max_iterations) { ++(*this); };
     virtual ~BitMapEnumerator() {};
 
     size_t operator++() {
         auto length = bitarray.size();
+        auto length2 = std::max(bitarray.size(),max_iterations);
         for (++current_value; current_value < length; ++current_value) {
             if (bitarray.at(current_value)) {
                 return current_value;
             }
         }
-        current_value = length;
+        if(current_value < length2) {
+            if (bitarray.DefaultValue()) {
+                return current_value;
+            }
+            current_value = length2;
+        }
         return current_value;
     };
 

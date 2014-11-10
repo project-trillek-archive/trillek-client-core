@@ -12,23 +12,23 @@ template<>
 struct luaU_Impl<trillek::physics::VelocityStruct> {
     static trillek::physics::VelocityStruct luaU_check(lua_State* L, int index) {
         trillek::physics::VelocityStruct f = {
-            glm::vec3(luaU_getfield<double>(L, index, "x"),
+            glm::vec4(luaU_getfield<double>(L, index, "x"),
             luaU_getfield<double>(L, index, "y"),
-            luaU_getfield<double>(L, index, "z")),
-            glm::vec3(luaU_getfield<double>(L, index, "rx"),
+            luaU_getfield<double>(L, index, "z"),0),
+            glm::vec4(luaU_getfield<double>(L, index, "rx"),
             luaU_getfield<double>(L, index, "ry"),
-            luaU_getfield<double>(L, index, "rz")) };
+            luaU_getfield<double>(L, index, "rz"),0) };
         return f;
     }
 
     static trillek::physics::VelocityStruct luaU_to(lua_State* L, int index) {
         trillek::physics::VelocityStruct f = {
-            glm::vec3(luaU_getfield<double>(L, index, "x"),
+            glm::vec4(luaU_getfield<double>(L, index, "x"),
             luaU_getfield<double>(L, index, "y"),
-            luaU_getfield<double>(L, index, "z")),
-            glm::vec3(luaU_getfield<double>(L, index, "rx"),
+            luaU_getfield<double>(L, index, "z"),0),
+            glm::vec4(luaU_getfield<double>(L, index, "rx"),
             luaU_getfield<double>(L, index, "ry"),
-            luaU_getfield<double>(L, index, "rz")) };
+            luaU_getfield<double>(L, index, "rz"),0) };
         return f;
     }
 

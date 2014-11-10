@@ -51,6 +51,15 @@ const int* RenderSystem::Start(const unsigned int width, const unsigned int heig
 
     SetViewportSize(width, height);
 
+    // copy the game transforms as graphic transforms
+    component::OnTrue(component::Bitmap<component::Component::GameTransform>(),
+        [&](id_t entity_id) {
+            auto cp = component::Get<component::Component::GameTransform>(entity_id);
+            component::Insert<component::Component::GraphicTransform>(entity_id, std::move(cp));
+            LOGMSGC(INFO) << "Copying transform of entity " << entity_id;
+        }
+    );
+
     // Activate the lowest ID or first camera and get the initial view matrix.
     id_t cam_idnum = 0;
     std::weak_ptr<CameraBase> cam_ptr;
@@ -694,7 +703,7 @@ void RenderSystem::RenderLightingPass(const glm::mat4x4 &view_matrix, const floa
 
 inline void RenderSystem::UpdateModelMatrices(const frame_tp& timepoint) {
     auto& transform_container = TrillekGame::GetSharedComponent()
-                                                .Map<Component::Transform>();
+                                                .Map<Component::GraphicTransform>();
     // since the data is published by the same thread, get the last published data
     // first remove the transforms
     auto& transform_map_neg = transform_container.GetLastNegativeCommit();
@@ -707,7 +716,7 @@ inline void RenderSystem::UpdateModelMatrices(const frame_tp& timepoint) {
     for (const auto& transform_el : transform_map_pos) {
         // for each modified transform in the frame
         const auto id = transform_el.first;
-        const auto& transform = transform_el.second->Get<Transform>();
+        const auto& transform = *component::Get<Component::GraphicTransform>(transform_el.second);
         glm::mat4 model_matrix = glm::translate(transform.GetTranslation()) *
             glm::mat4_cast(transform.GetOrientation()) *
             glm::scale(transform.GetScale());
@@ -715,8 +724,7 @@ inline void RenderSystem::UpdateModelMatrices(const frame_tp& timepoint) {
     }
     // Update the view matrix if necessary
     if (transform_map_pos.count(this->GetActiveCameraID())) {
-        auto camera_transform = TrillekGame::GetSharedComponent()
-                .GetSharedPtr<Component::Transform>(this->GetActiveCameraID());
+        auto camera_transform = component::GetConstSharedPtr<Component::GraphicTransform>(this->GetActiveCameraID());
         this->camera->UpdateTransform(std::move(camera_transform));
         this->vp_center.view_matrix = this->camera->GetViewMatrix();
     }

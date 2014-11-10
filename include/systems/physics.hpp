@@ -9,29 +9,27 @@
 #include "trillek.hpp"
 #include "async-data.hpp"
 #include "trillek-scheduler.hpp"
-#include "atomic-map.hpp"
+#include "user-command-queue.hpp"
 #include "systems/system-base.hpp"
 
 namespace trillek { namespace physics {
 
 struct VelocityStruct {
-    VelocityStruct() : linear(0,0,0), angular(0,0,0) {};
+    VelocityStruct() : linear(0,0,0,0), angular(0,0,0,0) {};
 
     template<class T>
     VelocityStruct(T&& linear, T&& angular)
         :   linear(std::forward<T>(linear)),
             angular(std::forward<T>(angular)) {};
 
-    glm::vec3 linear;
-    glm::vec3 angular;
+    glm::vec4 linear;
+    glm::vec4 angular;
     btVector3 GetLinear() const {
         return btVector3(linear.x, linear.y, linear.z);
     }
     btVector3 GetAngular() const {
         return btVector3(angular.x, angular.y, angular.z);
     }
-    //btVector3 linear;
-    //btVector3 angular;
 };
 
 struct VelocityMaxStruct {
@@ -77,7 +75,7 @@ public:
      * \param const unsigned int entity_id The entity ID the compoennt belongs to.
      * \param std::shared_ptr<T> component The component to add.
      */
-    void AddDynamicComponent(const unsigned int entity_id, std::shared_ptr<Container> shape);
+    void AddDynamicComponent(const unsigned int entity_id, std::shared_ptr<component::Container> shape) override;
 
     void AddBodyToWorld(btRigidBody* body);
 
@@ -99,8 +97,8 @@ public:
     void Terminate() override;
 
     template<class T>
-    void SetVelocity(id_t entity_id, T&& v) const {
-        this->velocities.Insert(entity_id, std::forward<T>(v));
+    void AddCommand(id_t entity_id, T&& v) const {
+        this->usercommands.AddCommand(entity_id, std::forward<T>(v));
     }
 
     /** \brief Set a rigid body's gravity.
@@ -124,7 +122,7 @@ private:
     btSequentialImpulseConstraintSolver* solver;
     btDiscreteDynamicsWorld* dynamicsWorld;
 
-    AtomicMap<id_t, std::shared_ptr<Container>> velocities;
+    UserCommandQueue usercommands;
 
     btCollisionShape* groundShape;
     btDefaultMotionState* groundMotionState;

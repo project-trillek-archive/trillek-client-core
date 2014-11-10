@@ -7,6 +7,7 @@
 #include <bullet/BulletCollision/Gimpact/btGImpactShape.h>
 #include <bullet/BulletCollision/Gimpact/btGImpactCollisionAlgorithm.h>
 #include "logging.hpp"
+#include "user-command.hpp"
 
 namespace trillek { namespace physics {
 
@@ -29,9 +30,10 @@ void PhysicsSystem::Start() {
 }
 
 void PhysicsSystem::HandleEvents(frame_tp timepoint) {
-    // publish the forces of the current frame immediately without making a copy of the list
-    for (auto& v : this->velocities.Poll()) {
-        Update<Component::Velocity>(std::move(v.first), std::move(v.second));
+    // Execute the commands
+    auto iterator_pair = this->usercommands.GetAndTagCommandsFrom(timepoint);
+    for (auto& v = iterator_pair.first; v != iterator_pair.second; ++v) {
+        usercommand::Execute(std::move(v->second.first), std::move(v->second.second));
     }
     // commit velocity updates
     Commit<Component::Velocity>(timepoint);
@@ -83,28 +85,56 @@ void PhysicsSystem::HandleEvents(frame_tp timepoint) {
         }
     );
 
+    auto not_immune = ~Bitmap<Component::Immune>();
+
+    // display a message for entities with health < 10
+    OnTrue(Lower<Component::Health>(10) & not_immune,
+        [](id_t id) {
+            LOGMSG(INFO) << "Entity #" << id << " health under 10 (" << Get<Component::Health>(id) << ")";
+        }
+    );
+
+    // Kill entities with health and whose health is 0 and are not immune
+    OnTrue(Bitmap<Component::Health>() & not_immune,
+        [](id_t entity_id) {
+            // this function is executed only on entitities that has a health component
+            auto health = Get<Component::Health>(entity_id);
+            if (health == 0) {
+                //kill entity
+                LOGMSG(INFO) << "Entity #" << entity_id << " should die now";
+                // set helth to 300
+                Update<Component::Health>(entity_id, 300);
+                // set immunity
+                Insert<Component::Immune>(entity_id, true);
+            }
+        }
+    );
+
+    // Substract 1 to health of all entities that have not 0
+    Add<Component::Health>(-1, NotEqual<Component::Health>(0) & not_immune);
 
     dynamicsWorld->stepSimulation(delta * 1.0E-9, 10);
     // Set out transform updates.
     auto& bodymap = TrillekGame::GetSystemComponent().Map<Component::Collidable>();
     for (auto& shape : bodymap) {
         btTransform transform;
-        shape.second->Get<Collidable>().GetRigidBody()->getMotionState()->getWorldTransform(transform);
+        Get<Component::Collidable>(shape.second)->GetRigidBody()->getMotionState()->getWorldTransform(transform);
 
         auto pos = transform.getOrigin();
         auto rot = transform.getRotation();
-        Transform_type entity_transform(Get<Component::Transform>(shape.first));
+        GraphicTransform_type entity_transform(Get<Component::GraphicTransform>(shape.first));
         entity_transform.SetTranslation(glm::vec3(pos.x(), pos.y(), pos.z()));
         entity_transform.SetOrientation(glm::quat(rot.w(), rot.x(), rot.y(), rot.z()));
-        Update<Component::Transform>(shape.first, std::move(entity_transform));
+        Update<Component::GraphicTransform>(shape.first, std::move(entity_transform));
     }
+
     // Publish the new updated transforms map
-    Commit<Component::Transform>(timepoint);
+    Commit<Component::GraphicTransform>(timepoint);
 }
 
 void PhysicsSystem::AddDynamicComponent(const unsigned int entity_id, std::shared_ptr<Container> component) {
-    if (component->Is<Collidable>()) {
-        AddBodyToWorld(component->Get<Collidable>().GetRigidBody());
+    if (component->Is<Component::Collidable>()) {
+        AddBodyToWorld(component::Get<Component::Collidable>(component)->GetRigidBody());
     }
 }
 

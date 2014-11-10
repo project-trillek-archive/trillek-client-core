@@ -15,9 +15,8 @@ namespace trillek {
 namespace script {
 
 int Traansform_get(lua_State* L) {
-    auto& shared = TrillekGame::GetSharedComponent();
     const int entity_id = luaL_checkinteger(L, 1);
-    auto transform = shared.GetSharedPtr<component::Component::Transform>(entity_id);
+    auto transform = component::GetConstSharedPtr<component::Component::GraphicTransform>(entity_id);
     if (!transform) {
         return 0;
     }

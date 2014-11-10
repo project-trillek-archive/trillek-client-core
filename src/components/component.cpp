@@ -1,6 +1,6 @@
 #include "components/component.hpp"
 #include "property.hpp"
-#include "container.hpp"
+#include "components/component-container.hpp"
 #include "physics/collidable.hpp"
 #include "trillek-game.hpp"
 #include "components/system-component-value.hpp"
@@ -58,7 +58,7 @@ std::shared_ptr<Container> Initialize<Component::VelocityMax>(const std::vector<
             return nullptr;
         }
     }
-    return std::allocate_shared<Container>(TrillekAllocator<Container>(), VelocityMax_type(std::move(lmax), std::move(amax)));
+    return component::Create<Component::VelocityMax>(VelocityMax_type(std::move(lmax), std::move(amax)));
 }
 
 template<>
@@ -95,11 +95,55 @@ id_t Initialize<Component::ReferenceFrame>(bool& result, const std::vector<Prope
 
 template<>
 std::shared_ptr<Container> Initialize<Component::Collidable>(const std::vector<Property> &properties) {
-    auto ret = std::allocate_shared<Container>(TrillekAllocator<Container>(), physics::Collidable());
-    if (ret->Get<physics::Collidable>().Initialize(properties)) {
+    auto ret = component::Create<Component::Collidable>(physics::Collidable());
+    if (component::Get<Component::Collidable>(ret)->Initialize(properties)) {
         return std::move(ret);
     }
     return nullptr;
+}
+
+template<>
+float_t Initialize<Component::OxygenRate>(bool& result, const std::vector<Property> &properties) {
+    id_t entity_id;
+    auto oxygen_rate = 20.0f;       // default value;
+    result = false;
+    for (const Property& p : properties) {
+        std::string name = p.GetName();
+        if (name == "rate") {
+            oxygen_rate = p.Get<float>();
+        }
+        else if (name == "entity_id") {
+            entity_id = p.Get<id_t>();
+            // tell to the caller that we must add the component
+            result = true;
+        }
+        else {
+            LOGMSG(ERROR) << "OxygenRate: Unknown property: " << name;
+        }
+    }
+    return oxygen_rate;
+}
+
+template<>
+uint32_t Initialize<Component::Health>(bool& result, const std::vector<Property> &properties) {
+    id_t entity_id;
+    uint32_t health = 100;       // default value;
+    result = false;
+    for (const Property& p : properties) {
+        std::string name = p.GetName();
+        if (name == "health") {
+            health = p.Get<uint32_t>();
+        }
+        else if (name == "entity_id") {
+            entity_id = p.Get<id_t>();
+            // tell to the caller that we must add the component
+            result = true;
+        }
+        else {
+            LOGMSG(ERROR) << "Health: Unknown property: " << name;
+        }
+    }
+    return health;
 }
 
 } // namespace component

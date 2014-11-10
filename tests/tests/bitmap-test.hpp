@@ -284,7 +284,7 @@ TEST_F(BitMapTest, BitMapCountTrueDefaultTrue) {
 }
 TEST_F(BitMapTest, BitMapEnumerator) {
     BitMap<uint32_t> bit_array((size_t) 576); //576 bits
-    auto it1 = bit_array.enumerator();
+    auto it1 = bit_array.enumerator(1000);
     ASSERT_LE(576, ++it1) << "it++ should return size when BitMap is empty";
 
     (bit_array)[0] = true;
@@ -297,7 +297,7 @@ TEST_F(BitMapTest, BitMapEnumerator) {
     (bit_array)[574] = true;
     (bit_array)[575] = true;
 
-    auto it = bit_array.enumerator();
+    auto it = bit_array.enumerator(1000);
     ASSERT_EQ(0, *it) << "it++ should return 0";
     ASSERT_EQ(1, ++it) << "it++ should return 1";
     ASSERT_EQ(15, ++it) << "it++ should return 15";
@@ -311,14 +311,14 @@ TEST_F(BitMapTest, BitMapEnumerator) {
 
     BitMap<uint32_t> bit_array2((size_t) 576); //576 bits
     (bit_array2)[1] = true;
-    auto it2 = bit_array2.enumerator();
+    auto it2 = bit_array2.enumerator(1000);
     ASSERT_EQ(1, *it2) << "it++ should return 1";
 }
 
 #if defined(__GNUG__)
 TEST_F(BitMapTest, BitMapEnumerator64) {
     BitMap<uint64_t> bit_array((size_t) 576); //576 bits
-    auto it1 = bit_array.enumerator();
+    auto it1 = bit_array.enumerator(1000);
     ASSERT_LE(576, ++it1) << "it++ should return size when BitMap is empty";
 
     (bit_array)[0] = true;
@@ -331,7 +331,7 @@ TEST_F(BitMapTest, BitMapEnumerator64) {
     (bit_array)[574] = true;
     (bit_array)[575] = true;
 
-    auto it = bit_array.enumerator();
+    auto it = bit_array.enumerator(1000);
     ASSERT_EQ(0, *it) << "it++ should return 0";
     ASSERT_EQ(1, ++it) << "it++ should return 1";
     ASSERT_EQ(15, ++it) << "it++ should return 15";
@@ -345,7 +345,7 @@ TEST_F(BitMapTest, BitMapEnumerator64) {
 
     BitMap<uint64_t> bit_array2((size_t) 576); //576 bits
     (bit_array2)[1] = true;
-    auto it2 = bit_array2.enumerator();
+    auto it2 = bit_array2.enumerator(1000);
     ASSERT_EQ(1, *it2) << "it++ should return 1";
 }
 TEST_F(BitMapTest, BitMapCountTrue64) {

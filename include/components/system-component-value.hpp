@@ -44,7 +44,13 @@ public:
     virtual ~SystemValue() {};
 
     template<Component type>
-    typename type_trait<type>::value_type& Get(id_t entity_id) {
+    typename type_trait<type>::value_type& Get(id_t entity_id, typename std::enable_if<!std::is_same<typename type_trait<type>::value_type,bool>::value>::type* = 0) {
+        return Map<type>().at(entity_id);
+    }
+
+    // bool specialization
+    template<Component type>
+    typename type_trait<type>::value_type Get(id_t entity_id, typename std::enable_if<std::is_same<typename type_trait<type>::value_type,bool>::value>::type* = 0) {
         return Map<type>().at(entity_id);
     }
 
@@ -54,9 +60,15 @@ public:
     }
 
     template<Component C, class V>
-    void Insert(id_t entity_id, V&& value) {
+    void Insert(id_t entity_id, V&& value, typename std::enable_if<!std::is_same<typename type_trait<C>::value_type,bool>::value>::type* = 0) {
         Update<C>(entity_id, std::forward<V>(value));
-        Bitmap<C>()[entity_id] = true;
+        SystemValueContainer<C,typename type_trait<C>::value_type>::bitmap[entity_id] = true;
+    }
+
+    // bool specialization
+    template<Component C, class V>
+    void Insert(id_t entity_id, V&& value, typename std::enable_if<std::is_same<typename type_trait<C>::value_type,bool>::value>::type* = 0) {
+        Update<C>(entity_id, std::forward<V>(value));
     }
 
     template<Component type, class V>
@@ -65,9 +77,15 @@ public:
     }
 
     template<Component type>
-    void Remove(id_t entity_id) {
+    void Remove(id_t entity_id, typename std::enable_if<!std::is_same<typename type_trait<type>::value_type,bool>::value>::type* = 0) {
         Map<type>().erase(entity_id);
-        Bitmap<type>()[entity_id] = false;
+        SystemValueContainer<type,typename type_trait<type>::value_type>::bitmap[entity_id] = false;
+    }
+
+    // bool specialization
+    template<Component type>
+    void Remove(id_t entity_id, typename std::enable_if<std::is_same<typename type_trait<type>::value_type,bool>::value>::type* = 0) {
+        Map<type>().erase(entity_id);
     }
 
     template<Component C>
@@ -76,7 +94,7 @@ public:
     }
 
     template<Component C>
-    BitMap<uint32_t>& Bitmap() {
+    const BitMap<uint32_t>& Bitmap() {
         return SystemValueContainer<C,typename type_trait<C>::value_type>::bitmap;
     }
 

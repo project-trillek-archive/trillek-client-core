@@ -5,6 +5,7 @@
 #include "type-id.hpp"
 
 namespace trillek {
+namespace graphics {
 
 /**
  * \brief A class to contain an arbitrary value.
@@ -136,6 +137,7 @@ private:
     ValueHolderBase* value_holder;
 };
 
+} // namespace graphics
 } // namespace trillek
 
 #endif

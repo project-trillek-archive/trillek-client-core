@@ -10,7 +10,7 @@ namespace trillek {
 using namespace component;
 
 template<Component type>
-static std::shared_ptr<Container> CreateComponent(id_t entity_id,
+static std::shared_ptr<component::Container> CreateComponent(id_t entity_id,
                                 const std::vector<Property> &properties) {
     auto type_id = static_cast<uint32_t>(type);
     auto sharedcomp = component::Initialize<type>(properties);
@@ -89,6 +89,52 @@ private:
 
 template<Component type>
 class ComponentAdder<SYSTEM,type,uint32_t> {
+public:
+    ComponentAdder(component::SystemValue& system) : system(system) {};
+
+    bool Create(id_t entity_id, const std::vector<Property> &properties) {
+        bool result = false;
+        auto comp = component::Initialize<type>(result, properties);
+        if (!result) {
+            LOGMSGC(ERROR) << "Error while initializing component "
+                            << reflection::GetTypeName<std::integral_constant<Component,type>>() << " for entity id #" << entity_id;
+            return false;
+        }
+
+        LOGMSG(DEBUG) << "Adding system component " << reflection::GetTypeName<std::integral_constant<Component,type>>() << " to entity #" << entity_id;
+        system.Insert<type>(entity_id, std::move(comp));
+        return true;
+    }
+
+private:
+    component::SystemValue& system;
+};
+
+template<Component type>
+class ComponentAdder<SYSTEM,type,float_t> {
+public:
+    ComponentAdder(component::SystemValue& system) : system(system) {};
+
+    bool Create(id_t entity_id, const std::vector<Property> &properties) {
+        bool result = false;
+        auto comp = component::Initialize<type>(result, properties);
+        if (!result) {
+            LOGMSGC(ERROR) << "Error while initializing component "
+                            << reflection::GetTypeName<std::integral_constant<Component,type>>() << " for entity id #" << entity_id;
+            return false;
+        }
+
+        LOGMSG(DEBUG) << "Adding system component " << reflection::GetTypeName<std::integral_constant<Component,type>>() << " to entity #" << entity_id;
+        system.Insert<type>(entity_id, std::move(comp));
+        return true;
+    }
+
+private:
+    component::SystemValue& system;
+};
+
+template<Component type>
+class ComponentAdder<SYSTEM,type,double_t> {
 public:
     ComponentAdder(component::SystemValue& system) : system(system) {};
 

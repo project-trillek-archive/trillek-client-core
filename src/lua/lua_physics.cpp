@@ -7,6 +7,7 @@
 
 #include "components/shared-component.hpp"
 #include "systems/physics.hpp"
+#include "transform.hpp"
 #include "trillek-game.hpp"
 
 namespace trillek {
@@ -21,8 +22,11 @@ int SetVelocity(lua_State* L) {
     auto physSys = luaW_check<physics::PhysicsSystem>(L, 1);
     int entity_id = luaL_checkint(L, 2);
     physics::VelocityStruct f = luaU_check<physics::VelocityStruct>(L, 3);
-    auto v_ptr = std::allocate_shared<Container>(TrillekAllocator<Container>(), component::Velocity_type(f));
-    physSys->SetVelocity(entity_id, std::move(v_ptr));
+    auto player_orientation = component::Get<component::Component::GraphicTransform>(entity_id).GetOrientation();
+    auto camera_orientation = glm::toMat4(std::move(player_orientation));
+    physics::VelocityStruct g(camera_orientation * f.linear, camera_orientation * f.angular);
+    auto v_ptr = component::Create<component::Component::Velocity>(std::move(g));
+    physSys->AddCommand(entity_id, std::move(v_ptr));
 
     return 0;
 }

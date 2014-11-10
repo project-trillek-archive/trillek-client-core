@@ -8,7 +8,10 @@
 
 namespace trillek {
 class Property;
+
+namespace graphics {
 class Container;
+}
 
 namespace reflection {
 
@@ -60,7 +63,7 @@ TRILLEK_MAKE_IDTYPE_NS(glm, mat2x2, 26)
 TRILLEK_MAKE_IDTYPE_NS(glm, mat3x3, 27)
 TRILLEK_MAKE_IDTYPE_NS(glm, mat4x4, 28)
 TRILLEK_MAKE_IDTYPE_NS(glm, quat, 29)
-TRILLEK_MAKE_IDTYPE(Container, 30)
+TRILLEK_MAKE_IDTYPE(graphics::Container, 30)
 TRILLEK_MAKE_IDTYPE(Property, 31)
 TRILLEK_MAKE_IDTYPE_NS(std, string, 32)
 TRILLEK_MAKE_IDTYPE_NS(glm, dvec2, 33)

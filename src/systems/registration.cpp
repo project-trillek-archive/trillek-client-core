@@ -33,11 +33,16 @@ namespace trillek {
  *
  * DYNAMIC: The component is passed to the system and then stored in the
  * ComponentFactory container
- * SYSTEM : The component is passed to the system that must store it.
+ * SYSTEM : The component is passed to SystemComponent and is stored there
  * SHARED : The component is passed to SharedComponent and is stored there
+ *
+ * system_value is like system, but for primitive values that don't need a pointer
+ * to be passed as argument of a fonction (bool, uint32_t).
  *
  * Only SHARED components can be shared between systems in different threads.
  * By default, DYNAMIC components are registered.
+ *
+ * The preferred choice is SYSTEM.
  */
 
 using component::Component;
@@ -65,7 +70,11 @@ void ComponentFactory::RegisterTypes() {
     RegisterComponentType(ComponentAdder<SYSTEM,Component::ReferenceFrame,id_t>(system_value));
     RegisterComponentType(ComponentAdder<SYSTEM,Component::IsReferenceFrame,bool>(system_value));
     RegisterComponentType(ComponentAdder<SYSTEM,Component::CombinedVelocity>(system));
-    RegisterComponentType(ComponentAdder<SHARED,Component::Transform, bool>(shared));
+    RegisterComponentType(ComponentAdder<SYSTEM,Component::ReferenceFrame,id_t>(system_value));
+    RegisterComponentType(ComponentAdder<SYSTEM,Component::OxygenRate,float_t>(system_value));
+    RegisterComponentType(ComponentAdder<SYSTEM,Component::Health,uint32_t>(system_value));
+    RegisterComponentType(ComponentAdder<SHARED,Component::GraphicTransform,bool>(shared));
+    RegisterComponentType(ComponentAdder<SHARED,Component::GameTransform,bool>(shared));
 #if defined(_CLIENT_) || defined(_STANDALONE_)
     RegisterComponentType<graphics::Renderable>();
     RegisterComponentType<graphics::LightBase>();

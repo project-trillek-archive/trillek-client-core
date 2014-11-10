@@ -14,8 +14,8 @@ std::shared_ptr<TransformMap> TransformMap::instance = nullptr;
 bool TransformMap::Serialize(rapidjson::Document& document) {
     rapidjson::Value transform_node(rapidjson::kObjectType);
 
-    for (auto& entity_transform_wrapped : TrillekGame::GetSharedComponent().Map<Component::Transform>().Map()) {
-        auto& entity_transform = entity_transform_wrapped.second->Get<Transform_type>();
+    for (auto& entity_transform_wrapped : TrillekGame::GetSharedComponent().Map<Component::GameTransform>().Map()) {
+        auto& entity_transform = *Get<Component::GameTransform>(entity_transform_wrapped.second);
         rapidjson::Value transform_object(rapidjson::kObjectType);
 
         rapidjson::Value translation_element(rapidjson::kObjectType);
@@ -140,7 +140,7 @@ bool TransformMap::Parse(rapidjson::Value& node) {
 
                     entity_transform.SetScale(glm::vec3(x, y, z));
                 }
-                TrillekGame::GetSharedComponent().Insert<Component::Transform>(entity_id, std::move(entity_transform));
+                TrillekGame::GetSharedComponent().Insert<Component::GameTransform>(entity_id, std::move(entity_transform));
             }
         }
 
