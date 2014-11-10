@@ -85,9 +85,18 @@ void PhysicsSystem::HandleEvents(frame_tp timepoint) {
         }
     );
 
+    auto not_immune = ~Bitmap<Component::Immune>();
+
+    // display a message for entities with health < 10
+    OnTrue(Lower<Component::Health>(10) & not_immune,
+        [](id_t id) {
+            LOGMSG(INFO) << "Entity #" << id << " health under 10 (" << Get<Component::Health>(id) << ")";
+        }
+    );
+
     // Kill entities with health and whose health is 0 and are not immune
-    OnTrue(Bitmap<Component::Health>() & ~Bitmap<Component::Immune>(),
-        [&](id_t entity_id) {
+    OnTrue(Bitmap<Component::Health>() & not_immune,
+        [](id_t entity_id) {
             // this function is executed only on entitities that has a health component
             auto health = Get<Component::Health>(entity_id);
             if (health == 0) {
@@ -98,13 +107,11 @@ void PhysicsSystem::HandleEvents(frame_tp timepoint) {
                 // set immunity
                 Insert<Component::Immune>(entity_id, true);
             }
-            else {
-                // decrement health
-                Update<Component::Health>(entity_id, --health);
-            }
         }
     );
 
+    // Substract 1 to health of all entities that have not 0
+    Add<Component::Health>(-1, NotEqual<Component::Health>(0) & not_immune);
 
     dynamicsWorld->stepSimulation(delta * 1.0E-9, 10);
     // Set out transform updates.

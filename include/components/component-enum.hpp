@@ -35,16 +35,16 @@ class Shared;
 class SystemValue;
 
 enum class Component : uint32_t {
-    Velocity = 1,
-    VelocityMax,
-    ReferenceFrame,
-    IsReferenceFrame,
-    CombinedVelocity,
-    Collidable,
-    Health,
-    Immune,
-    GraphicTransform,
-    GameTransform
+    Velocity = 1,               // instant displacement
+    VelocityMax,                // maximum instant displacement
+    ReferenceFrame,             // id of the parent entity for the transform
+    IsReferenceFrame,           // true if this entity has at least a child
+    CombinedVelocity,           // ?
+    Collidable,                 // wrapper object for body TODO:make a true component
+    Health,                     // Health level
+    Immune,                     // true = Immune
+    GraphicTransform,           // transform used to display the entity
+    GameTransform               // last confirmed transform
 };
 
 template<Component C> struct type_trait;
