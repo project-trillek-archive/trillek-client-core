@@ -1,4 +1,3 @@
-#if defined(_CLIENT_) || defined(_STANDALONE_)
 #include "graphics/texture.hpp"
 #include "resources/pixel-buffer.hpp"
 #include <memory>
@@ -231,4 +230,3 @@ void Texture::GenerateMultisampleDepth(GLuint width, GLuint height, GLuint sampl
 
 } // graphics
 } // trillek
-#endif // defined(_CLIENT_) || defined(_STANDALONE_)

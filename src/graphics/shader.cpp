@@ -1,4 +1,3 @@
-#if defined(_CLIENT_) || defined(_STANDALONE_)
 #include "graphics/shader.hpp"
 #include "resources/text-file.hpp"
 #include <iostream>
@@ -381,4 +380,3 @@ void Shader::LoadFromFile(ShaderType whichShader, const std::string & filename) 
 
 } // End of graphics
 } // End of trillek
-#endif // defined(_CLIENT_) || defined(_STANDALONE_)

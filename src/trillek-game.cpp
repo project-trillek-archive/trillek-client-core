@@ -21,9 +21,7 @@ void TrillekGame::Initialize() {
     system_component.reset(new component::System);
     system_value_component.reset(new component::SystemValue);
     close_window = false;
-#if defined(_CLIENT_) || defined(_STANDALONE_)
     engine_sys.reset(new MetaEngineSystem);
-#endif
 }
 std::unique_ptr<TrillekScheduler> TrillekGame::scheduler;
 std::unique_ptr<FakeSystem> TrillekGame::fake_system;
@@ -33,8 +31,6 @@ std::unique_ptr<component::Shared> TrillekGame::shared_component;
 std::unique_ptr<component::System> TrillekGame::system_component;
 std::unique_ptr<component::SystemValue> TrillekGame::system_value_component;
 bool TrillekGame::close_window;
-
-#if defined(_CLIENT_) || defined(_STANDALONE_)
 
 sound::System& TrillekGame::GetSoundSystem() {
     return *sound::System::GetInstance();
@@ -57,7 +53,5 @@ std::shared_ptr<graphics::RenderSystem> TrillekGame::GetGraphicsInstance() {
     });
     return std::shared_ptr<graphics::RenderSystem>(gl_sys_ptr);
 }
-
-#endif // defined(_CLIENT_) || defined(_STANDALONE_)
 
 } // End of namespace trillek

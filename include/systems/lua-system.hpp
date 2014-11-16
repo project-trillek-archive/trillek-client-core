@@ -5,7 +5,7 @@
 #include <map>
 #include <list>
 
-#include "dispatcher.hpp"
+#include "systems/dispatcher.hpp"
 #include "os-event.hpp"
 #include "trillek.hpp"
 #include "systems/system-base.hpp"

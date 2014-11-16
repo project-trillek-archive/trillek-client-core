@@ -1,4 +1,3 @@
-#if defined(_CLIENT_) || defined(_STANDALONE_)
 #include "trillek-game.hpp"
 #include "systems/meta-engine-system.hpp"
 #include "systems/physics.hpp"
@@ -25,4 +24,3 @@ void MetaEngineSystem::Terminate() {
     TrillekGame::GetGraphicSystem().Terminate();
 };
 }
-#endif

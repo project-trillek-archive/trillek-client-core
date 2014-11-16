@@ -19,7 +19,6 @@
 namespace trillek {
 namespace graphics {
 
-#if defined(_CLIENT_) || defined(_STANDALONE_)
 RenderSystem::RenderSystem() : Parser("graphics") {
     multisample = false;
     this->frame_drop = false;
@@ -1014,11 +1013,6 @@ void RenderSystem::HandleEvents(frame_tp timepoint) {
 void RenderSystem::Terminate() {
     TrillekGame::GetOS().DetachContext();
 }
-#else
-bool RenderSystem::Parse(rapidjson::Value& node) {
-    return true;
-}
-#endif // defined(_CLIENT_) || defined(_STANDALONE_)
 
 } // End of graphics
 } // End of trillek

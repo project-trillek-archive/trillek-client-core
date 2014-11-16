@@ -1,4 +1,3 @@
-#if defined(_CLIENT_) || defined(_STANDALONE_) || defined(_MSC_VER)
 #include "os.hpp"
 
 #include <iostream>
@@ -274,4 +273,3 @@ void OS::SetMousePosition(double x, double y) {
 }
 
 } // End of trillek
-#endif // defined(_CLIENT_) || defined(_STANDALONE_) || defined(_MSC_VER)

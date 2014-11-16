@@ -17,9 +17,7 @@ size_t gAllocatedSize = 0;
 
 int main(int argCount, char **argValues) {
     trillek::TrillekGame::Initialize();
-    #ifdef _CLIENT_
     std::cout << "Starting Trillek client..." << std::endl;
-    #endif // _CLIENT_
     // create the window
     auto& os = trillek::TrillekGame::GetOS();
 #if __APPLE__
@@ -38,7 +36,7 @@ int main(int argCount, char **argValues) {
 
     trillek::util::JSONPasrser jparser;
 
-    if (!jparser.Parse("assets/tests/sample.json")) {
+    if (!jparser.Parse("common/assets/tests/sample.json")) {
         std::cerr << "Error loading JSON configuration file." << std::endl;
     }
 
@@ -67,7 +65,7 @@ int main(int argCount, char **argValues) {
     trillek::TrillekGame::GetLuaSystem().Start();
 
     // Load a test file/main Lua file.
-    trillek::TrillekGame::GetLuaSystem().LoadFile("assets/scripts/test.lua");
+    trillek::TrillekGame::GetLuaSystem().LoadFile("common/assets/scripts/test.lua");
 
     // register the Lua system.
     systems.push(&trillek::TrillekGame::GetLuaSystem());
@@ -102,6 +100,8 @@ int main(int argCount, char **argValues) {
     os.MakeCurrent();
     os.Terminate();
 
-    jparser.Serialize("assets/tests/", "transforms.json", trillek::TransformMap::GetInstance());
+    // TODO: fix rotation.y for entity 1001 becoming NaN
+    //jparser.Serialize("common/assets/tests/", "transforms.json", trillek::TransformMap::GetInstance());
+    std::cout << "Number of bytes not freed: " << gAllocatedSize << std::endl;
     return 0;
 }

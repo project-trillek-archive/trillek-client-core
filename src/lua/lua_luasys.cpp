@@ -1,5 +1,3 @@
-#if defined(_CLIENT_) || defined(_STANDALONE_)
-
 #include "systems/lua-system.hpp"
 #include "trillek-game.hpp"
 
@@ -59,4 +57,3 @@ int luaopen_LuaSys(lua_State* L) {
 
 } // End of script
 } // End of trillek
-#endif
