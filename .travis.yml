@@ -70,7 +70,8 @@ before_script:
     - cmake -DTCC_BUILD_TESTS=True ..
 script:
     - make
-    - mv assets bin
+    - mkdir bin/common
+    - mv assets bin/common
     - cd bin
     - ./TCCTests
 
