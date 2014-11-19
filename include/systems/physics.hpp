@@ -44,7 +44,7 @@ struct VelocityMaxStruct {
     glm::vec3 angular;
 };
 
-class PhysicsSystem : public SystemBase {
+class PhysicsSystem final : public SystemBase {
     typedef std::pair<btVector3,btVector3> velocity;
 
 public:

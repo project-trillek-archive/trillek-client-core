@@ -21,7 +21,7 @@
 namespace trillek {
 namespace sound {
 
-class Sound {
+class Sound final {
 public:
     Sound();
     ~Sound();

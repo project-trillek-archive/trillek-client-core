@@ -55,7 +55,7 @@ struct MaterialGroup {
     std::list<TextureGroup> texture_groups;
 };
 
-class RenderSystem : public SystemBase, public util::Parser,
+class RenderSystem final : public SystemBase, public util::Parser,
     public event::Subscriber<KeyboardEvent>
 {
 public:

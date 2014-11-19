@@ -27,10 +27,10 @@ struct ViewRect{
 /**
  * \brief A class to manage a color or depth output from a render pass
  */
-class RenderAttachment : public GraphicsBase {
+class RenderAttachment final : public GraphicsBase {
 public:
     RenderAttachment();
-    virtual ~RenderAttachment();
+    ~RenderAttachment();
     RenderAttachment(const RenderAttachment &) = delete;
     RenderAttachment& operator=(const RenderAttachment &) = delete;
     RenderAttachment(RenderAttachment &&that);
@@ -94,10 +94,10 @@ private:
 /**
  * \brief A class to handle rendering a pass to a framebuffer
  */
-class RenderLayer : public GraphicsBase {
+class RenderLayer final : public GraphicsBase {
 public:
     RenderLayer();
-    virtual ~RenderLayer();
+    ~RenderLayer();
 
     virtual bool SystemStart(const std::list<Property> &);
     virtual bool SystemReset(const std::list<Property> &);

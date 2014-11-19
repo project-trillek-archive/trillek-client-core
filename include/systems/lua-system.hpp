@@ -22,7 +22,7 @@ namespace script {
 
 typedef int (LuaRegisterFunction)(lua_State*);
 
-class LuaSystem : public SystemBase,
+class LuaSystem final : public SystemBase,
     public event::Subscriber<KeyboardEvent>,
     public event::Subscriber<MouseBtnEvent>,
     public event::Subscriber<MouseMoveEvent> {

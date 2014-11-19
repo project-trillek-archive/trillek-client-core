@@ -31,10 +31,10 @@ enum class ShaderOutputType {
     DEFAULT_TARGETS
 };
 
-class Shader : public GraphicsBase {
+class Shader final : public GraphicsBase {
 public:
     Shader();
-    virtual ~Shader();
+    ~Shader();
 
     virtual bool SystemStart(const std::list<Property> &);
     virtual bool SystemReset(const std::list<Property> &);
