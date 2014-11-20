@@ -67,9 +67,6 @@ int main(int argCount, char **argValues) {
     // Load a test file/main Lua file.
     trillek::TrillekGame::GetLuaSystem().LoadFile("common/assets/scripts/test.lua");
 
-    // register the Lua system.
-    systems.push(&trillek::TrillekGame::GetLuaSystem());
-
     // Detach the window from the current thread
     os.DetachContext();
 
