@@ -9,10 +9,10 @@
 namespace trillek {
 namespace graphics {
 
-class Texture : public GraphicsBase {
+class Texture final : public GraphicsBase {
 public:
     Texture() : texture_id(0), compare(false) {}
-    virtual ~Texture();
+    ~Texture();
 
     // required to implement
     virtual bool SystemStart(const std::list<Property> &) { return true; }

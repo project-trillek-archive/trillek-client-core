@@ -14,7 +14,7 @@
 #include "trillek.hpp"
 #include "type-id.hpp"
 #include "trillek-scheduler.hpp"
-#include "component-factory.hpp"
+#include "components/component.hpp"
 #include "systems/system-base.hpp"
 #include "util/json-parser.hpp"
 #include "graphics/graphics-base.hpp"
@@ -24,6 +24,7 @@
 #include <map>
 #include "systems/dispatcher.hpp"
 #include "os.hpp"
+#include "graphics/graphics-container.hpp"
 
 namespace trillek {
 
@@ -54,7 +55,7 @@ struct MaterialGroup {
     std::list<TextureGroup> texture_groups;
 };
 
-class RenderSystem : public SystemBase, public util::Parser,
+class RenderSystem final : public SystemBase, public util::Parser,
     public event::Subscriber<KeyboardEvent>
 {
 public:
@@ -125,9 +126,7 @@ public:
      * \return bool false if the component exists on the entity
      */
     template<typename CT>
-    bool AddEntityComponent(const id_t entity_id, std::shared_ptr<CT>) {
-        return false;
-    }
+    bool AddEntityComponent(const id_t entity_id, std::shared_ptr<CT>);
 
     /**
      * \brief Adds a component to the system.
@@ -136,7 +135,7 @@ public:
      * \param const unsigned int The entity ID the component belongs to.
      * \param std::shared_ptr<ComponentBase> component to add.
      */
-    void AddComponent(const id_t entity_id, std::shared_ptr<ComponentBase> component);
+    void AddDynamicComponent(const id_t entity_id, std::shared_ptr<Container> component) override;
 
     /**
      * \brief Removes a Renderable component from the system..
@@ -154,7 +153,7 @@ public:
      * If event handling need some batch processing, a task list must be
      * prepared and stored temporarily to be retrieved by RunBatch().
      */
-    void HandleEvents(const frame_tp& timepoint) override;
+    void HandleEvents(frame_tp timepoint) override;
 
     /** \brief Save the data and terminate the system
      *
@@ -185,7 +184,7 @@ public:
             for(auto section_itr = node.MemberBegin();
                     section_itr != node.MemberEnd(); section_itr++) {
                 std::string obj_name(section_itr->name.GetString(), section_itr->name.GetStringLength());
-                std::shared_ptr<RT> objgen_ptr(new RT);
+                auto objgen_ptr = std::allocate_shared<RT,TrillekAllocator<RT>>(TrillekAllocator<RT>());
                 if(objgen_ptr->Parse(obj_name, section_itr->value)) {
                     rensys.Add(obj_name, objgen_ptr);
                 }
@@ -251,13 +250,9 @@ public:
 private:
 
     template<class CT>
-    int TryAddComponent(const id_t entity_id, std::shared_ptr<ComponentBase> comp) {
-        if(reflection::GetTypeID<CT>() == comp->component_type_id) {
-            auto ccomp = std::static_pointer_cast<CT>(comp);
-            if (!ccomp) {
-                return -1;
-            }
-            if(!AddEntityComponent(entity_id, ccomp)) {
+    int TryAddComponent(const id_t entity_id, const std::shared_ptr<Container>& comp) {
+        if(comp->Is<CT>()) {
+            if(!AddEntityComponent(entity_id, Container::GetSharedPtr<CT>(comp))) {
                 return -1;
             }
             return 1;
@@ -267,7 +262,7 @@ private:
         }
     }
 
-    void UpdateModelMatrices();
+    void UpdateModelMatrices(const frame_tp& timepoint);
 
     int gl_version[3];
     int debugmode;
@@ -310,7 +305,6 @@ private:
     std::map<unsigned int, std::map<std::string, std::shared_ptr<GraphicsBase>>> graphics_instances;
     std::map<unsigned int, glm::mat4> model_matrices;
     std::list<MaterialGroup> material_groups;
-    std::shared_future<std::shared_ptr<const std::map<unsigned int,const Transform*>>> updated_transforms;
 };
 
 /**
@@ -333,7 +327,6 @@ bool RenderSystem::AddEntityComponent(const id_t entity_id, std::shared_ptr<Ligh
 
 template<>
 bool RenderSystem::AddEntityComponent(const id_t entity_id, std::shared_ptr<CameraBase>);
-
 
 } // End of graphics
 

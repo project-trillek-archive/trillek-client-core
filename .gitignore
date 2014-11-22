@@ -1,6 +1,7 @@
 build/
 lib/
 bin/
+raknet/
 .gitattributes
 
 ## Vim

@@ -1,5 +1,8 @@
-#include "systems/sound-system.hpp"
+#include "trillek-game.hpp"
+#include "components/shared-component.hpp"
 #include "systems/transform-system.hpp"
+#include "systems/sound-system.hpp"
+#include "systems/graphics.hpp"
 #include "logging.hpp"
 
 namespace trillek {
@@ -66,6 +69,19 @@ void Sound::SetOuterConeAngle(float angle) {
 std::once_flag System::only_one;
 std::shared_ptr<System> System::instance = nullptr;
 
+std::shared_ptr<System> System::GetInstance() {
+    std::call_once(System::only_one,
+    [ ]() {
+        System::instance.reset(new System());
+
+        if(alureInitDevice(NULL, NULL) == false) {
+            LOGMSGFOR(ERROR, Sound) << "Failed to open OpenAL device: " << alureGetErrorString();
+        }
+    });
+
+    return System::instance;
+}
+
 System::~System() {
     alureShutdownDevice();
 }
@@ -99,24 +115,21 @@ std::shared_ptr<Sound> System::GetSound(const std::string& id) {
     return nullptr;
 }
 
-void System::HandleEvents(const frame_tp& timepoint) {
-    auto transformfut = TransformMap::GetAsyncUpdatedTransforms().GetFuture(timepoint);
-    if (transformfut.valid()) {
-        // wait for the list to be published
-        auto transformmap = transformfut.get();
-        // assume this is the camera entity id
-        if(transformmap->count(0)) {
-            auto data = transformmap->at(0);
-            const glm::vec3& position = data->GetTranslation();
+void System::HandleEvents(frame_tp timepoint) {
+    auto transform_history = TrillekGame::GetSharedComponent().
+                Map<component::Component::GraphicTransform>().Pull(timepoint, last_transform_frame);
+    for(auto itmap = transform_history.second.cbegin(); itmap != transform_history.second.cend(); ++itmap) {
+        auto& transformmap = itmap->second;
+        if (transformmap.count(TrillekGame::GetGraphicSystem().GetActiveCameraID())) {
+            // the camera is moving
+            auto& data = *component::Get<component::Component::GraphicTransform>(transformmap.at(TrillekGame::GetGraphicSystem().GetActiveCameraID()));
+            const glm::vec3& position = data.GetTranslation();
             alListener3f(AL_POSITION, position.x, position.y, position.z);
-            const glm::vec3& up = data->GetOrientation() * UP_VECTOR;
-            const glm::vec3& at = data->GetOrientation() * FORWARD_VECTOR;
+            const glm::vec3& up = data.GetOrientation() * UP_VECTOR;
+            const glm::vec3& at = data.GetOrientation() * FORWARD_VECTOR;
             ALfloat orientation[] = {at.x, at.y, at.z, up.x, up.y, up.z};
             alListenerfv(AL_ORIENTATION, orientation);
         }
-    }
-    else {
-        LOGMSGC(DEBUG) << "Missed the updated transform map publication";
     }
 }
 
@@ -179,4 +192,5 @@ bool System::Parse(rapidjson::Value& node) {
 
 } // end of namespace sound
 } // end of namespace trillek
+
 

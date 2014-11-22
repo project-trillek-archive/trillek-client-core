@@ -4,12 +4,12 @@
 #include "systems/system-base.hpp"
 
 namespace trillek {
-class MetaEngineSystem : public SystemBase {
+class MetaEngineSystem final : public SystemBase {
     void ThreadInit() override;
 
     void RunBatch() const override;
 
-    void HandleEvents(const frame_tp& timepoint) override;
+    void HandleEvents(frame_tp timepoint) override;
 
     void Terminate() override;
 };

@@ -5,7 +5,7 @@
 #include "type-id.hpp"
 #include <memory>
 #include <vector>
-#include "component.hpp"
+#include "components/component.hpp"
 
 namespace trillek {
 namespace resource {
@@ -20,7 +20,7 @@ class Shader;
 class Texture;
 class Animation;
 
-class Renderable : public ComponentBase {
+class Renderable final : public ComponentBase {
 public:
     Renderable();
     ~Renderable();

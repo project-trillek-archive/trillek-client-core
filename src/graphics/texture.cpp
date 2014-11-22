@@ -1,4 +1,3 @@
-
 #include "graphics/texture.hpp"
 #include "resources/pixel-buffer.hpp"
 #include <memory>

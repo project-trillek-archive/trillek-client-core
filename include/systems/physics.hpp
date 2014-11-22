@@ -7,23 +7,46 @@
 #include <map>
 
 #include "trillek.hpp"
-#include "async-data.hpp"
+#include "systems/async-data.hpp"
 #include "trillek-scheduler.hpp"
-#include "atomic-map.hpp"
+#include "user-command-queue.hpp"
 #include "systems/system-base.hpp"
 
-namespace trillek {
-namespace physics {
+namespace trillek { namespace physics {
 
-class Collidable;
+struct VelocityStruct {
+    VelocityStruct() : linear(0,0,0,0), angular(0,0,0,0) {};
 
-struct Force {
-    double x, y, z;
+    template<class T>
+    VelocityStruct(T&& linear, T&& angular)
+        :   linear(std::forward<T>(linear)),
+            angular(std::forward<T>(angular)) {};
+
+    glm::vec4 linear;
+    glm::vec4 angular;
+    btVector3 GetLinear() const {
+        return btVector3(linear.x, linear.y, linear.z);
+    }
+    btVector3 GetAngular() const {
+        return btVector3(angular.x, angular.y, angular.z);
+    }
 };
 
-typedef Force Torque;
+struct VelocityMaxStruct {
+    VelocityMaxStruct() : linear(0,0,0), angular(0,0,0) {};
 
-class PhysicsSystem : public SystemBase {
+    template<class T>
+    VelocityMaxStruct(T&& linear, T&& angular)
+        :   linear(std::forward<T>(linear)),
+            angular(std::forward<T>(angular)) {};
+
+    glm::vec3 linear;
+    glm::vec3 angular;
+};
+
+class PhysicsSystem final : public SystemBase {
+    typedef std::pair<btVector3,btVector3> velocity;
+
 public:
     PhysicsSystem();
     ~PhysicsSystem();
@@ -34,7 +57,7 @@ public:
      */
     void Start();
 
-    void ThreadInit() override { }
+    void ThreadInit() override {}
 
     /**
      * \brief Causes an update in the system based on the change in time.
@@ -50,9 +73,11 @@ public:
      * a Shape component. If the cast results in a nullptr the method returns
      * without adding the Shape component.
      * \param const unsigned int entity_id The entity ID the compoennt belongs to.
-     * \param std::shared_ptr<ComponentBase> component The component to add.
+     * \param std::shared_ptr<T> component The component to add.
      */
-    void AddComponent(const unsigned int entity_id, std::shared_ptr<ComponentBase> component);
+    void AddDynamicComponent(const unsigned int entity_id, std::shared_ptr<component::Container> shape) override;
+
+    void AddBodyToWorld(btRigidBody* body);
 
     /** \brief Handle incoming events to update data
      *
@@ -63,7 +88,7 @@ public:
      * If event handling need some batch processing, a task list must be
      * prepared and stored temporarily to be retrieved by RunBatch().
      */
-    void HandleEvents(const frame_tp& timepoint) override;
+    void HandleEvents(frame_tp timepoint) override;
 
     /** \brief Save the data and terminate the system
      *
@@ -71,79 +96,39 @@ public:
      */
     void Terminate() override;
 
-    /** \brief Set a rigid body's current linear force.
-     *
-     * \param unsigned int entity_id The entity ID of the rigid body.
-     * \param Force f The rigid body's new force.
-     */
-    void SetForce(unsigned int entity_id, const Force f) const;
-
-    /** \brief Set a rigid body's current torque.
-     *
-     * \param unsigned int entity_id The entity ID of the rigid body.
-     * \param Force f The rigid body's new torque.
-     * \return void
-     */
-    void SetTorque(unsigned int entity_id, const Torque t) const;
-
-    /** \brief Remove a rigid body's current linear force.
-    *
-    * \param const unsigned int entity_id The entity ID of the rigid body.
-    */
-    void RemoveForce(const unsigned int entity_id) const ;
-
-    /** \brief Remove a rigid body's current torque.
-    *
-    * \param const unsigned int entity_id The entity ID of the rigid body.
-    */
-    void RemoveTorque(const unsigned int entity_id) const;
+    template<class T>
+    void AddCommand(id_t entity_id, T&& v) const {
+        this->usercommands.AddCommand(entity_id, std::forward<T>(v));
+    }
 
     /** \brief Set a rigid body's gravity.
      *
      * \param const unsigned int entity_id The entity ID of the rigid body.
-     * \param const Force* f The rigid body's new gravity (world gravity if nullptr).
+     * \param btVector3 f The rigid body's new gravity.
      */
-    void SetGravity(const unsigned int entity_id, const Force* f = nullptr);
+    void SetGravity(const unsigned int entity_id, const btVector3& f);
 
-    /** \brief Return a future of the forces
+    /** \brief Set a rigid body's gravity to the world's gravity.
      *
-     * \param timepoint const frame_tp& the current frame
-     * \return std::shared_future<std::shared_ptr<std::map<id_t,btVector3>>> the future
-     *
+     * \param const unsigned int entity_id The entity ID of the rigid body.
      */
-    std::shared_future<std::shared_ptr<const std::map<id_t,btVector3>>> GetAsyncForces(const frame_tp& timepoint) const {
-        return async_forces.GetFuture(timepoint);
-    }
-
-    /** \brief Return a future of the torques
-     *
-     * \param timepoint const frame_tp& the current frame
-     * \return std::shared_future<std::shared_ptr<std::map<id_t,btVector3>>> the future
-     *
-     */
-    std::shared_future<std::shared_ptr<const std::map<id_t,btVector3>>> GetAsyncTorques(const frame_tp& timepoint) const {
-        return async_torques.GetFuture(timepoint);
-    }
+    void SetNormalGravity(const unsigned int entity_id);
 
 private:
+
     btBroadphaseInterface* broadphase;
     btDefaultCollisionConfiguration* collisionConfiguration;
     btCollisionDispatcher* dispatcher;
     btSequentialImpulseConstraintSolver* solver;
     btDiscreteDynamicsWorld* dynamicsWorld;
 
-    std::map<unsigned int, std::shared_ptr<Collidable>> bodies;
-
-    AtomicMap<unsigned int, btVector3> forces;
-    AtomicMap<unsigned int, btVector3> torques;
-    AsyncData<std::map<id_t,btVector3>> async_forces;
-    AsyncData<std::map<id_t,btVector3>> async_torques;
+    UserCommandQueue usercommands;
 
     btCollisionShape* groundShape;
     btDefaultMotionState* groundMotionState;
     btRigidBody* groundRigidBody;
 
-    frame_unit delta; // The time since the last HandleEvents was called.
+    frame_tp delta; // The time since the last HandleEvents was called.
 };
 
 } // End of physcics

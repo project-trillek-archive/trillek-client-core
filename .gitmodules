@@ -1,3 +1,5 @@
-[submodule "assets"]
-	path = assets
-	url = https://github.com/trillek-team/trillek-assets
+[submodule "common"]
+	path = common
+	url = https://github.com/trillek-team/trillek-common.git
+	branch = develop
+	ignore = dirty

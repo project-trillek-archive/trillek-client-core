@@ -11,12 +11,12 @@ echo "Downloading GLEW and GLM"
 sudo apt-get -q -y install libglew-dev libglm-dev
 
 # Get Crypto++
-echo "Getting & compiling crypt++"
-git submodule update --init --depth 1 -- ./crypto++
-cd crypto++
-cmake CMakeLists.txt
-make
-cd $BUILD_PATH
+#echo "Getting & compiling crypt++"
+#git submodule update --init --depth 1 -- ./crypto++
+#cd crypto++
+#cmake CMakeLists.txt
+#make
+#cd $BUILD_PATH
 
 # OpenAL, Vorbis and OGG
 echo "OpenAL, Vorbis/OGG and Alure"
@@ -32,6 +32,7 @@ if [ -z "$BULLET_DOUBLE" ] ; then
     cd bullet
     wget https://bullet.googlecode.com/files/bullet-2.82-r2704.tgz
     tar -xzxf bullet-2.82-r2704.tgz
+    cd bullet-2.82-r2704
     cmake -DINSTALL_LIBS=on -DBUILD_SHARED_LIBS=on -DBUILD_DEMOS=off -DUSE_DOUBLE_PRECISION=on  .
     make
     sudo make install
@@ -62,7 +63,8 @@ if [ -z "$GLFW_VERSION" ] ; then  # Should be >= 3
     sudo apt-get -qq install xorg-dev libglu1-mesa-dev
     git clone https://github.com/glfw/glfw.git
     cd glfw
-    CMAKE_CXX_FLAGS=-fPIC CMAKE_C_FLAGS=-fPIC cmake -DCMAKE_INSTALL_PREFIX=/usr -DBUILD_SHARED_LIBS:bool=true .
+    cmake CMAKE_CXX_FLAGS=-fPIC CMAKE_C_FLAGS=-fPIC cmake -DCMAKE_INSTALL_PREFIX=/usr -DBUILD_SHARED_LIBS:bool=true .
+    make
     sudo make install
 else
     echo "GLFW $GLFW_VERSION is installed "

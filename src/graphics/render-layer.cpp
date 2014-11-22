@@ -1,4 +1,3 @@
-
 #include "graphics/render-layer.hpp"
 #include "graphics/texture.hpp"
 #include "trillek-game.hpp"

@@ -1,18 +1,23 @@
 #include "trillek-game.hpp"
 #include <queue>
 #include <thread>
-#include <chrono>
 #include "os.hpp"
 #include "util/json-parser.hpp"
 #include "systems/transform-system.hpp"
 #include "systems/resource-system.hpp"
+#include "systems/physics.hpp"
 #include "systems/meta-engine-system.hpp"
 #include "systems/sound-system.hpp"
-#include <cstddef>
+#include "systems/graphics.hpp"
+#include <iostream>
+
+#include "systems/vcomputer-system.hpp"
 
 size_t gAllocatedSize = 0;
 
 int main(int argCount, char **argValues) {
+    trillek::TrillekGame::Initialize();
+    std::cout << "Starting Trillek client..." << std::endl;
     // create the window
     auto& os = trillek::TrillekGame::GetOS();
 #if __APPLE__
@@ -31,7 +36,7 @@ int main(int argCount, char **argValues) {
 
     trillek::util::JSONPasrser jparser;
 
-    if (!jparser.Parse("assets/tests/sample.json")) {
+    if (!jparser.Parse("common/assets/tests/sample.json")) {
         std::cerr << "Error loading JSON configuration file." << std::endl;
     }
 
@@ -48,7 +53,7 @@ int main(int argCount, char **argValues) {
     std::queue<trillek::SystemBase*> systems;
 
     // register the fake system. Comment this to cancel
-//    systems.push(&trillek::TrillekGame::GetFakeSystem());
+//  systems.push(&trillek::TrillekGame::GetFakeSystem());
 
     // register the engine system, i.e graphics + physics
     systems.push(&trillek::TrillekGame::GetEngineSystem());
@@ -56,8 +61,17 @@ int main(int argCount, char **argValues) {
     // register the sound system
     systems.push(&trillek::TrillekGame::GetSoundSystem());
 
+    // Start Lua system.
+    trillek::TrillekGame::GetLuaSystem().Start();
+
+    // Load a test file/main Lua file.
+    trillek::TrillekGame::GetLuaSystem().LoadFile("common/assets/scripts/test.lua");
+
     // Detach the window from the current thread
     os.DetachContext();
+
+    trillek::VComputerSystem cpu1;
+    systems.push(&cpu1);
 
     // start the scheduler in another thread
     std::thread tp(
@@ -65,7 +79,16 @@ int main(int argCount, char **argValues) {
                    &trillek::TrillekGame::GetScheduler(),
                    5,
                    std::ref(systems));
-    while (!os.Closing()) {
+
+    // Start the client network layer
+/*    trillek::TrillekGame::GetNetworkClient().SetTCPHandler<trillek::network::CLIENT>();
+
+    // Start the server network layer and connect the client to the server
+    if(! trillek::TrillekGame::GetNetworkClient().Connect("localhost", 7777, "my_login", "secret password")) {
+        trillek::TrillekGame::NotifyCloseWindow();
+    }
+*/
+    while (! os.Closing()) {
         os.OSMessageLoop();
     }
     tp.join();
@@ -74,6 +97,8 @@ int main(int argCount, char **argValues) {
     os.MakeCurrent();
     os.Terminate();
 
-    jparser.Serialize("assets/tests/", "transforms.json", trillek::TransformMap::GetInstance());
+    // TODO: fix rotation.y for entity 1001 becoming NaN
+    //jparser.Serialize("common/assets/tests/", "transforms.json", trillek::TransformMap::GetInstance());
+    std::cout << "Number of bytes not freed: " << gAllocatedSize << std::endl;
     return 0;
 }

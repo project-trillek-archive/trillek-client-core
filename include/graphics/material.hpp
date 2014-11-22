@@ -12,7 +12,7 @@ namespace graphics {
 class Texture;
 class Shader;
 
-class Material {
+class Material final {
 public:
     Material();
     ~Material();
