@@ -55,7 +55,6 @@ ADD_DEFINITIONS(-DGLM_FORCE_RADIANS -DBT_USE_DOUBLE_PRECISION)
 FIND_PACKAGE(OpenGL REQUIRED)
 FIND_PACKAGE(GLFW3 REQUIRED)
 FIND_PACKAGE(RapidJSON REQUIRED)
-FIND_PACKAGE(RakNet REQUIRED PATH ${CMAKE_SOURCE_DIR}/common/)
 FIND_PACKAGE(Bullet REQUIRED)
 FIND_PACKAGE(ALURE REQUIRED)
 FIND_PACKAGE(OpenAL REQUIRED)
@@ -124,7 +123,6 @@ LINK_DIRECTORIES(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
 # define all required external libraries
 SET(Backend_LIBS
-    ${RAKNET_LIBRARIES}
     ${BULLET_DYNAMICS_LIBRARIES}
     ${BULLET_COLLISION_LIBRARIES}
     ${BULLET_LINEARMATH_LIBRARIES}
@@ -146,19 +144,11 @@ SET(Frontend_LIBS
     )
 
 ADD_SUBDIRECTORY (${CMAKE_SOURCE_DIR}/common/trillek-vcomputer-module)
-#Dirty addition of vcomputer
-#TODO: make a cmake module
-IF (MSVC) # Visual C++
-    SET(Backend_LIBS
-        ${Backend_LIBS}
-        VCOMPUTER.lib
-        )
-ELSE (MSVC)
-    SET(Backend_LIBS
-        ${Backend_LIBS}
-	VCOMPUTER
-        )
-ENDIF (MSVC) # Visual C++
+
+SET(Backend_LIBS
+    ${Backend_LIBS}
+    VCOMPUTER
+    )
 
 INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/common/trillek-vcomputer-module/include")
 INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/common/trillek-vcomputer-module/src")
