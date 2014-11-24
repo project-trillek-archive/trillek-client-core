@@ -26,6 +26,10 @@ as a sandbox. There are also some sample codes here you should see. We will move
 
 The dev community is mainly on IRC : #project-trillek on Freenode.
 
+License
+===
+
+trillek-client is licensed under LGPL.
 
 Installing
 ===
@@ -59,6 +63,8 @@ To retrieve a copy of the Trillek code and assets, clone the repository and its 
 
 	git clone https://github.com/trillek-team/trillek-client-core.git
 	cd trillek-client-core
+	git submodule update --init common
+	cd common
 	git submodule update --init
 
 Avoid using the **Download Zip** option on GitHub.  This will *not* download the [assets](https://github.com/trillek-team/trillek-assets) submodule.

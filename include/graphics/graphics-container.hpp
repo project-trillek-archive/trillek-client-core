@@ -13,7 +13,7 @@ namespace graphics {
  * This class is used to carry dynamic typed values.
  * The type contained can be determined with GetType() or Is<T>()
  */
-class Container {
+class Container final {
 public:
     // instance an empty container
     Container() : value_holder(nullptr) { }
@@ -123,7 +123,7 @@ private:
      * \brief The generic value holder.
      */
     template <typename T>
-    class ValueHolder : public ValueHolderBase {
+    class ValueHolder final : public ValueHolderBase {
     public:
         ValueHolder(T value) : value(value), type_id(reflection::GetTypeID<T>()) { }
         T& Get() { return this->value; }

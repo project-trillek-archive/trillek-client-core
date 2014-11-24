@@ -3,7 +3,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 PROJECT(trillek-client-core)
 
 # Set the directory of cmake modules
-SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/modules")
+SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/common/modules")
 
 # Put the executable in the bin folder
 SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
@@ -11,32 +11,28 @@ SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 # Install the libraries using bin folder as root
 SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/lib")
 
-# Set the directory of Find<Library>.cmake modules
-SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/modules")
-
 # Set the directory for the header files
-SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} ${CMAKE_SOURCE_DIR}/include)
+SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} ${CMAKE_SOURCE_DIR}/include
+	${CMAKE_SOURCE_DIR}/common/include)
 
 # set options early
 SET(TCC_BUILD_TESTS CACHE BOOL "Parse the tests directory")
-SET(TRILLEK_BUILD_CLIENT CACHE BOOL "Build the client")
-SET(TRILLEK_BUILD_SERVER CACHE BOOL "Build the server")
-SET(TRILLEK_BUILD_STANDALONE ON CACHE BOOL "Build the standalone binary")
 SET(TCC_TEST_NETWORK_DISABLE OFF CACHE BOOL "Disable the network unit test")
 
 # find all source files in the src directory
-FILE(GLOB_RECURSE TCC_SRC "src/*.cpp")
+FILE(GLOB_RECURSE TCC_SRC "src/*.cpp" "common/src/*.cpp")
 
 # Put the main_XXX.cpp files into a filter
 FILE(GLOB TCC_MAIN_CPP "main/*.cpp")
 
 # find all the files in the includes directory
-FILE(GLOB_RECURSE TCC_INCLUDES "include/*.h" "include/*.hpp")
+FILE(GLOB_RECURSE TCC_INCLUDES "include/*.h" "include/*.hpp" "common/include/*.h"
+	"common/include/*.hpp")
 
 #Check if we can build with the current chaintool
 INCLUDE(SetCompilerFlags)
 
-INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/include/")
+INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/include/" "${CMAKE_SOURCE_DIR}/common/include/")
 
 # If we are on windows add in the local search directories as well.
 IF (WIN32 AND NOT MINGW) # Windows
@@ -59,8 +55,6 @@ ADD_DEFINITIONS(-DGLM_FORCE_RADIANS -DBT_USE_DOUBLE_PRECISION)
 FIND_PACKAGE(OpenGL REQUIRED)
 FIND_PACKAGE(GLFW3 REQUIRED)
 FIND_PACKAGE(RapidJSON REQUIRED)
-FIND_PACKAGE(RakNet REQUIRED)
-#INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}")
 FIND_PACKAGE(Bullet REQUIRED)
 FIND_PACKAGE(ALURE REQUIRED)
 FIND_PACKAGE(OpenAL REQUIRED)
@@ -119,17 +113,16 @@ IF (TCC_BUILD_TESTS)
         FIND_PACKAGE(GTEST REQUIRED)
     ENDIF (DEFINED ENV{GTEST_ROOT})
 
-    FILE(GLOB_RECURSE TCCTests_SRC "tests/src/*.cpp")
-    FILE(GLOB_RECURSE TCCTests_INCLUDE "tests/tests/*.h" "tests/tests/*.hpp")
-    SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} ${CMAKE_SOURCE_DIR}/tests/)
-    INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/tests/")
+    FILE(GLOB_RECURSE TCCTests_SRC "common/tests/src/*.cpp")
+    FILE(GLOB_RECURSE TCCTests_INCLUDE "common/tests/tests/*.h" "common/tests/tests/*.hpp")
+    SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} ${CMAKE_SOURCE_DIR}/common/tests/)
+    INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/common/tests/")
 ENDIF (TCC_BUILD_TESTS)
 
 LINK_DIRECTORIES(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
 # define all required external libraries
 SET(Backend_LIBS
-    ${RAKNET_LIBRARIES}
     ${BULLET_DYNAMICS_LIBRARIES}
     ${BULLET_COLLISION_LIBRARIES}
     ${BULLET_LINEARMATH_LIBRARIES}
@@ -150,23 +143,15 @@ SET(Frontend_LIBS
     ${OPENAL_LIBRARIES}
     )
 
-ADD_SUBDIRECTORY (${CMAKE_SOURCE_DIR}/trillek-vcomputer-module)
-#Dirty addition of vcomputer
-#TODO: make a cmake module
-IF (MSVC) # Visual C++
-    SET(Backend_LIBS
-        ${Backend_LIBS}
-        VCOMPUTER.lib
-        )
-ELSE (MSVC)
-    SET(Backend_LIBS
-        ${Backend_LIBS}
-	VCOMPUTER
-        )
-ENDIF (MSVC) # Visual C++
+ADD_SUBDIRECTORY (${CMAKE_SOURCE_DIR}/common/trillek-vcomputer-module)
 
-INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/trillek-vcomputer-module/include")
-INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/trillek-vcomputer-module/src")
+SET(Backend_LIBS
+    ${Backend_LIBS}
+    VCOMPUTER
+    )
+
+INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/common/trillek-vcomputer-module/include")
+INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/common/trillek-vcomputer-module/src")
 
 SET(Trillek_Server_LIBS ${Backend_LIBS})
 SET(Trillek_Client_LIBS ${Backend_LIBS} ${Frontend_LIBS})
@@ -179,20 +164,10 @@ ENDIF (MSVC)
 
 FOREACH(MAIN_CPP ${TCC_MAIN_CPP})
     GET_FILENAME_COMPONENT(T_NAME ${MAIN_CPP} NAME_WE)
-    IF(T_NAME STREQUAL "client-main" AND TRILLEK_BUILD_CLIENT)
+    IF(T_NAME STREQUAL "client-main")
         SET(T_NAME "Trillek_Client")
-        SET(BUILDTARGET "_CLIENT_")
-    ENDIF(T_NAME STREQUAL "client-main" AND TRILLEK_BUILD_CLIENT)
-
-    IF(T_NAME STREQUAL "server-main" AND TRILLEK_BUILD_SERVER)
-        SET(T_NAME "Trillek_Server")
-        SET(BUILDTARGET "_SERVER_")
-    ENDIF(T_NAME STREQUAL "server-main" AND TRILLEK_BUILD_SERVER)
-
-    IF(T_NAME STREQUAL "standalone-main" AND TRILLEK_BUILD_STANDALONE)
-        SET(T_NAME "Trillek_Standalone")
-        SET(BUILDTARGET "_STANDALONE_")
-    ENDIF(T_NAME STREQUAL "standalone-main" AND TRILLEK_BUILD_STANDALONE)
+	SET(BUILDTARGET "BUILD_CLIENT")
+    ENDIF(T_NAME STREQUAL "client-main")
 
     IF(BUILDTARGET)
         MESSAGE(STATUS "Processing: ${T_NAME}")
@@ -228,8 +203,6 @@ if(TCC_BUILD_TESTS)
     IF(TCC_TEST_NETWORK_DISABLE)
         SET_PROPERTY(TARGET TCCTests PROPERTY COMPILE_DEFINITIONS NO_NETWORK APPEND)
         #target_compile_definitions(TCCTests PRIVATE NO_NETWORK)
-    ELSE(TCC_TEST_NETWORK_DISABLE)
-        SET_PROPERTY(TARGET TCCTests PROPERTY COMPILE_DEFINITIONS _CLIENT_ _SERVER_ APPEND)
     ENDIF(TCC_TEST_NETWORK_DISABLE)
 
     TARGET_LINK_LIBRARIES(TCCTests ${GTEST_LIBRARIES} ${Trillek_Standalone_LIBS})

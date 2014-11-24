@@ -1,5 +1,3 @@
-#if defined(_CLIENT_) || defined(_STANDALONE_)
-
 #include "graphics/material.hpp"
 #include "graphics/shader.hpp"
 #include "graphics/texture.hpp"
@@ -52,4 +50,3 @@ void Material::DeactivateTexture(GLuint target) {
 
 } // End of graphics
 } // End of trillek
-#endif // defined(_CLIENT_) || defined(_STANDALONE_)

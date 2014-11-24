@@ -20,7 +20,7 @@ class Shader;
 class Texture;
 class Animation;
 
-class Renderable : public ComponentBase {
+class Renderable final : public ComponentBase {
 public:
     Renderable();
     ~Renderable();

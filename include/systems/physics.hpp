@@ -7,7 +7,7 @@
 #include <map>
 
 #include "trillek.hpp"
-#include "async-data.hpp"
+#include "systems/async-data.hpp"
 #include "trillek-scheduler.hpp"
 #include "user-command-queue.hpp"
 #include "systems/system-base.hpp"
@@ -44,7 +44,7 @@ struct VelocityMaxStruct {
     glm::vec3 angular;
 };
 
-class PhysicsSystem : public SystemBase {
+class PhysicsSystem final : public SystemBase {
     typedef std::pair<btVector3,btVector3> velocity;
 
 public:

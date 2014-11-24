@@ -9,7 +9,7 @@ namespace trillek {
 namespace graphics {
 
 // This is a 6 degree-of-freedom camera allowing movement on any axis relative to the current orientation.
-class SixDOFCamera :
+class SixDOFCamera final :
     public CameraBase {
 public:
     /**

@@ -1,4 +1,3 @@
-#if defined(_CLIENT_) || defined(_STANDALONE_)
 #include "trillek-game.hpp"
 #include "components/shared-component.hpp"
 #include "systems/transform-system.hpp"
@@ -193,6 +192,5 @@ bool System::Parse(rapidjson::Value& node) {
 
 } // end of namespace sound
 } // end of namespace trillek
-#endif // defined(_CLIENT_) || defined(_STANDALONE_)
 
 

@@ -29,7 +29,7 @@ enum class RenderCmd : unsigned int {
     BIND_SHADER,
 };
 
-class RenderCommandItem {
+class RenderCommandItem final {
 public:
     RenderCommandItem(RenderCmd c, Container &&cv, std::list<Property> &&prop) {
         cmd = c;
@@ -71,10 +71,10 @@ public:
 /**
  * \brief RenderList - a class to manage the order of the scene rendering
  */
-class RenderList : public GraphicsBase {
+class RenderList final : public GraphicsBase {
 public:
     RenderList() { initialize_priority = 2; }
-    virtual ~RenderList() {}
+    ~RenderList() {}
 
     // required to implement
     virtual bool SystemStart(const std::list<Property> &) override;

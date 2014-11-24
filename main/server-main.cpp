@@ -20,9 +20,7 @@ size_t gAllocatedSize = 0;
 
 int main(int argCount, char **argValues) {
     trillek::TrillekGame::Initialize();
-#ifdef _SERVER_
     std::cout << "Starting Trillek server..." << std::endl;
-#endif // _SERVER_
 
 #if defined(_MSC_VER)
     // Visual C++ rely on GLFW clock

@@ -1,5 +1,3 @@
-#if defined(_CLIENT_) || defined(_STANDALONE_)
-
 #include "systems/lua-system.hpp"
 #include <iostream>
 
@@ -120,5 +118,4 @@ void LuaSystem::Notify(const MouseMoveEvent* mousemove_event) {
 
 } // End of script
 } // End of trillek
-#endif
 

@@ -55,8 +55,7 @@ struct MaterialGroup {
     std::list<TextureGroup> texture_groups;
 };
 
-#if defined(_CLIENT_) || defined(_STANDALONE_)
-class RenderSystem : public SystemBase, public util::Parser,
+class RenderSystem final : public SystemBase, public util::Parser,
     public event::Subscriber<KeyboardEvent>
 {
 public:
@@ -328,16 +327,7 @@ bool RenderSystem::AddEntityComponent(const id_t entity_id, std::shared_ptr<Ligh
 
 template<>
 bool RenderSystem::AddEntityComponent(const id_t entity_id, std::shared_ptr<CameraBase>);
-#else
-class RenderSystem : public util::Parser {
-public:
 
-    RenderSystem() : Parser("graphics") {};
-
-    // Inherited from Parser
-    virtual bool Parse(rapidjson::Value& node);
-};
-#endif // #if defined(_CLIENT_) || defined(_STANDALONE_)
 } // End of graphics
 
 namespace reflection {

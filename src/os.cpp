@@ -1,4 +1,3 @@
-#if defined(_CLIENT_) || defined(_STANDALONE_) || defined(_MSC_VER)
 #include "os.hpp"
 
 #include <iostream>
@@ -33,23 +32,64 @@ bool OS::InitializeWindow(const int width, const int height, const std::string t
         return false;
     }
 
+    // don't hint much (request default context version)
     glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, glMajor);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, glMinor);
-
-#if __APPLE__
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-#else
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
-#endif
 
     // Create a windowed mode window and its OpenGL context.
     this->window = glfwCreateWindow(width, height, title.c_str(), NULL, NULL);
 
     if (!this->window) {
-        glfwTerminate();
-        return false;
+        // creating a window with default hints failed
+        // try again with specific hints
+        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, glMajor);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, glMinor);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        this->window = glfwCreateWindow(width, height, title.c_str(), NULL, NULL);
+
+        if (!this->window) {
+            // still not right, give up
+            glfwTerminate();
+            return false;
+        }
+    }
+
+    // attach the context
+    glfwMakeContextCurrent(this->window);
+
+    // check the context version
+    std::string glcx_version((char*)glGetString(GL_VERSION));
+    std::string glcx_major = glcx_version.substr(0, glcx_version.find('.', 0));
+    if(glcx_major == "1") {
+        // we got a version 1 context, that will not work
+        // so try again.
+        glfwMakeContextCurrent(nullptr);
+        glfwDestroyWindow(this->window);
+        // be more specific this time
+        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, glMajor);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, glMinor);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        this->window = glfwCreateWindow(width, height, title.c_str(), NULL, NULL);
+
+        if (!this->window) {
+            glfwTerminate();
+            return false;
+        }
+        // attach the context
+        glfwMakeContextCurrent(this->window);
+
+        // check the context version again
+        glcx_version = (char*)glGetString(GL_VERSION);
+        glcx_major = glcx_version.substr(0, glcx_version.find('.', 0));
+        if(glcx_major == "1") {
+            // still 1, higher versions probably not supported
+            glfwTerminate();
+            std::cerr << "Initializing OpenGL failed, unsupported version: " << glcx_version << '\n';
+            std::cerr << "Press \"Enter\" to exit\n";
+            std::cin.get();
+            return false;
+        }
     }
 
     this->client_width = width;
@@ -61,9 +101,6 @@ bool OS::InitializeWindow(const int width, const int height, const std::string t
     id cocoaGLView = ((id (*)(id, SEL)) objc_msgSend)(cocoaWindow, sel_getUid("contentView"));
     ((void (*)(id, SEL, bool)) objc_msgSend)(cocoaGLView, sel_getUid("setWantsBestResolutionOpenGLSurface:"), false);
 #endif
-
-    // attach the context
-    glfwMakeContextCurrent(this->window);
 
 #ifndef __APPLE__
     // setting glewExperimental fixes a glfw context problem
@@ -274,4 +311,3 @@ void OS::SetMousePosition(double x, double y) {
 }
 
 } // End of trillek
-#endif // defined(_CLIENT_) || defined(_STANDALONE_) || defined(_MSC_VER)

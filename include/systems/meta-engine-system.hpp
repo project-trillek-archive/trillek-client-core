@@ -4,7 +4,7 @@
 #include "systems/system-base.hpp"
 
 namespace trillek {
-class MetaEngineSystem : public SystemBase {
+class MetaEngineSystem final : public SystemBase {
     void ThreadInit() override;
 
     void RunBatch() const override;

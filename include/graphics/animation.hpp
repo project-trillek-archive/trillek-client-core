@@ -15,7 +15,7 @@ class MD5Anim;
 
 namespace graphics {
 
-class Animation {
+class Animation final {
 public:
     Animation() : animation_time(0.0f) { }
 

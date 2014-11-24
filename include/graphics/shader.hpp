@@ -31,10 +31,10 @@ enum class ShaderOutputType {
     DEFAULT_TARGETS
 };
 
-class Shader : public GraphicsBase {
+class Shader final : public GraphicsBase {
 public:
     Shader();
-    virtual ~Shader();
+    ~Shader();
 
     virtual bool SystemStart(const std::list<Property> &);
     virtual bool SystemReset(const std::list<Property> &);
@@ -56,6 +56,12 @@ public:
     virtual bool Serialize(rapidjson::Document& document);
 
     bool ParseDefines(std::string &defstring, const rapidjson::Value& node);
+
+    /**
+     * Remove the #version line from source and return it.
+     */
+    static std::string VersionPrePass(std::string & source);
+
     void LoadFromString(ShaderType whichShader, const std::string & source);
     void LoadFromStrings(ShaderType whichShader, const std::vector<std::string> & source);
     void LoadFromFile(ShaderType whichShader, const std::string & filename);

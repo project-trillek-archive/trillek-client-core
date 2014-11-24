@@ -39,12 +39,16 @@ install:
     - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
     # GLEW
     - sudo apt-get -q -y install libglew-dev
-    # Raknet
-    - git submodule update --init --depth=1 raknet
+    # Raknet and assets
+    - git submodule update --init --depth=1 common
+    - cd common
+    - git submodule update --init assets
+    - git submodule update --init trillek-vcomputer-module
+    - git submodule update --init --depth=50 raknet
     - cd raknet
     - sudo cmake CMakeLists.txt
     - sudo make
-    - cd ..
+    - cd ../..
     # OpenAL, Vorbis and OGG
     - sudo apt-get -q -y install libogg-dev libvorbis-dev libopenal-dev libalure-dev
     # Bullet
@@ -61,12 +65,13 @@ install:
 #    - sudo apt-get -y install automake libtool cmake
 before_script:
     - mkdir build
-    - mv assets build
+    - mv common/assets build
     - cd build
     - cmake -DTCC_BUILD_TESTS=True ..
 script:
     - make
-    - mv assets bin
+    - mkdir bin/common
+    - mv assets bin/common
     - cd bin
     - ./TCCTests
 
