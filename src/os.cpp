@@ -60,7 +60,7 @@ bool OS::InitializeWindow(const int width, const int height, const std::string t
     // check the context version
     std::string glcx_version((char*)glGetString(GL_VERSION));
     std::string glcx_major = glcx_version.substr(0, glcx_version.find('.', 0));
-    if(glcx_major == "1") {
+    if(glcx_major == "1" || glcx_major == "2") {
         // we got a version 1 context, that will not work
         // so try again.
         glfwMakeContextCurrent(nullptr);
