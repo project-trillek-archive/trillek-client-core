@@ -5,7 +5,7 @@
 
 #include "lua/lua_velocity.hpp"
 
-#include "components/shared-component.hpp"
+#include "components/component.hpp"
 #include "systems/physics.hpp"
 #include "transform.hpp"
 #include "trillek-game.hpp"

@@ -56,20 +56,17 @@ void graphics::RenderSystem::RegisterTypes() {
 }
 
 void ComponentFactory::RegisterTypes() {
-    auto& shared = TrillekGame::GetSharedComponent();
-    auto& system = TrillekGame::GetSystemComponent();
-    auto& system_value = TrillekGame::GetSystemValueComponent();
-    RegisterComponentType(ComponentAdder<SYSTEM,Component::Collidable>(system));
-    RegisterComponentType(ComponentAdder<SHARED,Component::Velocity, bool>(shared));
-    RegisterComponentType(ComponentAdder<SHARED,Component::VelocityMax, bool>(shared));
-    RegisterComponentType(ComponentAdder<SYSTEM,Component::ReferenceFrame,id_t>(system_value));
-    RegisterComponentType(ComponentAdder<SYSTEM,Component::IsReferenceFrame,bool>(system_value));
-    RegisterComponentType(ComponentAdder<SYSTEM,Component::CombinedVelocity>(system));
-    RegisterComponentType(ComponentAdder<SYSTEM,Component::ReferenceFrame,id_t>(system_value));
-    RegisterComponentType(ComponentAdder<SYSTEM,Component::OxygenRate,float_t>(system_value));
-    RegisterComponentType(ComponentAdder<SYSTEM,Component::Health,uint32_t>(system_value));
-    RegisterComponentType(ComponentAdder<SHARED,Component::GraphicTransform,bool>(shared));
-    RegisterComponentType(ComponentAdder<SHARED,Component::GameTransform,bool>(shared));
+    RegisterComponentType(ComponentAdder<System,Component::Collidable>());
+    RegisterComponentType(ComponentAdder<Shared,Component::Velocity>());
+    RegisterComponentType(ComponentAdder<Shared,Component::VelocityMax>());
+    RegisterComponentType(ComponentAdder<SystemValue,Component::ReferenceFrame>());
+    RegisterComponentType(ComponentAdder<SystemValue,Component::IsReferenceFrame>());
+    RegisterComponentType(ComponentAdder<System,Component::CombinedVelocity>());
+    RegisterComponentType(ComponentAdder<SystemValue, Component::ReferenceFrame>());
+    RegisterComponentType(ComponentAdder<SystemValue, Component::OxygenRate>());
+    RegisterComponentType(ComponentAdder<SystemValue, Component::Health>());
+    RegisterComponentType(ComponentAdder<Shared, Component::GraphicTransform>());
+    RegisterComponentType(ComponentAdder<Shared, Component::GameTransform>());
     RegisterComponentType<graphics::Renderable>();
     RegisterComponentType<graphics::LightBase>();
     RegisterComponentType<graphics::SixDOFCamera>();

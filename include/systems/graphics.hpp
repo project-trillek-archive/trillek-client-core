@@ -14,7 +14,6 @@
 #include "trillek.hpp"
 #include "type-id.hpp"
 #include "trillek-scheduler.hpp"
-#include "components/component.hpp"
 #include "systems/system-base.hpp"
 #include "util/json-parser.hpp"
 #include "graphics/graphics-base.hpp"

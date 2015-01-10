@@ -1,5 +1,5 @@
 #include "trillek-game.hpp"
-#include "components/shared-component.hpp"
+#include "components/component.hpp"
 #include "systems/transform-system.hpp"
 #include "systems/sound-system.hpp"
 #include "systems/graphics.hpp"
@@ -116,8 +116,8 @@ std::shared_ptr<Sound> System::GetSound(const std::string& id) {
 }
 
 void System::HandleEvents(frame_tp timepoint) {
-    auto transform_history = TrillekGame::GetSharedComponent().
-                Map<component::Component::GraphicTransform>().Pull(timepoint, last_transform_frame);
+    auto transform_history =
+                component::GetRawContainer<component::Component::GraphicTransform>().Map().Pull(timepoint, last_transform_frame);
     for(auto itmap = transform_history.second.cbegin(); itmap != transform_history.second.cend(); ++itmap) {
         auto& transformmap = itmap->second;
         if (transformmap.count(TrillekGame::GetGraphicSystem().GetActiveCameraID())) {
