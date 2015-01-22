@@ -3,8 +3,15 @@
 
 echo "This script will try to download and install the necesary libs for Trillek engine on Ubuntu"
 BUILD_PATH=$(pwd)
-
 mkdir build
+
+echo "Git submodules"
+git submodule init
+git submodule update
+cd comon
+git submodule init
+git submodule update
+cd $BUILD_PATH
 
 # Get GLEW and GLM
 echo "Downloading GLEW and GLM"
@@ -21,6 +28,20 @@ sudo apt-get -q -y install libglew-dev libglm-dev
 # OpenAL, Vorbis and OGG
 echo "OpenAL, Vorbis/OGG and Alure"
 sudo apt-get -q -y install libogg-dev libvorbis-dev libopenal-dev libalure-dev
+
+# Lua
+echo "Lua"
+sudo apt-get -q -y liblua5.2-dev
+# Get LuaWrapper
+if [ ! -f /usr/local/include/luawrapper/luawrapper.hpp ]; then
+    echo "Getting LuaWrapper"
+    wget https://bitbucket.org/alexames/luawrapper/downloads/luawrapper.zip
+    unzip luawrapper.zip -d /tmp
+    sudo cp -r /tmp/luawrapper /usr/local/include/
+else
+    echo "LuaWrapper was installed previusly on /usr/local/include/luawrapper/"
+fi
+cd $BUILD_PATH
 
 # Bullet
 BULLET_DOUBLE="$(pkg-config bullet --cflags | grep DOUBLE_PRECISION )"
