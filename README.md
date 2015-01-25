@@ -1,6 +1,12 @@
 trillek-client
 ==============
 
+Status
+===
+| GNU/Linux                                        |
+|--------------------------------------------------|
+|[![Build Status](https://travis-ci.org/trillek-team/trillek-client-core.svg?branch=develop)](https://travis-ci.org/trillek-team/trillek-client-core)|
+
 Contributing
 ===
 

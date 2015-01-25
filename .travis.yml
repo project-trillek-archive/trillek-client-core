@@ -1,6 +1,11 @@
 language: cpp
 compiler: gcc
 before_install:
+    # Grabs a modern version of cmake
+    - echo "yes" | sudo add-apt-repository ppa:kalakris/cmake
+    - sudo apt-get update -qq
+    - sudo apt-get install cmake
+    - cmake --version
     # libstdc++-4.8-dev
     - sudo add-apt-repository --yes ppa:ubuntu-toolchain-r/test
     # clang++-3.2 and gcc 4.8
@@ -15,8 +20,6 @@ before_install:
     - sudo apt-get -qq install xorg-dev libglu1-mesa-dev
     - git clone --depth=100 https://github.com/glfw/glfw.git
     - cd glfw
-    # GLFW requests cmake-2.8.9 but travis runs 2.8.7, we use the last commit using 2.8.7
-    - git checkout 96d230becb0c612b3f3631cb6cf83ebe0a393b71
     - CMAKE_CXX_FLAGS=-fPIC CMAKE_C_FLAGS=-fPIC cmake -DCMAKE_INSTALL_PREFIX=/usr -DBUILD_SHARED_LIBS:bool=true .
     - sudo make install
     - cd ..
@@ -28,7 +31,7 @@ before_install:
     - unzip luawrapper.zip -d /tmp
     - sudo cp -r /tmp/luawrapper /usr
     # Download GLM 9.5 from github
-    - wget https://github.com/g-truc/glm/archive/0.9.5.3.zip 
+    - wget https://github.com/g-truc/glm/archive/0.9.5.3.zip
     - unzip 0.9.5.3.zip -d /tmp
     - sudo cp -r /tmp/glm-0.9.5.3/glm /usr/include
 install:
@@ -80,4 +83,7 @@ notifications:
         #- my.mail@bar.com
     # I can also set up Glitch to output build results as well if we don't want the travis bot join/part spam
     irc:
-        - "chat.freenode.net#project-trillek"
+        channels:
+            - "chat.freenode.net#project-trillek"
+        on_success: change
+        on_failure: always
