@@ -2,8 +2,7 @@
 #define CAMERA_HPP_INCLUDED
 
 #include "trillek-game.hpp"
-#include "components/shared-component.hpp"
-#include "components/system-component.hpp"
+#include "components/component.hpp"
 #include "systems/transform-system.hpp"
 #include "type-id.hpp"
 #include "transform.hpp"

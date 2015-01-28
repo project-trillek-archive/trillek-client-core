@@ -18,7 +18,7 @@ before_install:
     - sudo dpkg -i playdeb_0.3-1~getdeb1_all.deb
     # No ppa for GLFW3 at this time. Compiling by hand!
     - sudo apt-get -qq install xorg-dev libglu1-mesa-dev
-    - git clone --depth=100 https://github.com/glfw/glfw.git
+    - git clone --depth=200 https://github.com/glfw/glfw.git
     - cd glfw
     - CMAKE_CXX_FLAGS=-fPIC CMAKE_C_FLAGS=-fPIC cmake -DCMAKE_INSTALL_PREFIX=/usr -DBUILD_SHARED_LIBS:bool=true .
     - sudo make install

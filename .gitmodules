@@ -1,5 +1,5 @@
 [submodule "common"]
 	path = common
-	url = https://github.com/trillek-team/trillek-common.git
-	branch = develop
+	url = https://github.com/catageek/trillek-common.git
+	branch = feature-dynamic-polymorphism
 	ignore = dirty

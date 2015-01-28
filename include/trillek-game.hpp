@@ -21,11 +21,6 @@ class PhysicsSystem;
 namespace sound {
 class System;
 }
-namespace component {
-class Shared;
-class System;
-class SystemValue;
-}
 
 class TrillekGame final {
 public:
@@ -57,27 +52,6 @@ public:
      * \return FakeSystem& the fake system
      */
     static FakeSystem& GetFakeSystem() { return *fake_system.get(); }
-
-    /** \brief Get the storage of shared components
-     *
-     * \return component::Shared& the storage
-     *
-     */
-    static component::Shared& GetSharedComponent() { return *shared_component.get(); };
-
-    /** \brief Get the storage of system components stored by pointers
-     *
-     * \return component::System& the storage
-     *
-     */
-    static component::System& GetSystemComponent() { return *system_component.get(); };
-
-    /** \brief Get the storage of system components stored by values
-     *
-     * \return component::SystemValue& the storage
-     *
-     */
-    static component::SystemValue& GetSystemValueComponent() { return *system_value_component.get(); };
 
     /** \brief Get the terminate flag
      *
@@ -131,9 +105,6 @@ private:
     static std::unique_ptr<FakeSystem> fake_system;
     static std::unique_ptr<physics::PhysicsSystem> phys_sys;
     static std::unique_ptr<OS> glfw_os;
-    static std::unique_ptr<component::Shared> shared_component;
-    static std::unique_ptr<component::System> system_component;
-    static std::unique_ptr<component::SystemValue> system_value_component;
     static bool close_window;
 
     static std::once_flag once_graphics;

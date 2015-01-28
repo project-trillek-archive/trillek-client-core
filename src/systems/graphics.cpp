@@ -710,8 +710,7 @@ void RenderSystem::RenderLightingPass(const glm::mat4x4 &view_matrix, const floa
 }
 
 inline void RenderSystem::UpdateModelMatrices(const frame_tp& timepoint) {
-    auto& transform_container = TrillekGame::GetSharedComponent()
-                                                .Map<Component::GraphicTransform>();
+    auto& transform_container = GetRawContainer<Component::GraphicTransform>().Map();
     // since the data is published by the same thread, get the last published data
     // first remove the transforms
     auto& transform_map_neg = transform_container.GetLastNegativeCommit();
